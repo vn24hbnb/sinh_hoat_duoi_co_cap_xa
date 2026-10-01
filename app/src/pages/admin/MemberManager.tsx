@@ -10,7 +10,7 @@ import { GlassCard } from '../../components/ui/GlassCard'
 
 type Branch = { id: string; name: string }
 type Member = { id: string; full_name: string; date_of_birth: string | null; chi_bo_id: string; is_active: boolean }
-type PersonRow = { full_name: string; date_of_birth: string; invalid_date: boolean; identity_confirmed: boolean; chi_bo_id: string; branch_name: string; branch_source: 'sheet'|'default'|'unresolved'; worksheet: string; row_number: number }
+type PersonRow = { full_name: string; date_of_birth: string; source_date_of_birth: string; identity_problem: boolean; identity_confirmed: boolean; chi_bo_id: string; branch_name: string; branch_source: 'sheet'|'default'|'unresolved'; worksheet: string; row_number: number }
 type EditForm = Member
 const inputClass = 'w-full rounded-xl border border-slate-200 bg-white/80 p-3 text-sm dark:border-slate-700 dark:bg-slate-900'
 
@@ -112,7 +112,8 @@ export default function MemberManager() {
   const needsIdentityReview=(row:PersonRow,index:number)=>!isDuplicate(row,index)&&(members.some(member=>samePersonName(row,member)&&!sameMember(row,{...member,date_of_birth:member.date_of_birth||''}))||importRows.slice(0,index).some(other=>samePersonName(row,other)&&!sameMember(row,other)))
   const duplicates=importRows.filter(isDuplicate).length
   const identityReviews=importRows.filter((row,index)=>needsIdentityReview(row,index)&&!row.identity_confirmed).length
-  const readyRows=importRows.filter((row,index)=>row.full_name&&row.chi_bo_id&&!row.invalid_date&&!isDuplicate(row,index)&&(!needsIdentityReview(row,index)||row.identity_confirmed))
+  const identityProblems=importRows.filter(row=>row.identity_problem).length
+  const readyRows=importRows.filter((row,index)=>row.full_name&&row.chi_bo_id&&!row.identity_problem&&!isDuplicate(row,index)&&(!needsIdentityReview(row,index)||row.identity_confirmed))
 
   async function invoke(action:string,payload:Record<string,unknown>={}) {
     const {data,error:invokeError}=await supabase.functions.invoke('admin-members',{body:{action,organization_id:tenantService.requireOrganizationId(),...payload}})
@@ -210,14 +211,29 @@ export default function MemberManager() {
           if(full_name.length>200||/\d/.test(full_name)||/^(ho va ten|ho ten|danh sach|tong so|ghi chu|chu thich)\b/.test(normalizedPerson)||normalizedPerson==='cong'||normalizedPerson.startsWith('cong tong '))continue
           if(serialCol!==null&&!/^\d+$/.test(String(row[serialCol]??'').trim()))continue
           const rawDob=dobCol===null?'':row[dobCol]
-          const date_of_birth=parseDate(rawDob)
-          const invalid_date=String(rawDob??'').trim()!==''&&!date_of_birth
+          const source_date_of_birth=parseDate(rawDob)
           const rowBranchId=defaultBranchId
           const branch_name=branches.find(item=>item.id===rowBranchId)?.name||sheet.sheetName.trim()
-          parsed.push({full_name,date_of_birth,invalid_date,identity_confirmed:false,chi_bo_id:rowBranchId,branch_name,branch_source:branchSource,worksheet:sheet.sheetName,row_number:i+1})
+          parsed.push({full_name,date_of_birth:'',source_date_of_birth,identity_problem:false,identity_confirmed:false,chi_bo_id:rowBranchId,branch_name,branch_source:branchSource,worksheet:sheet.sheetName,row_number:i+1})
         }
       }
       if(!parsed.length)throw new Error('Không tìm thấy dòng có họ tên trong tệp.')
+      const sameNameGroups=new Map<string,number[]>()
+      parsed.forEach((row,index)=>{
+        if(!row.chi_bo_id)return
+        const key=`${row.chi_bo_id}:${normalizedName(row.full_name)}`
+        sameNameGroups.set(key,[...(sameNameGroups.get(key)||[]),index])
+      })
+      for(const indexes of sameNameGroups.values()){
+        if(indexes.length<2)continue
+        const dates=indexes.map(index=>parsed[index].source_date_of_birth)
+        const canDisambiguate=dates.every(Boolean)&&new Set(dates).size===dates.length
+        if(!canDisambiguate){indexes.forEach(index=>{parsed[index].identity_problem=true});continue}
+        indexes.forEach((index,position)=>{
+          const [year,month,day]=dates[position].split('-')
+          parsed[index].full_name=`${parsed[index].full_name} (${day}/${month}/${year})`
+        })
+      }
       setImportBranch(filenameBranchId||(worksheets.length===1?importBranch:''))
       setFileName(`${file.name} · ${worksheets.length} trang tính · ${parsed.length} dòng`);setImportRows(parsed)
     } catch(e) {setImportRows([]);setFileName('');setError(e instanceof Error?e.message:'Không đọc được tệp danh sách.')}
@@ -227,12 +243,12 @@ export default function MemberManager() {
     let created=0,skipped=duplicates
     const completedBranches:string[]=[]
     try {
-      if(importRows.some(row=>row.invalid_date))throw new Error('Có ngày sinh không đúng định dạng trong tệp. Hãy sửa dữ liệu đó rồi tải lại tệp; ngày sinh để trống vẫn được chấp nhận.')
+      if(identityProblems)throw new Error('Có tên trùng nhưng thiếu ngày sinh phân biệt hoặc ngày sinh bị lặp/sai định dạng. Hãy kiểm tra và sửa danh sách gốc trước khi nhập để tránh mất người.')
       if(importRows.some(row=>!row.chi_bo_id))throw new Error('Có trang tính chưa khớp với chi bộ trong xã. Hãy chọn chi bộ mặc định hoặc kiểm tra tên trang tính.')
       const groups=new Map<string,PersonRow[]>()
       readyRows.forEach(row=>groups.set(row.chi_bo_id,[...(groups.get(row.chi_bo_id)||[]),row]))
       for(const [chi_bo_id,rows] of groups){
-        const result=await invoke('import',{chi_bo_id,records:rows.map(({full_name,date_of_birth})=>({full_name,date_of_birth}))})
+        const result=await invoke('import',{chi_bo_id,records:rows.map(({full_name})=>({full_name,date_of_birth:''}))})
         created+=Number(result.created)||0;skipped+=Number(result.skipped)||0
         completedBranches.push(branches.find(item=>item.id===chi_bo_id)?.name||'chi bộ')
       }
@@ -269,13 +285,13 @@ export default function MemberManager() {
       </GlassCard>
       <GlassCard className="space-y-3 p-5">
         <h2 className="flex items-center gap-2 font-black text-red-deep dark:text-gold"><FileSpreadsheet size={18}/>Nhập danh sách từ Excel</h2>
-        <p className="text-sm text-slate-600">Chỉ lấy họ tên và ngày sinh nếu có. Tên trang tính được dùng để nhận diện chi bộ; trang tính không khớp sẽ cần chọn chi bộ mặc định.</p>
+        <p className="text-sm text-slate-600">Chỉ lấy họ tên; ngày sinh trong cơ sở dữ liệu sẽ để trống. Nếu trùng họ tên trong cùng chi bộ, ngày sinh trong tệp chỉ được dùng để thêm vào sau tên nhằm phân biệt, không lưu vào trường ngày sinh. Tên trang tính được dùng để nhận diện chi bộ.</p>
         <div className="flex flex-wrap items-center gap-3">
           <select value={importBranch} onChange={e=>{const value=e.target.value;setImportBranch(value);const fallback=branches.find(item=>item.id===value);setImportRows(rows=>rows.map(row=>row.branch_source==='sheet'?row:{...row,chi_bo_id:value,branch_name:fallback?.name||row.worksheet,branch_source:value?'default':'unresolved'}))}} className={inputClass+' md:max-w-xs'}><option value="">Chi bộ mặc định nếu tệp không chỉ rõ</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select>
           <input aria-label="Chọn tệp Excel" type="file" accept=".xlsx,.xls,.csv" onChange={e=>{const file=e.target.files?.[0];if(file)void readWorkbook(file)}} className="max-w-full text-sm"/>
           {fileName&&<span className="text-sm font-medium">{fileName}</span>}
         </div>
-        {importRows.length>0&&<><div className="max-h-64 overflow-auto rounded border"><table className="w-full text-left text-sm"><thead className="sticky top-0 bg-amber-50"><tr><th className="p-2">Họ và tên</th><th>Ngày sinh</th><th>Chi bộ</th><th>Trang tính / dòng</th><th>Trạng thái</th></tr></thead><tbody>{importRows.map((r,i)=>{const duplicate=isDuplicate(r,i);const needsReview=needsIdentityReview(r,i);return <tr key={`${r.worksheet}-${r.row_number}-${i}`} className="border-t"><td className="p-2">{r.full_name}</td><td>{r.invalid_date?<span className="text-rose-700">Ngày sinh sai định dạng</span>:r.date_of_birth||'—'}</td><td>{r.chi_bo_id?r.branch_name:<span className="text-rose-700">{r.branch_name} (chưa khớp)</span>}</td><td>{r.worksheet} · {r.row_number}</td><td>{r.invalid_date?<span className="text-rose-700">Cần sửa dữ liệu</span>:duplicate?<span className="text-amber-700">Trùng chính xác, sẽ bỏ qua</span>:needsReview?<label className="flex items-start gap-2 text-amber-800"><input type="checkbox" checked={r.identity_confirmed} onChange={e=>setImportRows(rows=>rows.map((item,index)=>index===i?{...item,identity_confirmed:e.target.checked}:item))}/> Xác nhận là người khác</label>:r.chi_bo_id?'Sẵn sàng':'Chưa nhận diện chi bộ'}</td></tr>})}</tbody></table></div><p className="text-xs text-slate-500">Có {importRows.length} dòng, {readyRows.length} dòng sẵn sàng, {duplicates} dòng trùng chính xác, {identityReviews} trường hợp trùng tên cần xác nhận.</p>{importRows.some(row=>row.invalid_date)&&<p className="text-sm text-rose-700">Có ngày sinh không hợp lệ. Hãy sửa tệp gốc rồi tải lên lại; ngày sinh còn thiếu được chấp nhận.</p>}{identityReviews>0&&<p className="text-sm text-amber-800">Có người cùng tên nhưng ngày sinh khác hoặc đang thiếu. Hãy kiểm tra từng trường hợp và xác nhận trước khi nhập để tránh tạo tài khoản trùng.</p>}<button onClick={()=>void importRoster()} disabled={busy||readyRows.length===0||identityReviews>0||importRows.some(row=>!row.chi_bo_id||row.invalid_date)} className="rounded-xl bg-red-revolution px-5 py-2 font-bold text-white disabled:opacity-50">{busy?'Đang nhập…':'Xác nhận nhập danh sách'}</button></>}
+        {importRows.length>0&&<><div className="max-h-64 overflow-auto rounded border"><table className="w-full text-left text-sm"><thead className="sticky top-0 bg-amber-50"><tr><th className="p-2">Họ và tên</th><th>Ngày sinh</th><th>Chi bộ</th><th>Trang tính / dòng</th><th>Trạng thái</th></tr></thead><tbody>{importRows.map((r,i)=>{const duplicate=isDuplicate(r,i);const needsReview=needsIdentityReview(r,i);return <tr key={`${r.worksheet}-${r.row_number}-${i}`} className="border-t"><td className="p-2">{r.full_name}</td><td>—</td><td>{r.chi_bo_id?r.branch_name:<span className="text-rose-700">{r.branch_name} (chưa khớp)</span>}</td><td>{r.worksheet} · {r.row_number}</td><td>{r.identity_problem?<span className="text-rose-700">Tên trùng, chưa phân biệt được</span>:duplicate?<span className="text-amber-700">Trùng chính xác, sẽ bỏ qua</span>:needsReview?<label className="flex items-start gap-2 text-amber-800"><input type="checkbox" checked={r.identity_confirmed} onChange={e=>setImportRows(rows=>rows.map((item,index)=>index===i?{...item,identity_confirmed:e.target.checked}:item))}/> Xác nhận là người khác</label>:r.chi_bo_id?'Sẵn sàng':'Chưa nhận diện chi bộ'}</td></tr>})}</tbody></table></div><p className="text-xs text-slate-500">Có {importRows.length} dòng, {readyRows.length} dòng sẵn sàng, {duplicates} dòng trùng chính xác, {identityReviews} trường hợp trùng tên cần xác nhận.</p>{identityProblems>0&&<p className="text-sm text-rose-700">Có {identityProblems} dòng thuộc nhóm trùng tên nhưng không có ngày sinh riêng biệt hợp lệ. Hãy sửa danh sách gốc trước khi nhập để tránh tài khoản bị bỏ sót.</p>}{identityReviews>0&&<p className="text-sm text-amber-800">Có người cùng tên với dữ liệu hiện có nhưng thông tin ngày sinh đã được để trống. Hãy kiểm tra và xác nhận từng trường hợp trước khi nhập.</p>}<button onClick={()=>void importRoster()} disabled={busy||readyRows.length===0||identityReviews>0||identityProblems>0||importRows.some(row=>!row.chi_bo_id)} className="rounded-xl bg-red-revolution px-5 py-2 font-bold text-white disabled:opacity-50">{busy?'Đang nhập…':'Xác nhận nhập danh sách'}</button></>}
       </GlassCard>
       <GlassCard className="p-5">
         <div className="mb-4 flex flex-wrap gap-3">
