@@ -28,14 +28,15 @@ if(actor.role!=='super_admin'&&organizationId!==actor.organization_id)return rep
   const parsed=new Date(`${value}T00:00:00.000Z`)
   return !Number.isNaN(parsed.valueOf())&&parsed.toISOString().slice(0,10)===value
  }
- const createAccount=async(fullName:string,dob:string,branch:string,recordAudit=true)=>{
+const createAccount=async(fullName:string,dob:string,branch:string,recordAudit=true)=>{
+  fullName=fullName.trim().replace(/\s+/g,' ').normalize('NFC')
   const pendingEmail=`pending-${crypto.randomUUID()}@members.internal`
   const {data:created,error:createError}=await admin.auth.admin.createUser({email:pendingEmail,password:'123456',email_confirm:true})
   if(createError||!created.user)throw new Error('Không tạo được tài khoản đăng nhập.')
   const id=created.user.id
   const {error:emailError}=await admin.auth.admin.updateUserById(id,{email:`member-${id}@members.internal`,email_confirm:true})
   if(emailError){await admin.auth.admin.deleteUser(id);throw new Error('Không hoàn tất được tên đăng nhập.')}
-  const {error:memberError}=await admin.from('members').insert({id,organization_id:organizationId,chi_bo_id:branch,full_name:fullName,date_of_birth:dob,is_active:true})
+  const {error:memberError}=await admin.from('members').insert({id,organization_id:organizationId,chi_bo_id:branch,full_name:fullName,date_of_birth:dob||null,is_active:true})
   if(memberError){await admin.auth.admin.deleteUser(id);throw new Error(memberError.code==='23505'?'Đảng viên có tên và ngày sinh này đã có trong chi bộ.':'Không lưu được thông tin đảng viên.')}
   const {error:userError}=await admin.from('app_users').insert({id,organization_id:organizationId,member_id:id,username:`member-${id.slice(0,8)}`,role:'member',is_active:true,must_change_password:false})
   if(userError){await admin.from('members').delete().eq('id',id);await admin.auth.admin.deleteUser(id);throw new Error('Không hoàn tất được tài khoản; thao tác đã được hoàn tác.')}
@@ -56,13 +57,13 @@ if(actor.role!=='super_admin'&&organizationId!==actor.organization_id)return rep
   if(records.length<1||records.length>200||!branch)return reply({error:'Chọn một chi bộ và nhập tối đa 200 dòng mỗi lần.'},400)
   const {data:chiBo}=await admin.from('chi_bos').select('id').eq('id',branch).eq('organization_id',organizationId).eq('is_active',true).maybeSingle()
   if(!chiBo)return reply({error:'Chi bộ không thuộc xã đang quản lý.'},400)
-  const inputRows=records.map(r=>({full_name:typeof r.full_name==='string'?r.full_name.trim():'',date_of_birth:typeof r.date_of_birth==='string'?r.date_of_birth:''}))
-  if(inputRows.some(r=>!r.full_name||r.full_name.length>200||!isValidDate(r.date_of_birth)))return reply({error:'Có dòng thiếu họ tên hoặc ngày sinh không hợp lệ.'},400)
-  const keys=new Set<string>()
-  if(inputRows.some(r=>{const k=`${r.full_name.toLocaleLowerCase('vi')}|${r.date_of_birth}`;if(keys.has(k))return true;keys.add(k);return false}))return reply({error:'Tệp có dòng tên và ngày sinh bị lặp. Hãy xử lý trong phần xem trước.'},400)
+  const inputRows=records.map(r=>({full_name:typeof r.full_name==='string'?r.full_name.trim().replace(/\s+/g,' ').normalize('NFC'):'',date_of_birth:typeof r.date_of_birth==='string'?r.date_of_birth.trim():''}))
+  if(inputRows.some(r=>!r.full_name||r.full_name.length>200||(r.date_of_birth&&!isValidDate(r.date_of_birth))))return reply({error:'Có dòng thiếu họ tên hoặc ngày sinh không hợp lệ.'},400)
+  const normalizedName=(value:string)=>value.trim().replace(/\s+/g,' ').normalize('NFC').toLocaleLowerCase('vi')
+  const collides=(a:{full_name:string;date_of_birth:string},b:{full_name:string;date_of_birth:string})=>normalizedName(a.full_name)===normalizedName(b.full_name)&&a.date_of_birth===b.date_of_birth
+  if(inputRows.some((r,i)=>inputRows.slice(0,i).some(previous=>collides(r,previous))))return reply({error:'Tệp có tên bị lặp trong chi bộ. Hãy xử lý trong phần xem trước.'},400)
   const {data:existing}=await admin.from('members').select('full_name,date_of_birth').eq('organization_id',organizationId).eq('chi_bo_id',branch)
-  const existingKeys=new Set((existing||[]).map(r=>`${String(r.full_name).toLocaleLowerCase('vi')}|${r.date_of_birth}`))
-  const pending=inputRows.filter(r=>!existingKeys.has(`${r.full_name.toLocaleLowerCase('vi')}|${r.date_of_birth}`))
+  const pending=inputRows.filter(r=>!(existing||[]).some(previous=>collides(r,{full_name:String(previous.full_name),date_of_birth:previous.date_of_birth||''})))
   const createdIds:string[]=[];let next=0;let failure:Error|null=null
   const worker=async()=>{while(!failure){const i=next++;if(i>=pending.length)return;try{createdIds.push(await createAccount(pending[i].full_name,pending[i].date_of_birth,branch,false))}catch(error){failure=error instanceof Error?error:new Error('Không tạo được tài khoản.');return}}}
   await Promise.all(Array.from({length:Math.min(6,pending.length)},()=>worker()))
@@ -71,10 +72,10 @@ if(actor.role!=='super_admin'&&organizationId!==actor.organization_id)return rep
   return reply({created:createdIds.length,skipped:inputRows.length-pending.length})
  }
  if(action==='create'){
-  const fullName=typeof input.full_name==='string'?input.full_name.trim():''
+  const fullName=typeof input.full_name==='string'?input.full_name.trim().replace(/\s+/g,' ').normalize('NFC'):''
   const dob=typeof input.date_of_birth==='string'?input.date_of_birth:''
   const branch=typeof input.chi_bo_id==='string'?input.chi_bo_id:''
-  if(!fullName||fullName.length>200||!/^\d{4}-\d{2}-\d{2}$/.test(dob)||!branch)return reply({error:'Cần nhập họ tên, ngày sinh và chi bộ.'},400)
+  if(!fullName||fullName.length>200||(dob&&!isValidDate(dob))||!branch)return reply({error:'Cần nhập họ tên và chi bộ; ngày sinh nếu có phải hợp lệ.'},400)
   const {data:chiBo}=await admin.from('chi_bos').select('id').eq('id',branch).eq('organization_id',organizationId).eq('is_active',true).maybeSingle()
   if(!chiBo)return reply({error:'Chi bộ không thuộc xã đang quản lý.'},400)
   try{const id=await createAccount(fullName,dob,branch);return reply({id})}catch(error){return reply({error:error instanceof Error?error.message:'Không tạo được đảng viên.'},400)}
@@ -93,12 +94,12 @@ if(actor.role!=='super_admin'&&organizationId!==actor.organization_id)return rep
  }
  if(action==='update'){
   const memberId=typeof input.member_id==='string'?input.member_id:''
-  const fullName=typeof input.full_name==='string'?input.full_name.trim():''
+  const fullName=typeof input.full_name==='string'?input.full_name.trim().replace(/\s+/g,' ').normalize('NFC'):''
   const dob=typeof input.date_of_birth==='string'?input.date_of_birth:''
   const branch=typeof input.chi_bo_id==='string'?input.chi_bo_id:''
   const {data:chiBo}=await admin.from('chi_bos').select('id').eq('id',branch).eq('organization_id',organizationId).maybeSingle()
-  if(!memberId||!fullName||!/^\d{4}-\d{2}-\d{2}$/.test(dob)||!chiBo)return reply({error:'Thông tin cập nhật chưa hợp lệ.'},400)
-  const {error}=await admin.from('members').update({full_name:fullName,date_of_birth:dob,chi_bo_id:branch,updated_at:new Date().toISOString()}).eq('id',memberId).eq('organization_id',organizationId)
+  if(!memberId||!fullName||(dob&&!isValidDate(dob))||!chiBo)return reply({error:'Thông tin cập nhật chưa hợp lệ.'},400)
+  const {error}=await admin.from('members').update({full_name:fullName,date_of_birth:dob||null,chi_bo_id:branch,updated_at:new Date().toISOString()}).eq('id',memberId).eq('organization_id',organizationId)
   if(error)return reply({error:'Không cập nhật được đảng viên.'},400)
   await audit('UPDATE_MEMBER','members',memberId)
   return reply({ok:true})

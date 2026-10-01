@@ -9,27 +9,39 @@ import { RedNavigationBar } from '../../components/layout/RedNavigationBar'
 import { GlassCard } from '../../components/ui/GlassCard'
 
 type Branch = { id: string; name: string }
-type Member = { id: string; full_name: string; date_of_birth: string; chi_bo_id: string; is_active: boolean }
-type PersonRow = { full_name: string; date_of_birth: string }
+type Member = { id: string; full_name: string; date_of_birth: string | null; chi_bo_id: string; is_active: boolean }
+type PersonRow = { full_name: string; date_of_birth: string; invalid_date: boolean; identity_confirmed: boolean; chi_bo_id: string; branch_name: string; branch_source: 'sheet'|'default'|'unresolved'; worksheet: string; row_number: number }
 type EditForm = Member
 const inputClass = 'w-full rounded-xl border border-slate-200 bg-white/80 p-3 text-sm dark:border-slate-700 dark:bg-slate-900'
 
 function parseDate(value: unknown): string {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return [value.getFullYear(),String(value.getMonth()+1).padStart(2,'0'),String(value.getDate()).padStart(2,'0')].join('-')
+    return validateDate([value.getFullYear(),String(value.getMonth()+1).padStart(2,'0'),String(value.getDate()).padStart(2,'0')].join('-'))
   }
   if (typeof value === 'number') {
-    const parsed = new Date(Math.round((value-25569)*86400000))
-    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0,10)
+    const parsed = new Date(Date.UTC(1899,11,30)+Math.round(value*86400000))
+    if (!Number.isNaN(parsed.getTime())) return validateDate(parsed.toISOString().slice(0,10))
   }
   if (typeof value !== 'string') return ''
   const raw = value.trim()
   const dmy = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/)
-  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw
+  if (dmy) return validateDate(`${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return validateDate(raw)
   return ''
 }
-const duplicateKey = (row: PersonRow) => `${row.full_name.trim().toLocaleLowerCase('vi')}|${row.date_of_birth}`
+function validateDate(value:string):string {
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return ''
+  const [year,month,day]=value.split('-').map(Number)
+  const parsed=new Date(Date.UTC(year,month-1,day))
+  return parsed.getUTCFullYear()===year&&parsed.getUTCMonth()===month-1&&parsed.getUTCDate()===day?value:''
+}
+const normalizedName = (value: string) => value.trim().normalize('NFC').toLocaleLowerCase('vi')
+const normalizedLabel = (value: unknown) => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/\s+/g,' ').trim()
+const normalizedBranch = (value: unknown) => normalizedLabel(value).replace(/[^a-z0-9\s]/g,' ').replace(/\bund\b/g,'ubnd').replace(/\s+/g,' ').trim()
+const samePersonName = (a: Pick<PersonRow,'full_name'|'chi_bo_id'>, b: Pick<PersonRow,'full_name'|'chi_bo_id'>) =>
+  Boolean(a.chi_bo_id && b.chi_bo_id) && a.chi_bo_id === b.chi_bo_id && normalizedName(a.full_name) === normalizedName(b.full_name)
+const sameMember = (a: Pick<PersonRow,'full_name'|'date_of_birth'|'chi_bo_id'>, b: Pick<PersonRow,'full_name'|'date_of_birth'|'chi_bo_id'>) =>
+  samePersonName(a,b) && a.date_of_birth === b.date_of_birth
 
 async function fetchOrganizationMembers(organizationId:string) {
   const [branches,members]=await Promise.all([
@@ -81,6 +93,9 @@ export default function MemberManager() {
     const request=++loadRequest.current
     void fetchOrganizationMembers(organizationId).then(({branches,members})=>{
       if(request!==loadRequest.current)return
+      setImportRows([])
+      setFileName('')
+      setImportBranch('')
       setBranches(branches)
       setMembers(members)
       setBranch(v=>branches.some(item=>item.id===v)?v:branches[0]?.id||'')
@@ -93,10 +108,11 @@ export default function MemberManager() {
   },[organizationId])
 
   const filtered=useMemo(()=>members.filter(m=>(!branch||m.chi_bo_id===branch)&&(!search||m.full_name.toLocaleLowerCase('vi').includes(search.toLocaleLowerCase('vi')))),[members,branch,search])
-  const localKeys=new Set(members.filter(m=>m.chi_bo_id===importBranch).map(duplicateKey))
-  const duplicateCounts=new Map<string,number>()
-  for(const row of importRows)duplicateCounts.set(duplicateKey(row),(duplicateCounts.get(duplicateKey(row))||0)+1)
-  const duplicates=importRows.filter(r=>localKeys.has(duplicateKey(r))||(duplicateCounts.get(duplicateKey(r))||0)>1).length
+  const isDuplicate=(row:PersonRow,index:number)=>members.some(member=>sameMember(row,{...member,date_of_birth:member.date_of_birth||''}))||importRows.slice(0,index).some(other=>sameMember(row,other))
+  const needsIdentityReview=(row:PersonRow,index:number)=>!isDuplicate(row,index)&&(members.some(member=>samePersonName(row,member)&&!sameMember(row,{...member,date_of_birth:member.date_of_birth||''}))||importRows.slice(0,index).some(other=>samePersonName(row,other)&&!sameMember(row,other)))
+  const duplicates=importRows.filter(isDuplicate).length
+  const identityReviews=importRows.filter((row,index)=>needsIdentityReview(row,index)&&!row.identity_confirmed).length
+  const readyRows=importRows.filter((row,index)=>row.full_name&&row.chi_bo_id&&!row.invalid_date&&!isDuplicate(row,index)&&(!needsIdentityReview(row,index)||row.identity_confirmed))
 
   async function invoke(action:string,payload:Record<string,unknown>={}) {
     const {data,error:invokeError}=await supabase.functions.invoke('admin-members',{body:{action,organization_id:tenantService.requireOrganizationId(),...payload}})
@@ -106,7 +122,7 @@ export default function MemberManager() {
   }
   async function saveNew(e:React.FormEvent) {
     e.preventDefault();setError('');setMessage('')
-    if(!form.full_name.trim()||!form.date_of_birth||!form.chi_bo_id)return
+    if(!form.full_name.trim()||!form.chi_bo_id)return
     setBusy(true)
     try {await invoke('create',form);setForm({full_name:'',date_of_birth:'',chi_bo_id:form.chi_bo_id});setMessage('Đã thêm đảng viên và tạo tài khoản đăng nhập. Mật khẩu mặc định: 123456.');await load()}
     catch(e){setError(e instanceof Error?e.message:'Chưa thêm được đảng viên.')}
@@ -144,47 +160,89 @@ export default function MemberManager() {
     try {
       const XLSX=await import('xlsx')
       const workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true})
-      const normalized=(v:unknown)=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+      const normalized=normalizedLabel
+      const fileLabel=normalized(file.name)
+      const fileBranch=fileLabel.includes('ubnd')?branches.find(item=>normalizedBranch(item.name)==='uy ban nhan dan xa'):
+        fileLabel.includes('coq')?branches.find(item=>normalizedBranch(item.name)==='cac co quan dang'):undefined
+      const filenameBranchId=fileBranch?.id||''
       const worksheets=workbook.SheetNames.map(sheetName=>{
         const rows=XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName],{header:1,raw:true,defval:''})
-        let headerInfo:{header:number;nameCol:number;dobCol:number}|null=null
-        for(let i=0;i<Math.min(rows.length,12);i++){
+        let headerInfo:{header:number;nameCol:number;dobCol:number|null;serialCol:number|null}|null=null
+        for(let i=0;i<Math.min(rows.length,20);i++){
           const cells=rows[i].map(normalized)
-          const nameCol=cells.findIndex(v=>v.includes('ho va ten')||v==='ho ten'||v==='ho ten dang vien')
+          const nameCol=cells.findIndex(v=>v.includes('ho va ten')||v==='ho ten'||v==='ho ten dang vien'||(v.includes('ho')&&v.includes('ten')))
           const dobCol=cells.findIndex(v=>v.includes('ngay sinh')||v.includes('nam sinh'))
-          if(nameCol>=0&&dobCol>=0){headerInfo={header:i,nameCol,dobCol};break}
+          const serialCol=cells.findIndex(v=>v==='stt'||v==='so tt'||v.includes('so thu tu')||v==='thu tu')
+          if(nameCol>=0){headerInfo={header:i,nameCol,dobCol:dobCol>=0?dobCol:null,serialCol:serialCol>=0?serialCol:null};break}
         }
-        return {sheetName,rows,headerInfo}
-      }).filter(sheet=>sheet.rows.some(row=>row.some(value=>String(value??'').trim()!=='')))
-      const selectedSheet=worksheets.find(sheet=>sheet.headerInfo)||worksheets[0]
-      if(!selectedSheet)throw new Error('Tệp không có trang tính chứa dữ liệu.')
-      const {rows}=selectedSheet
-      let {header,nameCol,dobCol}=selectedSheet.headerInfo||{header:-1,nameCol:-1,dobCol:-1}
-      if(header<0){nameCol=1;dobCol=3;header=-1}
+        const branch=branches.find(item=>normalizedBranch(item.name)===normalizedBranch(sheetName))
+        return {sheetName,rows,headerInfo,matchedBranchId:branch?.id||''}
+      }).filter(sheet=>{
+        const hasContent=sheet.rows.some(row=>row.some(value=>String(value??'').trim()!==''))
+        return hasContent&&Boolean(sheet.headerInfo||sheet.matchedBranchId||['ca xa','qs xa'].includes(normalized(sheet.sheetName)))
+      })
       const parsed:PersonRow[]=[]
-      for(let i=header+1;i<rows.length;i++){
-        const row=rows[i]
-        const full_name=String(row[nameCol]??'').trim()
-        const date_of_birth=parseDate(row[dobCol])
-        if(!full_name&&!date_of_birth)continue
-        parsed.push({full_name,date_of_birth})
+      for(const sheet of worksheets){
+        const sheetKey=normalizedBranch(sheet.sheetName)
+        const matchedBranch=branches.find(item=>normalizedBranch(item.name)===sheetKey)
+        const fallbackId=filenameBranchId||(worksheets.length===1?importBranch:'')
+        const defaultBranchId=matchedBranch?.id||fallbackId
+        const branchSource:PersonRow['branch_source']=matchedBranch?'sheet':defaultBranchId?'default':'unresolved'
+        const header=sheet.headerInfo?.header??-1
+        let nameCol=sheet.headerInfo?.nameCol??1
+        const dobCol=sheet.headerInfo?.dobCol??(sheet.headerInfo?null:3)
+        let serialCol=sheet.headerInfo?.serialCol??(['ca xa','qs xa'].includes(normalized(sheet.sheetName))?0:null)
+        let firstDataRow=header+1
+        if(!sheet.headerInfo&&['ca xa','qs xa'].includes(normalized(sheet.sheetName))){firstDataRow=4;nameCol=1}
+        // Some source sheets merge or shift the STT column, leaving the header
+        // in one column and every serial value blank in the data rows.
+        if(serialCol!==null){
+          const candidateSerialCol=serialCol
+          if(!sheet.rows.slice(firstDataRow).some(row=>/^\d+$/.test(String(row[candidateSerialCol]??'').trim())))serialCol=null
+        }
+        for(let i=firstDataRow;i<sheet.rows.length;i++){
+          const row=sheet.rows[i]
+          const rawName=row[nameCol]
+          if(typeof rawName!=='string')continue
+          const full_name=rawName.trim().replace(/\s+/g,' ').normalize('NFC')
+          if(!full_name)continue
+          const normalizedPerson=normalized(full_name)
+          if(full_name.length>200||/\d/.test(full_name)||/^(ho va ten|ho ten|danh sach|tong so|ghi chu|chu thich)\b/.test(normalizedPerson)||normalizedPerson==='cong'||normalizedPerson.startsWith('cong tong '))continue
+          if(serialCol!==null&&!/^\d+$/.test(String(row[serialCol]??'').trim()))continue
+          const rawDob=dobCol===null?'':row[dobCol]
+          const date_of_birth=parseDate(rawDob)
+          const invalid_date=String(rawDob??'').trim()!==''&&!date_of_birth
+          const rowBranchId=defaultBranchId
+          const branch_name=branches.find(item=>item.id===rowBranchId)?.name||sheet.sheetName.trim()
+          parsed.push({full_name,date_of_birth,invalid_date,identity_confirmed:false,chi_bo_id:rowBranchId,branch_name,branch_source:branchSource,worksheet:sheet.sheetName,row_number:i+1})
+        }
       }
-      if(!parsed.length)throw new Error('Không nhận ra cột Họ và tên, Ngày sinh. Tệp danh sách cần có tên ở cột B và ngày sinh ở cột D.')
-      const filePath=normalized(file.name)
-      const expectedBranch=filePath.includes('ubnd')?'uy ban nhan dan xa':filePath.includes('coq')?'cac co quan dang':''
-      const matchedBranch=branches.find(item=>normalized(item.name)===expectedBranch)
-      setImportBranch(matchedBranch?.id||'')
-      setFileName(`${file.name} · trang tính ${selectedSheet.sheetName}`);setImportRows(parsed)
+      if(!parsed.length)throw new Error('Không tìm thấy dòng có họ tên trong tệp.')
+      setImportBranch(filenameBranchId||(worksheets.length===1?importBranch:''))
+      setFileName(`${file.name} · ${worksheets.length} trang tính · ${parsed.length} dòng`);setImportRows(parsed)
     } catch(e) {setImportRows([]);setFileName('');setError(e instanceof Error?e.message:'Không đọc được tệp danh sách.')}
   }
   async function importRoster() {
     setBusy(true);setError('');setMessage('')
+    let created=0,skipped=duplicates
+    const completedBranches:string[]=[]
     try {
-      const records=importRows.filter(r=>r.full_name&&r.date_of_birth&&!localKeys.has(duplicateKey(r)))
-      const result=await invoke('import',{chi_bo_id:importBranch,records})
-      setMessage(`Đã nhập ${result.created} đảng viên; bỏ qua ${result.skipped} dòng đã có.`)
+      if(importRows.some(row=>row.invalid_date))throw new Error('Có ngày sinh không đúng định dạng trong tệp. Hãy sửa dữ liệu đó rồi tải lại tệp; ngày sinh để trống vẫn được chấp nhận.')
+      if(importRows.some(row=>!row.chi_bo_id))throw new Error('Có trang tính chưa khớp với chi bộ trong xã. Hãy chọn chi bộ mặc định hoặc kiểm tra tên trang tính.')
+      const groups=new Map<string,PersonRow[]>()
+      readyRows.forEach(row=>groups.set(row.chi_bo_id,[...(groups.get(row.chi_bo_id)||[]),row]))
+      for(const [chi_bo_id,rows] of groups){
+        const result=await invoke('import',{chi_bo_id,records:rows.map(({full_name,date_of_birth})=>({full_name,date_of_birth}))})
+        created+=Number(result.created)||0;skipped+=Number(result.skipped)||0
+        completedBranches.push(branches.find(item=>item.id===chi_bo_id)?.name||'chi bộ')
+      }
+      setMessage(`Đã nhập ${created} đảng viên; bỏ qua ${skipped} dòng trùng hoặc đã có.`)
       setImportRows([]);setFileName('');await load()
-    } catch(e) {setError(e instanceof Error?e.message:'Chưa nhập được danh sách.')}
+    } catch(e) {
+      const detail=e instanceof Error?e.message:'Chưa nhập được danh sách.'
+      if(completedBranches.length){await load();setMessage(`Đã nhập ${created} đảng viên ở ${completedBranches.join(', ')} trước khi gặp lỗi.`);setError(`${detail} Các chi bộ đã hoàn tất được giữ nguyên dữ liệu.`)}
+      else setError(detail)
+    }
     finally{setBusy(false)}
   }
 
@@ -203,7 +261,7 @@ export default function MemberManager() {
         <h2 className="flex items-center gap-2 font-black text-red-deep dark:text-gold"><UserPlus size={18}/>Thêm đảng viên</h2>
         <form onSubmit={saveNew} className="grid gap-3 md:grid-cols-4">
           <input required placeholder="Họ và tên" value={form.full_name} onChange={e=>setForm({...form,full_name:e.target.value})} className={inputClass}/>
-          <input required type="date" value={form.date_of_birth} onChange={e=>setForm({...form,date_of_birth:e.target.value})} className={inputClass}/>
+          <input type="date" aria-label="Ngày sinh (không bắt buộc)" value={form.date_of_birth} onChange={e=>setForm({...form,date_of_birth:e.target.value})} className={inputClass}/>
           <select required value={form.chi_bo_id} onChange={e=>setForm({...form,chi_bo_id:e.target.value})} className={inputClass}><option value="">Chọn chi bộ</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select>
           <button disabled={busy} className="rounded-xl bg-red-revolution px-4 py-2 font-bold text-white disabled:opacity-50">Thêm</button>
         </form>
@@ -211,13 +269,13 @@ export default function MemberManager() {
       </GlassCard>
       <GlassCard className="space-y-3 p-5">
         <h2 className="flex items-center gap-2 font-black text-red-deep dark:text-gold"><FileSpreadsheet size={18}/>Nhập danh sách từ Excel</h2>
-        <p className="text-sm text-slate-600">Chỉ lấy họ tên và ngày sinh. Tệp được xem trước tại đây; tài khoản trùng tên và ngày sinh sẽ được bỏ qua.</p>
+        <p className="text-sm text-slate-600">Chỉ lấy họ tên và ngày sinh nếu có. Tên trang tính được dùng để nhận diện chi bộ; trang tính không khớp sẽ cần chọn chi bộ mặc định.</p>
         <div className="flex flex-wrap items-center gap-3">
-          <select value={importBranch} onChange={e=>setImportBranch(e.target.value)} className={inputClass+' md:max-w-xs'}><option value="">Chọn chi bộ</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select>
+          <select value={importBranch} onChange={e=>{const value=e.target.value;setImportBranch(value);const fallback=branches.find(item=>item.id===value);setImportRows(rows=>rows.map(row=>row.branch_source==='sheet'?row:{...row,chi_bo_id:value,branch_name:fallback?.name||row.worksheet,branch_source:value?'default':'unresolved'}))}} className={inputClass+' md:max-w-xs'}><option value="">Chi bộ mặc định nếu tệp không chỉ rõ</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select>
           <input aria-label="Chọn tệp Excel" type="file" accept=".xlsx,.xls,.csv" onChange={e=>{const file=e.target.files?.[0];if(file)void readWorkbook(file)}} className="max-w-full text-sm"/>
           {fileName&&<span className="text-sm font-medium">{fileName}</span>}
         </div>
-        {importRows.length>0&&<><div className="max-h-64 overflow-auto rounded border"><table className="w-full text-left text-sm"><thead className="sticky top-0 bg-amber-50"><tr><th className="p-2">Họ và tên</th><th>Ngày sinh</th><th>Trạng thái</th></tr></thead><tbody>{importRows.map((r,i)=>{const duplicate=localKeys.has(duplicateKey(r))||(duplicateCounts.get(duplicateKey(r))||0)>1;return <tr key={i} className="border-t"><td className="p-2">{r.full_name||<span className="text-rose-700">Thiếu họ tên</span>}</td><td>{r.date_of_birth||<span className="text-rose-700">Thiếu ngày sinh</span>}</td><td>{duplicate?<span className="text-amber-700">Trùng, sẽ bỏ qua</span>:r.full_name&&r.date_of_birth?'Sẵn sàng':'Dữ liệu cần bổ sung'}</td></tr>})}</tbody></table></div><p className="text-xs text-slate-500">Có {importRows.length} dòng, {duplicates} dòng trùng hoặc đã có trong danh sách.</p><button onClick={()=>void importRoster()} disabled={busy||!importBranch||importRows.filter(r=>r.full_name&&r.date_of_birth&&!localKeys.has(duplicateKey(r))&&duplicateCounts.get(duplicateKey(r))===1).length===0} className="rounded-xl bg-red-revolution px-5 py-2 font-bold text-white disabled:opacity-50">{busy?'Đang nhập…':'Xác nhận nhập danh sách'}</button></>}
+        {importRows.length>0&&<><div className="max-h-64 overflow-auto rounded border"><table className="w-full text-left text-sm"><thead className="sticky top-0 bg-amber-50"><tr><th className="p-2">Họ và tên</th><th>Ngày sinh</th><th>Chi bộ</th><th>Trang tính / dòng</th><th>Trạng thái</th></tr></thead><tbody>{importRows.map((r,i)=>{const duplicate=isDuplicate(r,i);const needsReview=needsIdentityReview(r,i);return <tr key={`${r.worksheet}-${r.row_number}-${i}`} className="border-t"><td className="p-2">{r.full_name}</td><td>{r.invalid_date?<span className="text-rose-700">Ngày sinh sai định dạng</span>:r.date_of_birth||'—'}</td><td>{r.chi_bo_id?r.branch_name:<span className="text-rose-700">{r.branch_name} (chưa khớp)</span>}</td><td>{r.worksheet} · {r.row_number}</td><td>{r.invalid_date?<span className="text-rose-700">Cần sửa dữ liệu</span>:duplicate?<span className="text-amber-700">Trùng chính xác, sẽ bỏ qua</span>:needsReview?<label className="flex items-start gap-2 text-amber-800"><input type="checkbox" checked={r.identity_confirmed} onChange={e=>setImportRows(rows=>rows.map((item,index)=>index===i?{...item,identity_confirmed:e.target.checked}:item))}/> Xác nhận là người khác</label>:r.chi_bo_id?'Sẵn sàng':'Chưa nhận diện chi bộ'}</td></tr>})}</tbody></table></div><p className="text-xs text-slate-500">Có {importRows.length} dòng, {readyRows.length} dòng sẵn sàng, {duplicates} dòng trùng chính xác, {identityReviews} trường hợp trùng tên cần xác nhận.</p>{importRows.some(row=>row.invalid_date)&&<p className="text-sm text-rose-700">Có ngày sinh không hợp lệ. Hãy sửa tệp gốc rồi tải lên lại; ngày sinh còn thiếu được chấp nhận.</p>}{identityReviews>0&&<p className="text-sm text-amber-800">Có người cùng tên nhưng ngày sinh khác hoặc đang thiếu. Hãy kiểm tra từng trường hợp và xác nhận trước khi nhập để tránh tạo tài khoản trùng.</p>}<button onClick={()=>void importRoster()} disabled={busy||readyRows.length===0||identityReviews>0||importRows.some(row=>!row.chi_bo_id||row.invalid_date)} className="rounded-xl bg-red-revolution px-5 py-2 font-bold text-white disabled:opacity-50">{busy?'Đang nhập…':'Xác nhận nhập danh sách'}</button></>}
       </GlassCard>
       <GlassCard className="p-5">
         <div className="mb-4 flex flex-wrap gap-3">
@@ -233,8 +291,8 @@ export default function MemberManager() {
           </td></tr>)}
         </tbody></table></div>
       </GlassCard>
-      <p className="text-xs text-slate-500">Tài khoản mới và đặt lại mật khẩu dùng mặc định 123456. Có thể tự đổi mật khẩu sau khi đăng nhập.</p>
+      <p className="text-xs text-slate-500">Tài khoản mới dùng mật khẩu mặc định 123456. Đảng viên có thể tự đổi mật khẩu sau khi đăng nhập.</p>
     </main>
-    {editing&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><GlassCard className="w-full max-w-md space-y-4 bg-white p-5 dark:bg-slate-900"><h2 className="font-black">Sửa thông tin đảng viên</h2><form onSubmit={saveEdit} className="space-y-3"><label className="block text-sm">Họ và tên<input required value={editing.full_name} onChange={e=>setEditing({...editing,full_name:e.target.value})} className={inputClass}/></label><label className="block text-sm">Ngày sinh<input required type="date" value={editing.date_of_birth} onChange={e=>setEditing({...editing,date_of_birth:e.target.value})} className={inputClass}/></label><label className="block text-sm">Chi bộ<select value={editing.chi_bo_id} onChange={e=>setEditing({...editing,chi_bo_id:e.target.value})} className={inputClass}>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><div className="flex justify-end gap-3"><button type="button" onClick={()=>setEditing(null)} className="rounded-lg border px-4 py-2">Hủy</button><button disabled={busy} className="rounded-lg bg-red-revolution px-4 py-2 font-bold text-white">Lưu thay đổi</button></div></form></GlassCard></div>}
+    {editing&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><GlassCard className="w-full max-w-md space-y-4 bg-white p-5 dark:bg-slate-900"><h2 className="font-black">Sửa thông tin đảng viên</h2><form onSubmit={saveEdit} className="space-y-3"><label className="block text-sm">Họ và tên<input required value={editing.full_name} onChange={e=>setEditing({...editing,full_name:e.target.value})} className={inputClass}/></label><label className="block text-sm">Ngày sinh<input type="date" value={editing.date_of_birth||''} onChange={e=>setEditing({...editing,date_of_birth:e.target.value})} className={inputClass}/></label><label className="block text-sm">Chi bộ<select value={editing.chi_bo_id} onChange={e=>setEditing({...editing,chi_bo_id:e.target.value})} className={inputClass}>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><div className="flex justify-end gap-3"><button type="button" onClick={()=>setEditing(null)} className="rounded-lg border px-4 py-2">Hủy</button><button disabled={busy} className="rounded-lg bg-red-revolution px-4 py-2 font-bold text-white">Lưu thay đổi</button></div></form></GlassCard></div>}
   </PatternBackground>
 }

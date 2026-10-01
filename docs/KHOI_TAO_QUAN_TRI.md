@@ -1,6 +1,6 @@
 # Khởi tạo ba tài khoản quản trị lần đầu
 
-Migration tạo hai xã và hai chi bộ Mường La, nhưng không tạo Auth users hay mật khẩu quản trị. Việc tạo Auth users cần diễn ra qua Supabase Auth để mật khẩu được Supabase băm; tuyệt đối không chèn mật khẩu vào SQL hoặc commit vào Git.
+Các migration tạo hai xã, hai chi bộ Mường La và 13 chi bộ Chiềng Lao, nhưng không tạo Auth users hay mật khẩu quản trị. Việc tạo Auth users cần diễn ra qua Supabase Auth để mật khẩu được Supabase băm; tuyệt đối không chèn mật khẩu vào SQL hoặc commit vào Git.
 
 ## Tạo Auth users
 
@@ -63,6 +63,6 @@ where username in ('admin@muongla', 'admin@chienglao', 'admin@');
 
 ## Nhập danh sách đảng viên
 
-Đăng nhập bằng quản trị chung, vào mục Đảng viên, chọn xã/chi bộ, rồi tải Excel để xem trước và nhập. Trình nhập chỉ gửi Họ và tên, ngày sinh; không đưa tệp Excel vào Git. Chiềng Lao chỉ nhập sau khi nhận đủ tên chi bộ và danh sách được xác nhận.
+Đăng nhập bằng quản trị chung, vào mục Đảng viên, chọn xã/chi bộ, rồi tải Excel để xem trước và nhập. Trình nhập chỉ gửi Họ và tên, ngày sinh; không đưa tệp Excel vào Git. Danh sách Mường La có 82 người ở hai chi bộ. Tệp Chiềng Lao có 93 người trên 13 trang tính; tệp không có ngày sinh nên trường này được lưu rỗng, không tự suy đoán. Kiểm tra phần xem trước và xác nhận các trường hợp trùng tên trước khi nhập.
 
 Trước khi mở dùng thật, từng xã cần tự cấu hình địa điểm và giờ điểm danh; ngân hàng câu hỏi của mỗi xã phải được nhập riêng. Mật khẩu thành viên mặc định được tạo ở máy chủ khi tạo tài khoản; thành viên có thể tự đổi sau khi đăng nhập.
