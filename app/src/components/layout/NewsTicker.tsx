@@ -15,15 +15,15 @@ export const NewsTicker: React.FC<NewsTickerProps> = ({
   const combinedText = messages.join('   •   ')
 
   return (
-    <div className="w-full bg-gold/9 border-y border-gold/30 py-1.5 overflow-hidden flex items-center relative select-none">
+    <div className="news-strip w-full bg-surface-muted border-b border-line py-3 px-4 flex flex-col md:flex-row gap-2 relative">
       {/* Ticker title block */}
-      <div className="bg-red-revolution text-white text-xs font-black px-3 py-1 uppercase tracking-wider z-10 flex items-center shrink-0 shadow-md">
+      <div className="text-primary dark:text-accent-text text-xs font-semibold shrink-0">
         Tin tức & Khẩu hiệu
       </div>
       
       {/* Scrolling Text Container */}
-      <div className="relative flex items-center w-full overflow-hidden">
-        <div className="animate-marquee whitespace-nowrap text-sm font-bold text-brown-text tracking-wide uppercase flex items-center pl-4">
+      <div className="relative flex items-center w-full min-w-0">
+        <div className="text-xs text-muted leading-relaxed">
           {combinedText}
         </div>
       </div>

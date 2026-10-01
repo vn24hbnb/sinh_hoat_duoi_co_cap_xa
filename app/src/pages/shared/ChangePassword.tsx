@@ -56,10 +56,10 @@ export const ChangePassword: React.FC = () => {
             <div className="w-16 h-16 rounded-full bg-red-revolution/10 flex items-center justify-center text-red-revolution mx-auto mb-4">
               <ShieldAlert size={32} />
             </div>
-            <h2 className="text-xl font-black text-red-deep dark:text-gold uppercase tracking-wider">
+            <h2 className="text-xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
               Đổi mật khẩu mới
             </h2>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs font-semibold text-muted dark:text-muted mt-1">
               Đổi mật khẩu là tùy chọn. Mật khẩu mới cần có ít nhất 6 ký tự.
             </p>
           </div>
@@ -69,11 +69,11 @@ export const ChangePassword: React.FC = () => {
 
               {/* New Password */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-brown-text dark:text-cream-light mb-1.5">
+                <label className="block text-xs font-bold normal-case tracking-normal text-brown-text dark:text-cream-light mb-1.5">
                   Mật khẩu mới
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted">
                     <KeyRound size={18} />
                   </div>
                   <input
@@ -86,7 +86,7 @@ export const ChangePassword: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-navy dark:hover:text-white"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted hover:text-navy dark:hover:text-white"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -95,11 +95,11 @@ export const ChangePassword: React.FC = () => {
 
               {/* Confirm New Password */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-brown-text dark:text-cream-light mb-1.5">
+                <label className="block text-xs font-bold normal-case tracking-normal text-brown-text dark:text-cream-light mb-1.5">
                   Xác nhận mật khẩu mới
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted">
                     <KeyRound size={18} />
                   </div>
                   <input

@@ -219,15 +219,15 @@ export const AdminAuditLogs: React.FC = () => {
       case 'IMPORT_QUESTIONS':
         return <span className="text-emerald-700 dark:text-emerald-400 font-bold">Nhập thành công <b>{meta.count} câu hỏi</b> {meta.method === 'file' ? 'từ file' : 'từ clipboard'}</span>
       case 'CREATE_QUESTION':
-        return <span className="text-slate-600 dark:text-slate-400 italic">" {meta.content} "</span>
+        return <span className="text-muted dark:text-muted italic">" {meta.content} "</span>
       case 'UPDATE_UI_SETTINGS':
         return <span className="text-pink-700 dark:text-pink-400 font-bold">Thay đổi thiết kế giao diện cổng thông tin</span>
       case 'UPDATE_MEETING_UI_SETTINGS':
         return <span className="text-purple-700 dark:text-purple-400">Cấu hình bán kính: <b>{meta.gps_radius_m}m</b>, hình thức: <b>{meta.attendance_methods}</b></span>
       case 'MARK_ATTENDANCE':
-        return <span className="text-slate-500">Tự động ghi nhận điểm danh (GPS: {meta.gpsValid ? 'Hợp lệ' : 'Cảnh báo'})</span>
+        return <span className="text-muted">Tự động ghi nhận điểm danh (GPS: {meta.gpsValid ? 'Hợp lệ' : 'Cảnh báo'})</span>
       default:
-        return <span className="text-slate-400 text-[10px] font-mono break-all">{JSON.stringify(meta)}</span>
+        return <span className="text-muted text-xs font-mono break-all">{JSON.stringify(meta)}</span>
     }
   }
 
@@ -253,11 +253,11 @@ export const AdminAuditLogs: React.FC = () => {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-xl font-black text-navy dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <h1 className="text-xl font-bold text-navy dark:text-white normal-case tracking-normal flex items-center gap-2">
               <ShieldAlert className="text-red-revolution dark:text-gold" />
               Nhật ký hệ thống (Audit Logs)
             </h1>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs font-semibold text-muted dark:text-muted mt-1">
               Theo dõi và kiểm tra vết toàn bộ các hoạt động điều hành và cấu hình của Ban Tổ chức
             </p>
           </div>
@@ -268,7 +268,7 @@ export const AdminAuditLogs: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             {/* Search */}
             <div className="relative w-full md:max-w-md">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted" />
               <input
                 type="text"
                 value={searchQuery}
@@ -280,14 +280,14 @@ export const AdminAuditLogs: React.FC = () => {
 
             {/* Filter actions */}
             <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-              <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Bộ lọc hành động:</span>
+              <span className="text-xs font-bold text-muted whitespace-nowrap">Bộ lọc hành động:</span>
               <select
                 value={actionFilter}
                 onChange={(e) => {
                   setActionFilter(e.target.value)
                   setPage(1)
                 }}
-                className="text-xs font-black rounded-lg border border-slate-200 dark:border-slate-800 py-2 px-3 dark:bg-slate-900/80 dark:text-white focus:outline-none focus:border-red-revolution"
+                className="text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 py-2 px-3 dark:bg-slate-900/80 dark:text-white focus:outline-none focus:border-red-revolution"
               >
                 <option value="ALL">Tất cả hành động</option>
                 <option value="LOGIN">Đăng nhập thành công</option>
@@ -316,14 +316,14 @@ export const AdminAuditLogs: React.FC = () => {
           ) : filteredLogs.length === 0 ? (
             <div className="py-20 text-center">
               <Database className="mx-auto text-slate-350 dark:text-slate-650 mb-3" size={48} />
-              <div className="text-sm font-bold text-slate-400">Không tìm thấy bản ghi nhật ký nào phù hợp.</div>
+              <div className="text-sm font-bold text-muted">Không tìm thấy bản ghi nhật ký nào phù hợp.</div>
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-xs font-semibold text-left">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase tracking-wider text-[9px]">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-muted normal-case tracking-normal text-xs">
                       <th className="py-3 px-4">Thời gian</th>
                       <th className="py-3 px-4">Hành động</th>
                       <th className="py-3 px-4">Người thực hiện (Actor)</th>
@@ -339,27 +339,27 @@ export const AdminAuditLogs: React.FC = () => {
 
                       return (
                         <tr key={log.id} className="border-b border-slate-50/50 dark:border-slate-900/20 hover:bg-red-revolution/5">
-                          <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
+                          <td className="py-3 px-4 text-muted whitespace-nowrap">
                             <span className="flex items-center gap-1">
-                              <Calendar size={12} className="text-slate-400" />
+                              <Calendar size={12} className="text-muted" />
                               {formattedTime}
                             </span>
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-wider ${actionStyle.color}`}>
+                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold border normal-case tracking-normal ${actionStyle.color}`}>
                               {actionStyle.text}
                             </span>
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-1 font-bold text-navy dark:text-white">
-                              <User size={12} className={isSystem ? "text-slate-400" : "text-red-revolution dark:text-gold"} />
+                              <User size={12} className={isSystem ? "text-muted" : "text-red-revolution dark:text-gold"} />
                               <span>{actorName}</span>
                             </div>
                             {log.actor?.username && !isSystem && (
-                              <span className="text-[9px] text-slate-400 font-mono font-medium">@{log.actor.username}</span>
+                              <span className="text-xs text-muted font-mono font-medium">@{log.actor.username}</span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-slate-700 dark:text-slate-350 max-w-md font-semibold">
+                          <td className="py-3 px-4 text-slate-700 dark:text-muted max-w-md font-semibold">
                             {renderMetadata(log)}
                           </td>
                         </tr>
@@ -371,7 +371,7 @@ export const AdminAuditLogs: React.FC = () => {
 
               {/* Pagination */}
               <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 mt-4">
-                <span className="text-xs text-slate-500 font-semibold">
+                <span className="text-xs text-muted font-semibold">
                   Hiển thị bản ghi {Math.min(totalCount, (page - 1) * PAGE_SIZE + 1)} - {Math.min(totalCount, page * PAGE_SIZE)} trong tổng số <b>{totalCount}</b> bản ghi
                 </span>
                 <div className="flex items-center gap-1">
@@ -382,7 +382,7 @@ export const AdminAuditLogs: React.FC = () => {
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="text-xs font-black px-3 py-1 bg-red-revolution/10 border border-red-revolution/20 dark:border-gold/20 dark:bg-gold/10 text-red-revolution dark:text-gold rounded-lg font-sans">
+                  <span className="text-xs font-bold px-3 py-1 bg-red-revolution/10 border border-red-revolution/20 dark:border-gold/20 dark:bg-gold/10 text-red-revolution dark:text-gold rounded-lg font-sans">
                     {page} / {totalPages}
                   </span>
                   <button

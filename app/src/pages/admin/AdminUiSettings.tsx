@@ -268,10 +268,10 @@ export const AdminUiSettings: React.FC = () => {
         {/* Page Title */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-xl md:text-3xl font-black text-red-deep dark:text-gold uppercase tracking-wider">
+            <h1 className="text-xl md:text-3xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
               Quản trị giao diện
             </h1>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+            <p className="text-xs font-bold text-muted dark:text-muted mt-1 normal-case tracking-normal">
               Tùy biến tiêu đề, slogan, bảng màu và hình ảnh hiển thị
             </p>
           </div>
@@ -281,10 +281,10 @@ export const AdminUiSettings: React.FC = () => {
         <div className="flex border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto scrollbar-none gap-2">
           <button
             onClick={() => setActiveTab('general')}
-            className={`flex items-center gap-2 py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs font-bold normal-case tracking-normal border-b-2 transition-all whitespace-nowrap ${
               activeTab === 'general'
                 ? 'border-red-revolution text-red-revolution dark:text-gold dark:border-gold'
-                : 'border-transparent text-slate-500 hover:text-red-revolution dark:hover:text-gold'
+                : 'border-transparent text-muted hover:text-red-revolution dark:hover:text-gold'
             }`}
           >
             <Settings size={16} />
@@ -293,10 +293,10 @@ export const AdminUiSettings: React.FC = () => {
           
           <button
             onClick={() => setActiveTab('appearance')}
-            className={`flex items-center gap-2 py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs font-bold normal-case tracking-normal border-b-2 transition-all whitespace-nowrap ${
               activeTab === 'appearance'
                 ? 'border-red-revolution text-red-revolution dark:text-gold dark:border-gold'
-                : 'border-transparent text-slate-500 hover:text-red-revolution dark:hover:text-gold'
+                : 'border-transparent text-muted hover:text-red-revolution dark:hover:text-gold'
             }`}
           >
             <Palette size={16} />
@@ -305,10 +305,10 @@ export const AdminUiSettings: React.FC = () => {
           
           <button
             onClick={() => setActiveTab('assets')}
-            className={`flex items-center gap-2 py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs font-bold normal-case tracking-normal border-b-2 transition-all whitespace-nowrap ${
               activeTab === 'assets'
                 ? 'border-red-revolution text-red-revolution dark:text-gold dark:border-gold'
-                : 'border-transparent text-slate-500 hover:text-red-revolution dark:hover:text-gold'
+                : 'border-transparent text-muted hover:text-red-revolution dark:hover:text-gold'
             }`}
           >
             <ImageIcon size={16} />
@@ -327,7 +327,7 @@ export const AdminUiSettings: React.FC = () => {
             <form onSubmit={handleSaveSettings} className="space-y-6">
               <div className="flex items-center gap-2 pb-3 border-b border-red-revolution/10">
                 <Type size={18} className="text-red-revolution dark:text-gold" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-red-deep dark:text-gold">
+                <h3 className="text-sm font-bold normal-case tracking-normal text-red-deep dark:text-gold">
                   Nội dung chữ hệ thống
                 </h3>
               </div>
@@ -335,7 +335,7 @@ export const AdminUiSettings: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Site Name */}
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-2">
+                  <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-2">
                     Tên phần mềm (Tiêu đề phụ / Slogan trang chủ)
                   </label>
                   <input
@@ -346,14 +346,14 @@ export const AdminUiSettings: React.FC = () => {
                     className="block w-full min-h-[44px] px-3.5 rounded-xl border border-red-revolution/25 bg-white/70 dark:bg-navy/35 text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-red-revolution/50 text-sm font-semibold"
                     placeholder="Sinh hoạt chính trị dưới nghi thức chào cờ"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1 font-semibold">
+                  <p className="text-xs text-muted mt-1 font-semibold">
                     Hiển thị ở phía dưới tiêu đề chính trên thanh banner header.
                   </p>
                 </div>
 
                 {/* Organization Name */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-2">
+                  <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-2">
                     Tiêu đề chính (Đơn vị tổ chức)
                   </label>
                   <input
@@ -364,14 +364,14 @@ export const AdminUiSettings: React.FC = () => {
                     className="block w-full min-h-[44px] px-3.5 rounded-xl border border-red-revolution/25 bg-white/70 dark:bg-navy/35 text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-red-revolution/50 text-sm font-semibold"
                     placeholder="ĐẢNG BỘ THANH TRA TỈNH SƠN LA"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1 font-semibold">
+                  <p className="text-xs text-muted mt-1 font-semibold">
                     Tên cơ quan, tổ chức hiển thị to nhất ở trung tâm Header.
                   </p>
                 </div>
 
                 {/* Slogan */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-2">
+                  <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-2">
                     Khẩu hiệu hành động
                   </label>
                   <input
@@ -382,14 +382,14 @@ export const AdminUiSettings: React.FC = () => {
                     className="block w-full min-h-[44px] px-3.5 rounded-xl border border-red-revolution/25 bg-white/70 dark:bg-navy/35 text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-red-revolution/50 text-sm font-semibold"
                     placeholder="ĐOÀN KẾT - KỶ CƯƠNG - GƯƠNG MẪU - TRÁCH NHIỆM"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1 font-semibold">
-                    Khẩu hiệu hành động chạy chữ hoặc hiển thị tại banner.
+                  <p className="text-xs text-muted mt-1 font-semibold">
+                    Khẩu hiệu hiển thị tại banner; dải thông tin được giữ tĩnh để dễ đọc.
                   </p>
                 </div>
 
                 {/* Welcome Message */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-2">
+                  <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-2">
                     Dòng mô tả chào mừng (Login/Home)
                   </label>
                   <textarea
@@ -403,7 +403,7 @@ export const AdminUiSettings: React.FC = () => {
 
                 {/* Primary Button Text */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-2">
+                  <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-2">
                     Tên nút hành động chính
                   </label>
                   <input
@@ -414,7 +414,7 @@ export const AdminUiSettings: React.FC = () => {
                     className="block w-full min-h-[44px] px-3.5 rounded-xl border border-red-revolution/25 bg-white/70 dark:bg-navy/35 text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-red-revolution/50 text-sm font-semibold"
                     placeholder="TIẾP TỤC"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1 font-semibold">
+                  <p className="text-xs text-muted mt-1 font-semibold">
                     Chữ hiển thị trên nút chính điều hướng luồng Đảng viên (vd: TIẾP TỤC, BẮT ĐẦU).
                   </p>
                 </div>
@@ -426,11 +426,11 @@ export const AdminUiSettings: React.FC = () => {
                     <div className="flex gap-2">
                       <Sparkles className="text-red-revolution dark:text-gold mt-0.5 shrink-0" size={18} />
                       <div>
-                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <p className="text-xs font-bold text-slate-700 dark:text-muted">
                           Bật hiệu ứng chuyển động nhẹ
                         </p>
-                        <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                          Khi bật, các hiệu ứng lướt sáng banner, chạy chữ và hiệu ứng trượt sẽ hoạt động.
+                        <p className="text-xs text-muted font-semibold mt-0.5">
+                          Khi bật, các hiệu ứng xuất hiện nhẹ và hoa văn chuyển động được sử dụng; dải thông tin vẫn đứng yên để dễ đọc.
                         </p>
                       </div>
                     </div>
@@ -450,11 +450,11 @@ export const AdminUiSettings: React.FC = () => {
                     <div className="flex gap-2">
                       <ImageIcon className="text-red-revolution dark:text-gold mt-0.5 shrink-0" size={18} />
                       <div>
-                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <p className="text-xs font-bold text-slate-700 dark:text-muted">
                           Cho phép hình nền Trống đồng xoay tròn
                         </p>
-                        <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                          Khi bật, hình nền Trống đồng chìm của trang chủ và các mục quản trị sẽ tự động xoay tròn chậm.
+                        <p className="text-xs text-muted font-semibold mt-0.5">
+                          Khi bật, hoa văn ở trang tổng quan xoay chậm. Màn nghiệp vụ dùng nền phẳng; ảnh nền trang chủ vẫn xuất hiện tại banner đảng viên.
                         </p>
                       </div>
                     </div>
@@ -475,10 +475,10 @@ export const AdminUiSettings: React.FC = () => {
                       <div className="flex gap-2">
                         <ImageIcon className="text-red-revolution dark:text-gold mt-0.5 shrink-0" size={18} />
                         <div>
-                          <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <p className="text-xs font-bold text-slate-700 dark:text-muted">
                             Tốc độ xoay của Trống đồng
                           </p>
-                          <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                          <p className="text-xs text-muted font-semibold mt-0.5">
                             Lựa chọn thời gian hoàn thành 1 vòng quay (Mức 160s là nhanh nhất).
                           </p>
                         </div>
@@ -514,14 +514,14 @@ export const AdminUiSettings: React.FC = () => {
             <form onSubmit={handleSaveSettings} className="space-y-6">
               <div className="flex items-center gap-2 pb-3 border-b border-red-revolution/10">
                 <Palette size={18} className="text-red-revolution dark:text-gold" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-red-deep dark:text-gold">
+                <h3 className="text-sm font-bold normal-case tracking-normal text-red-deep dark:text-gold">
                   Chủ đề & Màu sắc hiển thị
                 </h3>
               </div>
 
               {/* Preset Palettes */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-3">
+                <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-3">
                   Chọn nhanh bảng màu cách mạng đề xuất
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -540,7 +540,7 @@ export const AdminUiSettings: React.FC = () => {
                       }`}
                     >
                       <div>
-                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <p className="text-xs font-bold text-slate-700 dark:text-muted">
                           {p.name}
                         </p>
                         <div className="flex gap-1.5 mt-2">
@@ -562,7 +562,7 @@ export const AdminUiSettings: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 {/* Custom Color Picker: Primary */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-2">
+                  <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-2">
                     Màu chủ đạo (Theme Color)
                   </label>
                   <div className="flex gap-2">
@@ -576,14 +576,14 @@ export const AdminUiSettings: React.FC = () => {
                       type="text"
                       value={themeColor}
                       onChange={(e) => setThemeColor(e.target.value)}
-                      className="block flex-1 min-h-[44px] px-3.5 rounded-xl border border-red-revolution/25 bg-white/70 dark:bg-navy/35 text-navy dark:text-white focus:outline-none text-sm font-semibold uppercase"
+                      className="block flex-1 min-h-[44px] px-3.5 rounded-xl border border-red-revolution/25 bg-white/70 dark:bg-navy/35 text-navy dark:text-white focus:outline-none text-sm font-semibold normal-case"
                     />
                   </div>
                 </div>
 
                 {/* Custom Color Picker: Accent */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-2">
+                  <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-2">
                     Màu nhấn / Màu chữ Vàng (Accent Color)
                   </label>
                   <div className="flex gap-2">
@@ -597,14 +597,14 @@ export const AdminUiSettings: React.FC = () => {
                       type="text"
                       value={accentColor}
                       onChange={(e) => setAccentColor(e.target.value)}
-                      className="block flex-1 min-h-[44px] px-3.5 rounded-xl border border-red-revolution/25 bg-white/70 dark:bg-navy/35 text-navy dark:text-white focus:outline-none text-sm font-semibold uppercase"
+                      className="block flex-1 min-h-[44px] px-3.5 rounded-xl border border-red-revolution/25 bg-white/70 dark:bg-navy/35 text-navy dark:text-white focus:outline-none text-sm font-semibold normal-case"
                     />
                   </div>
                 </div>
 
                 {/* Font Selector */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-2">
+                  <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-2">
                     Font chữ hệ thống (Font Family)
                   </label>
                   <select
@@ -622,7 +622,7 @@ export const AdminUiSettings: React.FC = () => {
 
                 {/* Appearance mode Selector */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-cream-light mb-2">
+                  <label className="block text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-cream-light mb-2">
                     Chế độ Sáng / Tối (Appearance Mode)
                   </label>
                   <select
@@ -641,11 +641,11 @@ export const AdminUiSettings: React.FC = () => {
                   <div className="flex gap-2">
                     <Sparkles className="text-red-revolution dark:text-gold mt-0.5 shrink-0" size={18} />
                     <div>
-                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <p className="text-xs font-bold text-slate-700 dark:text-muted">
                         Bật hiệu ứng chuyển động nhẹ
                       </p>
-                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                        Khi bật, các hiệu ứng lướt sáng banner, chạy chữ và hiệu ứng trượt sẽ hoạt động.
+                      <p className="text-xs text-muted font-semibold mt-0.5">
+                        Khi bật, các hiệu ứng xuất hiện nhẹ và hoa văn chuyển động được sử dụng; dải thông tin vẫn đứng yên để dễ đọc.
                       </p>
                     </div>
                   </div>
@@ -665,11 +665,11 @@ export const AdminUiSettings: React.FC = () => {
                     <div className="flex gap-2">
                       <ImageIcon className="text-red-revolution dark:text-gold mt-0.5 shrink-0" size={18} />
                       <div>
-                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <p className="text-xs font-bold text-slate-700 dark:text-muted">
                           Cho phép hình nền Trống đồng xoay tròn
                         </p>
-                        <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                          Khi bật, hình nền Trống đồng chìm của trang chủ và các mục quản trị sẽ tự động xoay tròn chậm.
+                        <p className="text-xs text-muted font-semibold mt-0.5">
+                          Khi bật, hoa văn ở trang tổng quan xoay chậm. Màn nghiệp vụ dùng nền phẳng; ảnh nền trang chủ vẫn xuất hiện tại banner đảng viên.
                         </p>
                       </div>
                     </div>
@@ -690,10 +690,10 @@ export const AdminUiSettings: React.FC = () => {
                       <div className="flex gap-2">
                         <ImageIcon className="text-red-revolution dark:text-gold mt-0.5 shrink-0" size={18} />
                         <div>
-                          <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <p className="text-xs font-bold text-slate-700 dark:text-muted">
                             Tốc độ xoay của Trống đồng
                           </p>
-                          <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                          <p className="text-xs text-muted font-semibold mt-0.5">
                             Lựa chọn thời gian hoàn thành 1 vòng quay (Mức 160s là nhanh nhất).
                           </p>
                         </div>
@@ -729,7 +729,7 @@ export const AdminUiSettings: React.FC = () => {
               {/* Asset Type Selection Sub-tabs */}
               <div className="flex items-center gap-2 pb-3 border-b border-red-revolution/10 mb-5">
                 <ImageIcon size={18} className="text-red-revolution dark:text-gold" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-red-deep dark:text-gold">
+                <h3 className="text-sm font-bold normal-case tracking-normal text-red-deep dark:text-gold">
                   Kho tệp tin ảnh và hình nền
                 </h3>
               </div>
@@ -742,8 +742,8 @@ export const AdminUiSettings: React.FC = () => {
                     onClick={() => setAssetSubTab(type)}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                       assetSubTab === type
-                        ? 'bg-red-revolution text-white shadow-md'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                        ? 'bg-red-revolution text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-muted dark:text-muted hover:bg-slate-200'
                     }`}
                   >
                     {getFriendlySubTabName(type)}
@@ -752,7 +752,7 @@ export const AdminUiSettings: React.FC = () => {
               </div>
 
               {/* Info panel */}
-              <div className="flex gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-200 dark:border-slate-800 mb-6 text-xs text-slate-500 dark:text-slate-400 font-semibold">
+              <div className="flex gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-200 dark:border-slate-800 mb-6 text-xs text-muted dark:text-muted font-semibold">
                 <Info size={16} className="text-red-revolution shrink-0 mt-0.5" />
                 <div>
                   <p>
@@ -764,10 +764,10 @@ export const AdminUiSettings: React.FC = () => {
               {/* Opacity settings (Luôn hiển thị ở đầu Tab Kho hình ảnh) */}
               <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-200/50 dark:border-slate-800/40 space-y-4">
                 <div className="pb-2 border-b border-red-revolution/10">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-red-deep dark:text-gold">
+                  <h4 className="text-xs font-bold normal-case tracking-normal text-red-deep dark:text-gold">
                     Cài đặt tỷ lệ mờ của ảnh nền hệ thống
                   </h4>
-                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                  <p className="text-xs text-muted font-semibold mt-0.5">
                     Độ mờ của lớp phủ màu lên hình nền (giá trị phần trăm càng cao, ảnh nền càng mờ và chữ càng hiển thị rõ ràng).
                   </p>
                 </div>
@@ -776,10 +776,10 @@ export const AdminUiSettings: React.FC = () => {
                   {/* Home background opacity slider */}
                   <div className="flex flex-col gap-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      <span className="text-xs font-bold text-slate-700 dark:text-muted">
                         Độ mờ ảnh nền trang chủ:
                       </span>
-                      <span className="text-xs font-black text-red-revolution dark:text-gold">
+                      <span className="text-xs font-bold text-red-revolution dark:text-gold">
                         {homeOpacity}%
                       </span>
                     </div>
@@ -796,10 +796,10 @@ export const AdminUiSettings: React.FC = () => {
                   {/* Login background opacity slider */}
                   <div className="flex flex-col gap-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      <span className="text-xs font-bold text-slate-700 dark:text-muted">
                         Độ mờ ảnh nền đăng nhập:
                       </span>
-                      <span className="text-xs font-black text-red-revolution dark:text-gold">
+                      <span className="text-xs font-bold text-red-revolution dark:text-gold">
                         {loginOpacity}%
                       </span>
                     </div>
@@ -834,7 +834,7 @@ export const AdminUiSettings: React.FC = () => {
 
               {/* Grid of existing assets */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-1.5">
+                <h4 className="text-xs font-bold normal-case tracking-normal text-slate-700 dark:text-muted mb-4 flex items-center gap-1.5">
                   Danh sách {getFriendlySubTabName(assetSubTab)} đã tải lên
                 </h4>
 
@@ -843,7 +843,7 @@ export const AdminUiSettings: React.FC = () => {
                     <LoadingSpinner message="Đang nạp danh sách ảnh..." />
                   </div>
                 ) : assets.length === 0 ? (
-                  <div className="py-12 text-center text-xs font-bold text-slate-400 border border-slate-100 dark:border-slate-800/40 rounded-xl bg-slate-50/50 dark:bg-slate-950/10">
+                  <div className="py-12 text-center text-xs font-bold text-muted border border-slate-100 dark:border-slate-800/40 rounded-xl bg-slate-50/50 dark:bg-slate-950/10">
                     Chưa có hình ảnh nào được tải lên cho mục này.
                   </div>
                 ) : (
@@ -854,7 +854,7 @@ export const AdminUiSettings: React.FC = () => {
                         className={`relative rounded-xl overflow-hidden border bg-white dark:bg-slate-950 flex flex-col transition-all ${
                           asset.is_active
                             ? 'border-red-revolution shadow-glow ring-2 ring-red-revolution/25 dark:border-gold dark:ring-gold/25'
-                            : 'border-slate-200 dark:border-slate-800 hover:shadow-md'
+                            : 'border-slate-200 dark:border-slate-800 hover:shadow-sm'
                         }`}
                       >
                         {/* Image Thumbnail Container */}
@@ -865,7 +865,7 @@ export const AdminUiSettings: React.FC = () => {
                             className="max-h-full max-w-full object-contain transition-transform group-hover:scale-[1.02]"
                           />
                           {asset.is_active && (
-                            <div className="absolute top-2 left-2 bg-emerald-500 text-white rounded-full p-1 shadow-md" title="Đang kích hoạt">
+                            <div className="absolute top-2 left-2 bg-emerald-500 text-white rounded-full p-1 shadow-sm" title="Đang kích hoạt">
                               <Check size={14} />
                             </div>
                           )}
@@ -874,15 +874,15 @@ export const AdminUiSettings: React.FC = () => {
                         {/* Image Info */}
                         <div className="p-3 flex-1 flex flex-col justify-between gap-3">
                           <div>
-                            <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate" title={asset.asset_name}>
+                            <p className="text-xs font-bold text-slate-700 dark:text-muted truncate" title={asset.asset_name}>
                               {asset.asset_name}
                             </p>
                             {asset.description && (
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1 line-clamp-2">
+                              <p className="text-xs text-muted dark:text-muted font-semibold mt-1 line-clamp-2">
                                 {asset.description}
                               </p>
                             )}
-                            <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 font-bold">
+                            <p className="text-xs text-muted dark:text-muted mt-1 font-bold">
                               Kích thước: {asset.size_bytes ? `${(asset.size_bytes / 1024).toFixed(1)} KB` : 'N/A'}
                             </p>
                           </div>
@@ -892,7 +892,7 @@ export const AdminUiSettings: React.FC = () => {
                             {asset.is_active ? (
                               <button
                                 disabled
-                                className="flex-1 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold flex items-center justify-center gap-1 border border-emerald-200 dark:border-emerald-900/30"
+                                className="flex-1 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200 dark:border-emerald-900/30"
                               >
                                 <Check size={12} />
                                 Đang sử dụng
@@ -900,7 +900,7 @@ export const AdminUiSettings: React.FC = () => {
                             ) : (
                               <button
                                 onClick={() => handleActivateAsset(asset.id)}
-                                className="flex-1 py-1.5 rounded-lg bg-red-revolution hover:bg-red-dark text-white text-[10px] font-bold transition-colors shadow-sm"
+                                className="flex-1 py-1.5 rounded-lg bg-red-revolution hover:bg-red-dark text-white text-xs font-bold transition-colors shadow-sm"
                               >
                                 Sử dụng
                               </button>
@@ -908,7 +908,7 @@ export const AdminUiSettings: React.FC = () => {
                             <button
                               onClick={() => handleDeleteAsset(asset)}
                               disabled={asset.is_active}
-                              className={`p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 transition-colors ${
+                              className={`p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-muted dark:text-muted transition-colors ${
                                 asset.is_active
                                   ? 'opacity-30 cursor-not-allowed'
                                   : 'hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 hover:border-rose-200'

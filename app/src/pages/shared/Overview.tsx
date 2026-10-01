@@ -52,13 +52,13 @@ export const Overview: React.FC = () => {
           {/* Main Informational Columns */}
           <div className="lg:col-span-2 space-y-6">
             <GlassCard className="animate-fade-in">
-              <h2 className="text-lg md:text-xl font-black text-red-deep dark:text-gold uppercase tracking-wider mb-4 border-b border-red-revolution/10 pb-2">
+              <h2 className="text-lg md:text-xl font-bold text-red-deep dark:text-gold normal-case tracking-normal mb-4 border-b border-red-revolution/10 pb-2">
                 Giới thiệu chung
               </h2>
-              <p className="text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+              <p className="text-xs md:text-sm font-semibold text-slate-700 dark:text-muted leading-relaxed mb-4">
                 Sinh hoạt chính trị dưới nghi thức chào cờ là hoạt động nề nếp, trang nghiêm, góp phần giáo dục truyền thống cách mạng, nâng cao lòng yêu nước, lòng tự hào dân tộc và ý thức trách nhiệm của mỗi cán bộ, đảng viên.
               </p>
-              <p className="text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-300 leading-relaxed">
+              <p className="text-xs md:text-sm font-semibold text-slate-700 dark:text-muted leading-relaxed">
                 Hệ thống Sinh hoạt chính trị điện tử hỗ trợ Ban tổ chức quản lý nhanh danh sách tham dự, tối ưu quy trình điểm danh tọa độ GPS và số hóa các bài thu hoạch, câu hỏi nhận thức nhanh giúp nâng cao chất lượng học tập Nghị quyết Đảng bộ.
               </p>
             </GlassCard>
@@ -70,10 +70,10 @@ export const Overview: React.FC = () => {
                   <ShieldCheck size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-navy dark:text-white uppercase mb-1">
+                  <h3 className="font-bold text-sm text-navy dark:text-white normal-case mb-1">
                     Gương mẫu - Kỷ cương
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-normal">
+                  <p className="text-xs text-muted dark:text-muted font-semibold leading-normal">
                     Mỗi đảng viên nghiêm túc thực hiện nghĩa vụ tham gia sinh hoạt, đúng giờ và chấp hành đúng quy định phòng họp.
                   </p>
                 </div>
@@ -84,10 +84,10 @@ export const Overview: React.FC = () => {
                   <BookOpen size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-navy dark:text-white uppercase mb-1">
+                  <h3 className="font-bold text-sm text-navy dark:text-white normal-case mb-1">
                     Học tập không ngừng
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-normal">
+                  <p className="text-xs text-muted dark:text-muted font-semibold leading-normal">
                     Tiếp thu đầy đủ các nội dung chuyên đề chính trị dưới cờ và hoàn thành xuất sắc các bài thu hoạch trắc nghiệm.
                   </p>
                 </div>
@@ -101,10 +101,10 @@ export const Overview: React.FC = () => {
               <div className="w-14 h-14 rounded-full bg-gold/10 text-gold flex items-center justify-center mb-4 border border-gold/30">
                 <Calendar size={28} />
               </div>
-              <h3 className="text-base font-bold text-red-deep dark:text-gold uppercase tracking-wider mb-2">
+              <h3 className="text-base font-bold text-red-deep dark:text-gold normal-case tracking-normal mb-2">
                 Sinh hoạt chính trị
               </h3>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+              <p className="text-xs font-semibold text-muted dark:text-muted leading-relaxed mb-6">
                 Đồng chí đảng viên vui lòng bấm nút bên dưới để tiến hành điểm danh trực tuyến và hoàn thành bài kiểm tra nhận thức chuyên đề tháng.
               </p>
               
@@ -117,9 +117,9 @@ export const Overview: React.FC = () => {
             <GlassCard className="p-6">
               <div className="flex items-center gap-2 text-gold mb-3">
                 <Award size={20} />
-                <span className="text-xs font-black uppercase tracking-wider">Thông điệp thi đua</span>
+                <span className="text-xs font-bold normal-case tracking-normal">Thông điệp thi đua</span>
               </div>
-              <blockquote className="border-l-2 border-gold pl-3 text-xs italic font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+              <blockquote className="border-l-2 border-gold pl-3 text-xs italic font-semibold text-muted dark:text-muted leading-relaxed">
                 "Đoàn kết, gương mẫu, trách nhiệm; hoàn thành tốt nhiệm vụ chính trị được giao."
               </blockquote>
             </GlassCard>

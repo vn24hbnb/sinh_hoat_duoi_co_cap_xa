@@ -688,16 +688,16 @@ export const QuestionManager: React.FC = () => {
         
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-xl md:text-2xl font-black text-red-deep dark:text-gold uppercase tracking-wider">
+            <h1 className="text-xl md:text-2xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
               Ngân hàng đề thi trắc nghiệm
             </h1>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs font-semibold text-muted dark:text-muted mt-0.5">
               Tạo lập bộ đề thi chuyên đề và import câu hỏi trực tiếp từ file Excel/Word/CSV trên máy tính, điện thoại
             </p>
           </div>
           <RevolutionaryButton 
             onClick={() => setShowCreateBankModal(true)}
-            className="flex items-center gap-1.5 shadow-md"
+            className="flex items-center gap-1.5 shadow-sm"
           >
             <Plus size={18} /> Tạo bộ đề mới
           </RevolutionaryButton>
@@ -710,11 +710,11 @@ export const QuestionManager: React.FC = () => {
           {/* CỘT TRÁI: DANH SÁCH BỘ ĐỀ */}
           <div className="lg:col-span-4 space-y-4">
             <GlassCard>
-              <h3 className="text-xs font-black text-brown-text dark:text-cream-light uppercase tracking-wider mb-3 pb-2 border-b border-red-revolution/10">
+              <h3 className="text-xs font-bold text-brown-text dark:text-cream-light normal-case tracking-normal mb-3 pb-2 border-b border-red-revolution/10">
                 Danh sách bộ đề thi ({banks.length})
               </h3>
               {banks.length === 0 ? (
-                <div className="text-center py-6 text-xs text-slate-500 font-semibold">
+                <div className="text-center py-6 text-xs text-muted font-semibold">
                   Chưa có bộ đề thi nào. Hãy tạo bộ đề mới để bắt đầu.
                 </div>
               ) : (
@@ -731,7 +731,7 @@ export const QuestionManager: React.FC = () => {
                     >
                       <div className="flex-1 min-w-0 pr-2">
                         <h4 className="text-xs font-bold truncate">{b.name}</h4>
-                        <p className="text-[10px] text-slate-500 truncate font-medium mt-0.5">
+                        <p className="text-xs text-muted truncate font-medium mt-0.5">
                           {b.description || 'Không có mô tả'}
                         </p>
                       </div>
@@ -741,12 +741,12 @@ export const QuestionManager: React.FC = () => {
                             e.stopPropagation()
                             handleDeleteBank(b.id, b.name)
                           }}
-                          className="p-1 text-slate-400 hover:text-red-revolution rounded transition-colors"
+                          className="p-1 text-muted hover:text-red-revolution rounded transition-colors"
                           title="Xóa bộ đề"
                         >
                           <Trash2 size={13} />
                         </button>
-                        <ChevronRight size={14} className="text-slate-400" />
+                        <ChevronRight size={14} className="text-muted" />
                       </div>
                     </div>
                   ))}
@@ -761,19 +761,19 @@ export const QuestionManager: React.FC = () => {
               <GlassCard className="h-full flex flex-col">
                 <div className="border-b border-red-revolution/10 pb-4 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <span className="bg-red-revolution/10 text-red-deep dark:text-gold text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                    <span className="bg-red-revolution/10 text-red-deep dark:text-gold text-xs px-2 py-0.5 rounded font-bold normal-case tracking-normal">
                       Bộ đề đang chọn
                     </span>
                     <h2 className="text-sm font-bold text-navy dark:text-white mt-1">
                       {selectedBank.name}
                     </h2>
                     {selectedBank.description && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                      <p className="text-xs text-muted dark:text-muted font-semibold mt-0.5">
                         {selectedBank.description}
                       </p>
                     )}
                   </div>
-                  <div className="text-xs font-black text-brown-text dark:text-cream-light bg-slate-100 dark:bg-navy/40 px-3 py-1.5 rounded-lg shrink-0">
+                  <div className="text-xs font-bold text-brown-text dark:text-cream-light bg-slate-100 dark:bg-navy/40 px-3 py-1.5 rounded-lg shrink-0">
                     Sĩ số câu hỏi: {questions.length}
                   </div>
                 </div>
@@ -785,7 +785,7 @@ export const QuestionManager: React.FC = () => {
                     className={`py-2 px-3 border-b-2 transition-all flex items-center gap-1.5 ${
                       activeTab === 'list' 
                         ? 'border-red-revolution text-red-revolution dark:text-gold' 
-                        : 'border-transparent text-slate-500 hover:text-navy dark:hover:text-white'
+                        : 'border-transparent text-muted hover:text-navy dark:hover:text-white'
                     }`}
                   >
                     <BookOpen size={14} /> Danh sách câu hỏi
@@ -795,7 +795,7 @@ export const QuestionManager: React.FC = () => {
                     className={`py-2 px-3 border-b-2 transition-all flex items-center gap-1.5 ${
                       activeTab === 'add_single' 
                         ? 'border-red-revolution text-red-revolution dark:text-gold' 
-                        : 'border-transparent text-slate-500 hover:text-navy dark:hover:text-white'
+                        : 'border-transparent text-muted hover:text-navy dark:hover:text-white'
                     }`}
                   >
                     <Plus size={14} /> Nhập lẻ câu hỏi
@@ -805,7 +805,7 @@ export const QuestionManager: React.FC = () => {
                     className={`py-2 px-3 border-b-2 transition-all flex items-center gap-1.5 ${
                       activeTab === 'upload_file' 
                         ? 'border-red-revolution text-red-revolution dark:text-gold' 
-                        : 'border-transparent text-slate-500 hover:text-navy dark:hover:text-white'
+                        : 'border-transparent text-muted hover:text-navy dark:hover:text-white'
                     }`}
                   >
                     <Upload size={14} /> Tải file Excel/Word/CSV
@@ -815,7 +815,7 @@ export const QuestionManager: React.FC = () => {
                     className={`py-2 px-3 border-b-2 transition-all flex items-center gap-1.5 ${
                       activeTab === 'paste_excel' 
                         ? 'border-red-revolution text-red-revolution dark:text-gold' 
-                        : 'border-transparent text-slate-500 hover:text-navy dark:hover:text-white'
+                        : 'border-transparent text-muted hover:text-navy dark:hover:text-white'
                     }`}
                   >
                     <Clipboard size={14} /> Dán nhanh bảng
@@ -833,13 +833,13 @@ export const QuestionManager: React.FC = () => {
                           <LoadingSpinner message="Đang tải danh sách câu hỏi..." />
                         </div>
                       ) : questions.length === 0 ? (
-                        <div className="text-center py-12 text-xs text-slate-500 font-semibold bg-slate-50 dark:bg-navy/10 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                        <div className="text-center py-12 text-xs text-muted font-semibold bg-slate-50 dark:bg-navy/10 rounded-card border border-dashed border-slate-200 dark:border-slate-800">
                           Bộ đề này chưa có câu hỏi nào.
                           <div className="mt-3 flex justify-center gap-2">
-                            <RevolutionaryButton onClick={() => setActiveTab('add_single')} variant="secondary" className="text-[10px] py-1.5 px-3">
+                            <RevolutionaryButton onClick={() => setActiveTab('add_single')} variant="secondary" className="text-xs py-1.5 px-3">
                               Thêm câu hỏi lẻ
                             </RevolutionaryButton>
-                            <RevolutionaryButton onClick={() => setActiveTab('upload_file')} className="text-[10px] py-1.5 px-3">
+                            <RevolutionaryButton onClick={() => setActiveTab('upload_file')} className="text-xs py-1.5 px-3">
                               Tải file Excel/Word
                             </RevolutionaryButton>
                           </div>
@@ -850,7 +850,7 @@ export const QuestionManager: React.FC = () => {
                             <div key={q.id} className="p-3 bg-slate-50 dark:bg-navy/40 rounded-xl border border-slate-100 dark:border-slate-800 text-xs text-navy dark:text-white relative group">
                               <button 
                                 onClick={() => handleDeleteQuestion(q.id)}
-                                className="absolute top-3 right-3 p-1 bg-white dark:bg-navy border border-slate-100 dark:border-slate-800 rounded text-slate-400 hover:text-red-revolution hover:border-red-revolution/20 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                                className="absolute top-3 right-3 p-1 bg-white dark:bg-navy border border-slate-100 dark:border-slate-800 rounded text-muted hover:text-red-revolution hover:border-red-revolution/20 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                                 title="Xóa câu hỏi"
                               >
                                 <Trash2 size={12} />
@@ -861,7 +861,7 @@ export const QuestionManager: React.FC = () => {
                                 <span className="leading-relaxed">{q.content}</span>
                               </div>
                               
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2.5 font-medium pl-6 text-slate-600 dark:text-slate-300">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2.5 font-medium pl-6 text-muted dark:text-muted">
                                 <div className={q.correct_option === 'A' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ''}>
                                   A. {q.option_a}
                                 </div>
@@ -876,10 +876,10 @@ export const QuestionManager: React.FC = () => {
                                 </div>
                               </div>
                               
-                              <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 pl-6 flex flex-wrap gap-2 text-[10px] font-bold text-slate-400">
-                                <span>Đáp án đúng: <b className="text-emerald-600 dark:text-emerald-400 text-xs bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded">{q.correct_option}</b></span>
+                              <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 pl-6 flex flex-wrap gap-2 text-xs font-bold text-muted">
+                                <span className="inline-flex items-center gap-1"><CheckCircle size={16} aria-hidden="true"/>Đáp án đúng: <b className="text-success text-xs bg-success-bg px-2 py-1 rounded">{q.correct_option}</b></span>
                                 {q.explanation && (
-                                  <span className="italic font-medium text-slate-500">
+                                  <span className="italic font-medium text-muted">
                                     - Giải thích: {q.explanation}
                                   </span>
                                 )}
@@ -895,7 +895,7 @@ export const QuestionManager: React.FC = () => {
                   {activeTab === 'add_single' && (
                     <form onSubmit={handleAddSingleQuestion} className="space-y-3 text-xs md:text-sm font-semibold">
                       <div>
-                        <label className="block text-slate-500 mb-1">Nội dung câu hỏi *</label>
+                        <label className="block text-muted mb-1">Nội dung câu hỏi *</label>
                         <textarea
                           required
                           rows={2}
@@ -908,7 +908,7 @@ export const QuestionManager: React.FC = () => {
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-500 mb-1">Đáp án A *</label>
+                          <label className="block text-muted mb-1">Đáp án A *</label>
                           <input
                             type="text"
                             required
@@ -919,7 +919,7 @@ export const QuestionManager: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-500 mb-1">Đáp án B *</label>
+                          <label className="block text-muted mb-1">Đáp án B *</label>
                           <input
                             type="text"
                             required
@@ -930,7 +930,7 @@ export const QuestionManager: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-500 mb-1">Đáp án C *</label>
+                          <label className="block text-muted mb-1">Đáp án C *</label>
                           <input
                             type="text"
                             required
@@ -941,7 +941,7 @@ export const QuestionManager: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-500 mb-1">Đáp án D *</label>
+                          <label className="block text-muted mb-1">Đáp án D *</label>
                           <input
                             type="text"
                             required
@@ -955,7 +955,7 @@ export const QuestionManager: React.FC = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="sm:col-span-1">
-                          <label className="block text-slate-500 mb-1">Đáp án đúng *</label>
+                          <label className="block text-muted mb-1">Đáp án đúng *</label>
                           <select
                             value={qCorrect}
                             onChange={(e) => setQCorrect(e.target.value)}
@@ -968,7 +968,7 @@ export const QuestionManager: React.FC = () => {
                           </select>
                         </div>
                         <div className="sm:col-span-2">
-                          <label className="block text-slate-500 mb-1">Giải thích đáp án</label>
+                          <label className="block text-muted mb-1">Giải thích đáp án</label>
                           <input
                             type="text"
                             value={qExplanation}
@@ -983,7 +983,7 @@ export const QuestionManager: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setActiveTab('list')}
-                          className="px-4 py-2 text-xs font-bold text-slate-500 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 transition-colors"
+                          className="px-4 py-2 text-xs font-bold text-muted border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 transition-colors"
                         >
                           Hủy bỏ
                         </button>
@@ -1000,17 +1000,17 @@ export const QuestionManager: React.FC = () => {
                       
                       {/* Bảng hướng dẫn cấu trúc file */}
                       <div className="bg-slate-50 dark:bg-navy/35 border border-slate-200 dark:border-slate-800/80 rounded-xl p-3.5 space-y-2">
-                        <h4 className="font-black text-red-deep dark:text-gold flex items-center gap-1 text-[11px] uppercase tracking-wider">
+                        <h4 className="font-bold text-red-deep dark:text-gold flex items-center gap-1 text-xs normal-case tracking-normal">
                           <FileText size={15} /> BIỂU MẪU CẤU TRÚC FILE IMPORT:
                         </h4>
-                        <p className="text-[10px] text-slate-500 font-medium">
+                        <p className="text-xs text-muted font-medium">
                           File Excel hoặc Word cần chứa bảng thông tin gồm ít nhất 6 cột theo thứ tự bắt buộc:
                         </p>
                         
                         <div className="overflow-x-auto">
-                          <table className="min-w-full border border-slate-200 dark:border-slate-700 text-[10px] text-left">
+                          <table className="min-w-full border border-slate-200 dark:border-slate-700 text-xs text-left">
                             <thead>
-                              <tr className="bg-red-revolution/5 text-red-deep dark:text-gold border-b border-slate-200 dark:border-slate-700 font-black">
+                              <tr className="bg-red-revolution/5 text-red-deep dark:text-gold border-b border-slate-200 dark:border-slate-700 font-bold">
                                 <th className="p-1.5 border-r border-slate-200 dark:border-slate-700">Cột 1 (Nội dung)</th>
                                 <th className="p-1.5 border-r border-slate-200 dark:border-slate-700">Cột 2 (A)</th>
                                 <th className="p-1.5 border-r border-slate-200 dark:border-slate-700">Cột 3 (B)</th>
@@ -1028,19 +1028,19 @@ export const QuestionManager: React.FC = () => {
                                 <td className="p-1.5 border-r border-slate-200 dark:border-slate-700">Năm 1954</td>
                                 <td className="p-1.5 border-r border-slate-200 dark:border-slate-700">Năm 1975</td>
                                 <td className="p-1.5 border-r border-slate-200 dark:border-slate-700 text-center text-emerald-600 font-bold">A</td>
-                                <td className="p-1.5 text-slate-400">Ngày 3/2/1930</td>
+                                <td className="p-1.5 text-muted">Ngày 3/2/1930</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
-                        <p className="text-[9px] text-slate-400 italic">
+                        <p className="text-xs text-muted italic">
                           * Lưu ý: File Word (.docx) cần tổ chức dạng bảng biểu (Table). File Excel (.xlsx, .xls) bắt đầu từ Sheet đầu tiên. File CSV (.csv) mã hóa UTF-8.
                         </p>
                       </div>
 
                       {/* VÙNG UPLOAD CHỌN FILE */}
                       {previewQuestions.length === 0 ? (
-                        <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center bg-slate-50/50 dark:bg-navy/10 hover:bg-red-revolution/5 hover:border-red-revolution/30 transition-all cursor-pointer relative">
+                        <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-card p-8 text-center bg-slate-50/50 dark:bg-navy/10 hover:bg-red-revolution/5 hover:border-red-revolution/30 transition-all cursor-pointer relative">
                           <input
                             type="file"
                             accept=".xlsx, .xls, .docx, .csv"
@@ -1051,14 +1051,14 @@ export const QuestionManager: React.FC = () => {
                             <Upload size={24} />
                           </div>
                           <h4 className="text-xs font-bold text-navy dark:text-white mb-1">Click để tải file từ điện thoại / máy tính</h4>
-                          <p className="text-[10px] text-slate-500 font-semibold">Chấp nhận file Excel (.xlsx/.xls), Word (.docx) hoặc CSV (.csv)</p>
+                          <p className="text-xs text-muted font-semibold">Chấp nhận file Excel (.xlsx/.xls), Word (.docx) hoặc CSV (.csv)</p>
                         </div>
                       ) : (
                         /* MÀN HÌNH PREVIEW CÂU HỎI TRƯỚC KHI LƯU */
                         <div className="space-y-3 animate-fade-in">
                           <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 p-3 rounded-xl">
                             <div className="min-w-0">
-                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-bold">Xác nhận nạp file:</span>
+                              <span className="text-xs text-emerald-600 dark:text-emerald-400 block font-bold">Xác nhận nạp file:</span>
                               <span className="text-xs font-bold text-navy dark:text-white truncate block">{fileName}</span>
                             </div>
                             <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 shrink-0 bg-emerald-100 dark:bg-emerald-900/40 px-2.5 py-1 rounded-lg">
@@ -1067,8 +1067,8 @@ export const QuestionManager: React.FC = () => {
                           </div>
 
                           <div className="max-h-[220px] overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-xl">
-                            <table className="min-w-full text-[11px] text-left">
-                              <thead className="bg-slate-100 dark:bg-navy/60 text-slate-500 font-bold sticky top-0">
+                            <table className="min-w-full text-xs text-left">
+                              <thead className="bg-slate-100 dark:bg-navy/60 text-muted font-bold sticky top-0">
                                 <tr>
                                   <th className="p-2 w-8 text-center">STT</th>
                                   <th className="p-2">Câu hỏi</th>
@@ -1079,15 +1079,15 @@ export const QuestionManager: React.FC = () => {
                               <tbody>
                                 {previewQuestions.map((q, index) => (
                                   <tr key={index} className="border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50 dark:hover:bg-navy/20">
-                                    <td className="p-2 text-center text-slate-400 font-bold">{index + 1}</td>
+                                    <td className="p-2 text-center text-muted font-bold">{index + 1}</td>
                                     <td className="p-2">
                                       <div className="font-bold text-navy dark:text-white">{q.content}</div>
-                                      <div className="text-[10px] text-slate-400 mt-0.5">
+                                      <div className="text-xs text-muted mt-0.5">
                                         A: {q.optionA} | B: {q.optionB} | C: {q.optionC} | D: {q.optionD}
                                       </div>
                                     </td>
                                     <td className="p-2 text-center text-emerald-600 font-bold">{q.correctOption}</td>
-                                    <td className="p-2 text-slate-500 italic text-[10px] truncate max-w-[150px]">{q.explanation || '-'}</td>
+                                    <td className="p-2 text-muted italic text-xs truncate max-w-[150px]">{q.explanation || '-'}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -1101,7 +1101,7 @@ export const QuestionManager: React.FC = () => {
                                 setPreviewQuestions([])
                                 setFileName('')
                               }}
-                              className="px-3.5 py-2 text-xs font-bold text-slate-500 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50"
+                              className="px-3.5 py-2 text-xs font-bold text-muted border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50"
                             >
                               Hủy bỏ / Tải lại
                             </button>
@@ -1122,23 +1122,23 @@ export const QuestionManager: React.FC = () => {
                   {activeTab === 'paste_excel' && (
                     <div className="space-y-4">
                       <div className="bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 p-3 rounded-xl border border-amber-200 text-xs font-medium leading-relaxed">
-                        <p className="font-bold flex items-center gap-1.5 mb-1 text-[11px]">
+                        <p className="font-bold flex items-center gap-1.5 mb-1 text-xs">
                           <HelpCircle size={14} className="shrink-0" /> DÁN NHANH DỮ LIỆU COPY TỪ WORD / EXCEL:
                         </p>
-                        <ol className="list-decimal pl-4 space-y-1 text-[10px]">
+                        <ol className="list-decimal pl-4 space-y-1 text-xs">
                           <li>Copy các dòng bảng dữ liệu trong Word hoặc Excel (gồm các cột Câu hỏi, A, B, C, D, Đáp án đúng, Giải thích).</li>
                           <li>Dán trực tiếp (Ctrl+V) vào khung text bên dưới rồi bấm Import.</li>
                         </ol>
                       </div>
 
                       <div>
-                        <label className="block text-slate-500 mb-1 text-xs font-bold">Dán dữ liệu bảng tại đây:</label>
+                        <label className="block text-muted mb-1 text-xs font-bold">Dán dữ liệu bảng tại đây:</label>
                         <textarea
                           rows={6}
                           value={pasteText}
                           onChange={(e) => setPasteText(e.target.value)}
                           placeholder="Ví dụ:&#10;Câu hỏi một	Đáp án A	Đáp án B	Đáp án C	Đáp án D	A	Giải thích câu 1&#10;Câu hỏi hai	A	B	C	D	B"
-                          className="w-full p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white outline-none focus:border-red-revolution font-mono text-[11px] leading-normal resize-none"
+                          className="w-full p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white outline-none focus:border-red-revolution font-mono text-xs leading-normal resize-none"
                         />
                       </div>
 
@@ -1149,7 +1149,7 @@ export const QuestionManager: React.FC = () => {
                             setPasteText('')
                             setActiveTab('list')
                           }}
-                          className="px-4 py-2 text-xs font-bold text-slate-500 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 transition-colors"
+                          className="px-4 py-2 text-xs font-bold text-muted border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 transition-colors"
                         >
                           Hủy bỏ
                         </button>
@@ -1171,7 +1171,7 @@ export const QuestionManager: React.FC = () => {
                   <BookOpen size={28} />
                 </div>
                 <h3 className="text-sm font-bold text-navy dark:text-white mb-1">Chưa chọn bộ đề thi</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto font-semibold">
+                <p className="text-xs text-muted max-w-sm mx-auto font-semibold">
                   Vui lòng chọn một bộ đề ở danh sách bên trái hoặc bấm tạo bộ đề thi mới để quản lý và thiết lập câu hỏi.
                 </p>
               </GlassCard>
@@ -1182,23 +1182,23 @@ export const QuestionManager: React.FC = () => {
 
       {/* Modal tạo bộ đề mới */}
       {showCreateBankModal && (
-        <div className="fixed inset-0 bg-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <GlassCard className="max-w-md w-full border border-red-revolution/20 shadow-2xl relative">
+        <div className="fixed inset-0 bg-navy/60 backdrop-blur-none flex items-center justify-center p-4 z-50 animate-fade-in">
+          <GlassCard className="max-w-md w-full border border-red-revolution/20 shadow-sm relative">
             <button 
               onClick={() => setShowCreateBankModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-red-revolution transition-colors"
+              className="absolute top-4 right-4 text-muted hover:text-red-revolution transition-colors"
             >
               <X size={20} />
             </button>
 
             <div className="flex items-center gap-2 text-red-revolution dark:text-gold mb-6 border-b border-red-revolution/10 pb-3">
               <BookOpen size={20} />
-              <h3 className="text-sm font-black uppercase tracking-wider">Tạo bộ đề thi mới</h3>
+              <h3 className="text-sm font-bold normal-case tracking-normal">Tạo bộ đề thi mới</h3>
             </div>
 
             <form onSubmit={handleCreateBank} className="space-y-4 text-xs md:text-sm font-semibold">
               <div>
-                <label className="block text-slate-500 mb-1">Tên bộ đề (Ngân hàng câu hỏi) *</label>
+                <label className="block text-muted mb-1">Tên bộ đề (Ngân hàng câu hỏi) *</label>
                 <input
                   type="text"
                   required
@@ -1210,7 +1210,7 @@ export const QuestionManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-500 mb-1">Mô tả bộ đề</label>
+                <label className="block text-muted mb-1">Mô tả bộ đề</label>
                 <textarea
                   value={newBankDesc}
                   onChange={(e) => setNewBankDesc(e.target.value)}
@@ -1224,7 +1224,7 @@ export const QuestionManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateBankModal(false)}
-                  className="flex-1 py-3 text-xs font-bold uppercase rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 transition-colors"
+                  className="flex-1 py-3 text-xs font-bold normal-case rounded-xl border border-slate-200 dark:border-slate-800 text-muted hover:bg-slate-50 transition-colors"
                 >
                   Hủy bỏ
                 </button>

@@ -17,13 +17,13 @@ export const NotFound: React.FC = () => {
           <div className="w-16 h-16 rounded-full bg-red-revolution/10 flex items-center justify-center text-red-revolution mb-4">
             <AlertCircle size={36} />
           </div>
-          <h1 className="text-3xl font-black text-red-deep dark:text-gold uppercase tracking-wider mb-2">
+          <h1 className="text-3xl font-bold text-red-deep dark:text-gold normal-case tracking-normal mb-2">
             404
           </h1>
-          <h2 className="text-lg font-bold text-navy dark:text-white uppercase mb-4">
+          <h2 className="text-lg font-bold text-navy dark:text-white normal-case mb-4">
             Không tìm thấy trang
           </h2>
-          <p className="text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+          <p className="text-xs md:text-sm font-semibold text-muted dark:text-muted leading-relaxed mb-6">
             Đồng chí đã truy cập vào đường dẫn không tồn tại trên hệ thống. Vui lòng quay lại trang chủ.
           </p>
           <RevolutionaryButton onClick={() => navigate('/')} fullWidth>

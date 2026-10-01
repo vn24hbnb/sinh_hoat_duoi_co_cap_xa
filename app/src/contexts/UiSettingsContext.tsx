@@ -43,17 +43,17 @@ export const UiSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     // 1. Color Palette overrides
     if (ui.theme_color) {
-      root.style.setProperty('--color-red-revolution', ui.theme_color)
-      root.style.setProperty('--color-red-dark', darkenColor(ui.theme_color, 25))
-      root.style.setProperty('--color-red-deep', darkenColor(ui.theme_color, 45))
+      root.style.setProperty('--ui-primary', ui.theme_color)
+      root.style.setProperty('--ui-primary-hover', darkenColor(ui.theme_color, 25))
+      root.style.setProperty('--ui-primary-deep', darkenColor(ui.theme_color, 45))
     }
     if (ui.accent_color) {
-      root.style.setProperty('--color-gold', ui.accent_color)
+      root.style.setProperty('--ui-accent', ui.accent_color)
     }
 
     // 2. Font family
     if (ui.font_family) {
-      root.style.setProperty('--font-sans', `"${ui.font_family}", "Be Vietnam Pro", system-ui, sans-serif`)
+      root.style.setProperty('--ui-font', `"${ui.font_family}", "Be Vietnam Pro", system-ui, sans-serif`)
     }
 
     // 3. Dark mode implementation
@@ -86,6 +86,9 @@ export const UiSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   useEffect(() => {
     let cancelled = false
     setSettings(null)
+    const root = document.documentElement
+    for (const property of ['--ui-primary', '--ui-primary-hover', '--ui-primary-deep', '--ui-accent', '--ui-font']) root.style.removeProperty(property)
+    root.classList.remove('dark', 'disable-transitions')
     if (!organizationId) {
       setLoading(false)
       return

@@ -22,7 +22,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         <div className="absolute w-10 h-10 border-4 border-gold/10 border-b-gold rounded-full animate-spin [animation-direction:reverse] [animation-duration:1.5s]"></div>
       </div>
       {message && (
-        <p className="text-xs md:text-sm font-bold text-red-dark dark:text-gold mt-4 uppercase tracking-widest animate-pulse">
+        <p className="text-xs md:text-sm font-bold text-red-dark dark:text-gold mt-4 normal-case tracking-normal animate-pulse">
           {message}
         </p>
       )}

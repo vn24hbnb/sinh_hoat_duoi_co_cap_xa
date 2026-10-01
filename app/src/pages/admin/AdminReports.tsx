@@ -38,8 +38,8 @@ const DonutChart: React.FC<{ title: string; segments: ChartSegment[] }> = ({ tit
   }, [])
 
   return (
-    <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center">
-      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-450 dark:text-slate-405 mb-3">{title}</h4>
+    <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-card border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center">
+      <h4 className="text-xs font-bold normal-case tracking-normal text-muted dark:text-slate-405 mb-3">{title}</h4>
       <div className="relative w-28 h-28">
         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
           <circle cx="50" cy="50" r={r} fill="transparent" stroke="rgba(0,0,0,0.03)" strokeWidth="10" />
@@ -60,13 +60,13 @@ const DonutChart: React.FC<{ title: string; segments: ChartSegment[] }> = ({ tit
           ))}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-[9px] font-bold text-slate-400 uppercase">Tỷ lệ</span>
-          <span className="text-sm font-black text-navy dark:text-white">
+          <span className="text-xs font-bold text-muted normal-case">Tỷ lệ</span>
+          <span className="text-sm font-bold text-navy dark:text-white">
             {total > 0 ? `${Math.round((segments[0]?.value / total) * 100)}%` : '0%'}
           </span>
         </div>
       </div>
-      <div className="mt-3 w-full text-[10px] font-bold text-slate-550 dark:text-slate-400 space-y-1">
+      <div className="mt-3 w-full text-xs font-bold text-muted dark:text-muted space-y-1">
         {segments.map((seg, idx) => (
           <div key={idx} className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 truncate">
@@ -367,16 +367,16 @@ export const AdminReports: React.FC = () => {
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-xl md:text-2xl font-black text-red-deep dark:text-gold uppercase tracking-wider flex items-center gap-2">
+            <h1 className="text-xl md:text-2xl font-bold text-red-deep dark:text-gold normal-case tracking-normal flex items-center gap-2">
               Báo cáo & Vinh danh phiên họp
               {autoRefresh && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 normal-case tracking-normal">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 normal-case tracking-normal">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   LIVE
                 </span>
               )}
             </h1>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs font-semibold text-muted dark:text-muted mt-0.5">
               {meeting ? `Hồ sơ báo cáo kết quả của: "${meeting.title}"` : 'Tổng hợp kết quả xếp hạng thi đua và vinh danh'}
             </p>
           </div>
@@ -384,7 +384,7 @@ export const AdminReports: React.FC = () => {
           {/* Dropdown chọn xem lại hồ sơ phiên họp cũ */}
           {meetingsList.length > 0 && (
             <div className="flex items-center gap-2 w-full lg:w-auto text-xs md:text-sm font-bold">
-              <span className="text-slate-500 dark:text-slate-400 shrink-0">Hồ sơ phiên:</span>
+              <span className="text-muted dark:text-muted shrink-0">Hồ sơ phiên:</span>
               <select
                 value={selectedMeetingId}
                 onChange={(e) => handleSelectMeeting(e.target.value)}
@@ -401,7 +401,7 @@ export const AdminReports: React.FC = () => {
           
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto shrink-0 justify-end no-print">
             {meeting && (
-              <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/70 dark:bg-navy/40 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-slate-50 dark:hover:bg-navy/60 transition-colors select-none shadow-sm">
+              <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/70 dark:bg-navy/40 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-muted cursor-pointer hover:bg-slate-50 dark:hover:bg-navy/60 transition-colors select-none shadow-sm">
                 <input
                   type="checkbox"
                   checked={autoRefresh}
@@ -428,7 +428,7 @@ export const AdminReports: React.FC = () => {
                 <RevolutionaryButton 
                   onClick={() => reportService.downloadExcel(report)}
                   variant="gold"
-                  className="flex items-center gap-1.5 shadow-md text-xs font-black uppercase"
+                  className="flex items-center gap-1.5 shadow-sm text-xs font-bold normal-case"
                 >
                   <FileSpreadsheet size={14} /> Xuất Excel
                 </RevolutionaryButton>
@@ -436,7 +436,7 @@ export const AdminReports: React.FC = () => {
                 <RevolutionaryButton 
                   onClick={exportToWord}
                   variant="secondary"
-                  className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 text-xs font-black uppercase"
+                  className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 text-xs font-bold normal-case"
                 >
                   <FileText size={14} className="text-blue-550 dark:text-blue-400" /> Xuất Word
                 </RevolutionaryButton>
@@ -444,7 +444,7 @@ export const AdminReports: React.FC = () => {
                 <RevolutionaryButton 
                   onClick={() => window.print()}
                   variant="secondary"
-                  className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 text-xs font-black uppercase"
+                  className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 text-xs font-bold normal-case"
                 >
                   <Printer size={14} /> In PDF
                 </RevolutionaryButton>
@@ -463,7 +463,7 @@ export const AdminReports: React.FC = () => {
             <h2 className="text-lg md:text-xl font-bold text-navy dark:text-white mb-2">
               Chưa có phiên họp chính trị nào diễn ra
             </h2>
-            <p className="text-xs md:text-sm font-semibold text-slate-500 max-w-sm mx-auto mb-6">
+            <p className="text-xs md:text-sm font-semibold text-muted max-w-sm mx-auto mb-6">
               Vui lòng quay lại sau hoặc kích hoạt phiên họp để xem báo cáo xếp hạng thi đua.
             </p>
             <RevolutionaryButton onClick={() => navigate('/admin/meetings')} variant="secondary">
@@ -475,44 +475,44 @@ export const AdminReports: React.FC = () => {
             
             {/* Quick Stats Panel */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
+              <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-card border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-red-revolution/10 text-red-revolution flex items-center justify-center shrink-0">
                   <Users size={20} />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng sĩ số chốt</div>
-                  <div className="text-base font-black text-navy dark:text-white">{report.stats.totalParticipants} Đ/c</div>
+                  <div className="text-xs font-bold text-muted normal-case tracking-normal">Tổng sĩ số chốt</div>
+                  <div className="text-base font-bold text-navy dark:text-white">{report.stats.totalParticipants} Đ/c</div>
                 </div>
               </div>
-              <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
+              <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-card border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                   <UserCheck size={20} />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Đã điểm danh</div>
-                  <div className="text-base font-black text-navy dark:text-white">
+                  <div className="text-xs font-bold text-muted normal-case tracking-normal">Đã điểm danh</div>
+                  <div className="text-base font-bold text-navy dark:text-white">
                     {report.stats.attendedCount} ({report.stats.totalParticipants > 0 ? ((report.stats.attendedCount / report.stats.totalParticipants) * 100).toFixed(0) : 0}%)
                   </div>
                 </div>
               </div>
-              <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
+              <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-card border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
                   <Trophy size={20} />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Đã hoàn thành thi</div>
-                  <div className="text-base font-black text-navy dark:text-white">
+                  <div className="text-xs font-bold text-muted normal-case tracking-normal">Đã hoàn thành thi</div>
+                  <div className="text-base font-bold text-navy dark:text-white">
                     {report.stats.examSubmittedCount} ({report.stats.totalParticipants > 0 ? ((report.stats.examSubmittedCount / report.stats.totalParticipants) * 100).toFixed(0) : 0}%)
                   </div>
                 </div>
               </div>
-              <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
+              <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-card border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center shrink-0">
                   <Star size={20} />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Điểm thi trung bình</div>
-                  <div className="text-base font-black text-navy dark:text-white">{report.stats.averageScore.toFixed(1)} / 10</div>
+                  <div className="text-xs font-bold text-muted normal-case tracking-normal">Điểm thi trung bình</div>
+                  <div className="text-base font-bold text-navy dark:text-white">{report.stats.examSubmittedCount > 0 ? `${report.stats.averageScore.toFixed(1)} / 10` : 'Chưa có bài hoàn tất'}</div>
                 </div>
               </div>
             </div>
@@ -549,7 +549,7 @@ export const AdminReports: React.FC = () => {
                   
                   <div className="flex items-center gap-2.5 text-yellow-600 dark:text-gold border-b border-yellow-500/20 pb-3 mb-4">
                     <Trophy className="animate-pulse" size={20} />
-                    <h3 className="text-sm font-black uppercase tracking-wider">
+                    <h3 className="text-sm font-bold normal-case tracking-normal">
                       Bảng vàng danh dự - Chi bộ gương mẫu
                     </h3>
                   </div>
@@ -557,17 +557,17 @@ export const AdminReports: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                     {discipline && (
                       <div className="p-4 bg-white/60 dark:bg-navy/50 rounded-xl border border-yellow-500/15 flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm font-black text-sm">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm font-bold text-sm">
                           🚀
                         </div>
                         <div>
-                          <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                          <div className="text-xs font-bold text-muted dark:text-muted normal-case tracking-normal">
                             Chi bộ kỷ luật nhất
                           </div>
                           <h4 className="font-bold text-navy dark:text-white text-sm mt-0.5">
                             {discipline.name}
                           </h4>
-                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                          <p className="text-xs font-semibold text-muted dark:text-muted mt-1">
                             Đi đầu phong trào với tỷ lệ điểm danh đạt <b>{discipline.attendanceRate}%</b> ({discipline.totalAttended}/{discipline.totalRequired} đồng chí).
                           </p>
                         </div>
@@ -576,17 +576,17 @@ export const AdminReports: React.FC = () => {
                     
                     {academic && (
                       <div className="p-4 bg-white/60 dark:bg-navy/50 rounded-xl border border-yellow-500/15 flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-950/40 text-yellow-600 dark:text-yellow-400 flex items-center justify-center shrink-0 shadow-sm font-black text-sm">
+                        <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-950/40 text-yellow-600 dark:text-yellow-400 flex items-center justify-center shrink-0 shadow-sm font-bold text-sm">
                           🎓
                         </div>
                         <div>
-                          <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                          <div className="text-xs font-bold text-muted dark:text-muted normal-case tracking-normal">
                             Chi bộ học tập xuất sắc nhất
                           </div>
                           <h4 className="font-bold text-navy dark:text-white text-sm mt-0.5">
                             {academic.name}
                           </h4>
-                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                          <p className="text-xs font-semibold text-muted dark:text-muted mt-1">
                             Đạt điểm thi trung bình chuyên đề cao nhất toàn Đảng bộ: <b>{academic.avgScore.toFixed(2)}/10</b> điểm.
                           </p>
                         </div>
@@ -601,13 +601,13 @@ export const AdminReports: React.FC = () => {
             <GlassCard>
               <div className="flex items-center gap-2 text-red-revolution dark:text-gold mb-6 border-b border-red-revolution/10 pb-3">
                 <Trophy size={18} />
-                <h3 className="text-xs font-black uppercase tracking-wider">Bảng xếp hạng thi đua {report.chiBoReports.length < 10 ? '0' + report.chiBoReports.length : report.chiBoReports.length} Chi bộ</h3>
+                <h3 className="text-xs font-bold normal-case tracking-normal">Bảng xếp hạng thi đua {report.chiBoReports.length < 10 ? '0' + report.chiBoReports.length : report.chiBoReports.length} Chi bộ</h3>
               </div>
               
               <div className="overflow-x-auto">
                 <table className="min-w-full text-xs md:text-sm font-semibold text-left">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-muted">
                       <th className="py-3 px-4 text-center w-12">Thứ hạng</th>
                       <th className="py-3 px-4">Tên chi bộ</th>
                       <th className="py-3 px-4">Bí thư chi bộ</th>
@@ -629,9 +629,9 @@ export const AdminReports: React.FC = () => {
                       
                       return (
                         <tr key={cb.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-red-revolution/5">
-                          <td className="py-4 px-4 text-center font-black">
+                          <td className="py-4 px-4 text-center font-bold">
                             {isTop3 ? (
-                              <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full border text-[10px] font-black ${badgeColors[idx]}`}>
+                              <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full border text-xs font-bold ${badgeColors[idx]}`}>
                                 {idx + 1}
                               </span>
                             ) : (
@@ -639,19 +639,19 @@ export const AdminReports: React.FC = () => {
                             )}
                           </td>
                           <td className="py-4 px-4 font-bold text-navy dark:text-white">{cb.name}</td>
-                          <td className="py-4 px-4 text-slate-600 dark:text-slate-300 font-bold">{cb.secretaryName}</td>
-                          <td className="py-4 px-4 text-center font-bold text-slate-500">{cb.totalRequired}</td>
-                          <td className="py-4 px-4 text-center font-bold text-slate-500">{cb.totalAttended}</td>
-                          <td className="py-4 px-4 text-center font-bold text-slate-500">{cb.totalExcused || 0}</td>
+                          <td className="py-4 px-4 text-muted dark:text-muted font-bold">{cb.secretaryName}</td>
+                          <td className="py-4 px-4 text-center font-bold text-muted">{cb.totalRequired}</td>
+                          <td className="py-4 px-4 text-center font-bold text-muted">{cb.totalAttended}</td>
+                          <td className="py-4 px-4 text-center font-bold text-muted">{cb.totalExcused || 0}</td>
                           <td className="py-4 px-4 text-center">
-                            <span className={`font-black ${
-                              cb.attendanceRate === 100 ? 'text-emerald-600' : 'text-slate-700 dark:text-slate-300'
+                            <span className={`font-bold ${
+                              cb.attendanceRate === 100 ? 'text-emerald-600' : 'text-slate-700 dark:text-muted'
                             }`}>
                               {cb.attendanceRate}%
                             </span>
                           </td>
-                          <td className="py-4 px-4 text-center font-black text-red-revolution dark:text-gold">
-                            {cb.avgScore.toFixed(2)}
+                          <td className={`py-4 px-4 text-center font-semibold ${cb.avgScore >= 8 ? 'text-success' : cb.avgScore < 5 ? 'text-danger' : 'text-ink'}`}>
+                            {report.stats.examSubmittedCount > 0 ? cb.avgScore.toFixed(2) : '—'}
                           </td>
                         </tr>
                       )
@@ -665,11 +665,11 @@ export const AdminReports: React.FC = () => {
             <GlassCard className="border border-yellow-500/20 bg-gradient-to-br from-white/95 to-amber-50/10 dark:from-navy/95 dark:to-amber-950/5">
               <div className="flex items-center gap-2 text-yellow-600 dark:text-gold mb-6 border-b border-yellow-500/10 pb-3">
                 <Star size={18} className="animate-spin-slow" />
-                <h3 className="text-xs font-black uppercase tracking-wider">Bảng Vàng Danh Độ - Top 10 cá nhân xuất sắc nhất</h3>
+                <h3 className="text-xs font-bold normal-case tracking-normal">Bảng Vàng Danh Độ - Top 10 cá nhân xuất sắc nhất</h3>
               </div>
 
               {report.topMembers.length === 0 ? (
-                <div className="text-center py-8 text-xs font-semibold text-slate-500">
+                <div className="text-center py-8 text-xs font-semibold text-muted">
                   Chưa có kết quả bài thi trắc nghiệm nào được nộp trong phiên này.
                 </div>
               ) : (
@@ -690,27 +690,27 @@ export const AdminReports: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-full border flex items-center justify-center font-black text-xs shrink-0 ${
+                          <span className={`w-8 h-8 rounded-full border flex items-center justify-center font-bold text-xs shrink-0 ${
                             idx === 0 ? 'bg-yellow-100 text-yellow-700 border-yellow-400 dark:bg-yellow-950 dark:text-yellow-400' :
-                            idx === 1 ? 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-400' :
+                            idx === 1 ? 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-muted' :
                             idx === 2 ? 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950 dark:text-amber-400' :
-                            'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                            'bg-slate-100 dark:bg-slate-800 text-muted dark:text-muted'
                           }`}>
                             {idx + 1}
                           </span>
                           <div>
                             <h4 className="font-bold text-navy dark:text-white text-sm">{member.fullName}</h4>
-                            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                            <p className="text-xs font-semibold text-muted dark:text-muted">
                               {member.position} | <b>{member.chiBoName}</b>
                             </p>
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <div className="text-base font-black text-red-revolution dark:text-gold">
-                            {member.score.toFixed(1)} <span className="text-[10px] text-slate-400">điểm</span>
+                          <div className={`text-base font-semibold ${member.score >= 8 ? 'text-success' : member.score < 5 ? 'text-danger' : 'text-ink'}`}>
+                            {member.score.toFixed(1)} <span className="text-xs text-muted">điểm</span>
                           </div>
-                          <div className="text-[10px] font-semibold text-slate-500 mt-0.5">
+                          <div className="text-xs font-semibold text-muted mt-0.5">
                             ⏱️ {formatDuration(member.durationSeconds)} | Đúng: {member.correctCount}/{member.totalQuestions}
                           </div>
                         </div>
@@ -748,19 +748,19 @@ export const AdminReports: React.FC = () => {
           <div className="flex justify-between items-start mb-6 border-b-2 border-black pb-4">
             <div className="text-center font-bold">
               <div>ĐẢNG CỘNG SẢN VIỆT NAM</div>
-              <div className="text-[10px] uppercase tracking-wide">Đảng bộ {reportOrganizationName}</div>
-              <div className="text-[9px] font-normal mt-1">Số: .....-BC/ĐU</div>
+              <div className="text-xs normal-case tracking-normal">Đảng bộ {reportOrganizationName}</div>
+              <div className="text-xs font-normal mt-1">Số: .....-BC/ĐU</div>
             </div>
             <div className="text-center font-bold">
-              <div className="text-[10px] uppercase tracking-wider">ĐẢNG CỘNG SẢN VIỆT NAM QUANG VINH MUÔN NĂM</div>
-              <div className="text-[9px] font-normal mt-2">Ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}</div>
+              <div className="text-xs normal-case tracking-normal">ĐẢNG CỘNG SẢN VIỆT NAM QUANG VINH MUÔN NĂM</div>
+              <div className="text-xs font-normal mt-2">Ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}</div>
             </div>
           </div>
           
           {/* Title */}
           <div className="text-center my-8">
-            <h1 className="text-base font-bold uppercase">BÁO CÁO KẾT QUẢ</h1>
-            <h2 className="text-sm font-bold uppercase mt-1">SINH HOẠT CHÍNH TRỊ DƯỚI NGHI THỨC CHÀO CỜ</h2>
+            <h1 className="text-base font-bold normal-case">BÁO CÁO KẾT QUẢ</h1>
+            <h2 className="text-sm font-bold normal-case mt-1">SINH HOẠT CHÍNH TRỊ DƯỚI NGHI THỨC CHÀO CỜ</h2>
             <div className="italic mt-2">Phiên họp: "{report.title}" (Ngày {report.meetingDate})</div>
           </div>
           
@@ -781,7 +781,7 @@ export const AdminReports: React.FC = () => {
             
             <div>
               <h3 className="font-bold text-xs mt-4">II. KẾT QUẢ THI ĐUA CÁC CHI BỘ</h3>
-              <table className="w-full border-collapse border border-black mt-2 text-left text-[11px]">
+              <table className="w-full border-collapse border border-black mt-2 text-left text-xs">
                 <thead>
                   <tr className="bg-slate-100">
                     <th className="border border-black p-1.5 text-center">Thứ hạng</th>
@@ -813,7 +813,7 @@ export const AdminReports: React.FC = () => {
 
             <div>
               <h3 className="font-bold text-xs mt-4">III. VINH DANH CÁ NHÂN ĐẠT KẾT QUẢ XUẤT SẮC (TOP 10)</h3>
-              <table className="w-full border-collapse border border-black mt-2 text-left text-[10px]">
+              <table className="w-full border-collapse border border-black mt-2 text-left text-xs">
                 <thead>
                   <tr className="bg-slate-100">
                     <th className="border border-black p-1 text-center">Hạng</th>
@@ -857,9 +857,9 @@ export const AdminReports: React.FC = () => {
             </div>
             <div className="text-center font-bold w-64 mr-8">
               <div>T/M ĐẢNG ỦY</div>
-              <div className="text-[10px] tracking-wide mt-1">BÍ THƯ</div>
+              <div className="text-xs tracking-normal mt-1">BÍ THƯ</div>
               <div className="h-16"></div>
-              <div className="underline font-bold uppercase">(Ký, đóng dấu và ghi rõ họ tên)</div>
+              <div className="underline font-bold normal-case">(Ký, đóng dấu và ghi rõ họ tên)</div>
             </div>
           </div>
         </div>

@@ -150,7 +150,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ assetType, onUploa
             onDragLeave={handleDrag}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+            className={`border-2 border-dashed rounded-card p-6 text-center cursor-pointer transition-all ${
               dragActive
                 ? 'border-red-revolution bg-red-revolution/5 scale-[0.99]'
                 : 'border-slate-300 dark:border-slate-700 hover:border-red-revolution/50 hover:bg-slate-50 dark:hover:bg-slate-800/20'
@@ -168,10 +168,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ assetType, onUploa
                 <Upload size={24} />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                <p className="text-sm font-bold text-slate-700 dark:text-muted">
                   Kéo thả hoặc nhấp để tải {getFriendlyAssetTypeName()}
                 </p>
-                <p className="text-xs text-slate-400 mt-1 font-semibold">
+                <p className="text-xs text-muted mt-1 font-semibold">
                   Hỗ trợ JPG, PNG, WEBP (Tối đa 3MB)
                 </p>
               </div>
@@ -179,11 +179,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ assetType, onUploa
           </div>
         ) : (
           /* Preview Area */
-          <div className="relative border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-900/40 p-4">
+          <div className="relative border border-slate-200 dark:border-slate-800 rounded-card overflow-hidden bg-slate-50 dark:bg-slate-900/40 p-4">
             <button
               type="button"
               onClick={handleClear}
-              className="absolute top-3 right-3 p-1.5 bg-red-revolution text-white hover:bg-red-dark rounded-full transition-all shadow-md z-10"
+              className="absolute top-3 right-3 p-1.5 bg-red-revolution text-white hover:bg-red-dark rounded-full transition-all shadow-sm z-10"
               title="Hủy chọn"
             >
               <X size={16} />
@@ -203,10 +203,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ assetType, onUploa
               <div className="flex-1 w-full space-y-3">
                 <div className="flex items-center gap-2">
                   <FileImage size={16} className="text-red-revolution" />
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-xs">
+                  <span className="text-xs font-bold text-slate-700 dark:text-muted truncate max-w-xs">
                     {file?.name}
                   </span>
-                  <span className="text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold bg-slate-200 dark:bg-slate-800 text-muted dark:text-muted px-2 py-0.5 rounded-full">
                     {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : ''}
                   </span>
                 </div>
@@ -225,14 +225,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ assetType, onUploa
                   <button
                     type="button"
                     onClick={handleClear}
-                    className="px-3.5 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
+                    className="px-3.5 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted dark:text-muted transition-colors"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
                     disabled={uploading}
-                    className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-red-revolution text-white hover:bg-red-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-red-revolution/25"
+                    className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-red-revolution text-white hover:bg-red-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-red-revolution/25"
                   >
                     {uploading ? 'Đang tải lên...' : 'Lưu và Tải lên'}
                   </button>

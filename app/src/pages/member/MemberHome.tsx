@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Calendar,
+  Flag,
   FileText,
   ArrowRight,
   UserCheck,
@@ -27,6 +28,7 @@ import { PortalHeader } from '../../components/layout/PortalHeader'
 import { RedNavigationBar } from '../../components/layout/RedNavigationBar'
 import { NewsTicker } from '../../components/layout/NewsTicker'
 import { GlassCard } from '../../components/ui/GlassCard'
+import { SessionProgress } from '../../components/ui/SessionProgress'
 import { RevolutionaryButton } from '../../components/ui/RevolutionaryButton'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
@@ -534,7 +536,7 @@ export const MemberHome: React.FC = () => {
       <main className="max-w-5xl mx-auto py-8 px-4 sm:px-6">
         
         {isOffline && (
-          <div className="bg-red-600 text-white text-xs font-black py-2.5 px-4 text-center rounded-xl mb-4 animate-pulse">
+          <div className="bg-red-600 text-white text-xs font-bold py-2.5 px-4 text-center rounded-xl mb-4 animate-pulse">
             ⚠️ Thiết bị của đồng chí đang mất kết nối mạng. Một số tính năng có thể không hoạt động ổn định.
           </div>
         )}
@@ -542,31 +544,30 @@ export const MemberHome: React.FC = () => {
         {/* User Info Header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
           <div>
-            <h1 className="text-xl md:text-2xl font-black text-red-deep dark:text-gold uppercase tracking-wide">
+            <h1 className="text-xl md:text-2xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
               Đ/c {user?.memberName}
             </h1>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs font-bold text-muted dark:text-muted mt-0.5">
               Chức vụ: {user?.position} | {user?.chiBoName}
             </p>
           </div>
           <div>
-            <StatusBadge status="success" label="Đã đăng nhập" />
           </div>
         </div>
 
         {error && <AlertMessage type="error" message={error} className="mb-6" />}
 
         {/* Tab Selection */}
-        <div className="flex border-b border-red-revolution/10 mb-6 bg-white/40 dark:bg-navy/20 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm gap-1">
+        <div className="flex border-b border-red-revolution/10 mb-6 bg-white/40 dark:bg-navy/20 p-1.5 rounded-card border border-slate-200 dark:border-slate-800 shadow-sm gap-1">
           <button
             onClick={() => {
               setActiveTab('session')
               setSelectedChiBo(null)
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs md:text-sm font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs md:text-sm font-bold normal-case tracking-normal rounded-xl transition-all cursor-pointer ${
               activeTab === 'session'
-                ? 'bg-red-revolution text-white shadow-md'
-                : 'text-slate-650 dark:text-slate-400 hover:text-red-revolution hover:bg-white/30'
+                ? 'bg-red-revolution text-white shadow-sm'
+                : 'text-slate-650 dark:text-muted hover:text-red-revolution hover:bg-white/30'
             }`}
           >
             <Calendar size={14} />
@@ -578,10 +579,10 @@ export const MemberHome: React.FC = () => {
               setActiveTab('attendance')
               setSelectedChiBo(null)
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs md:text-sm font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs md:text-sm font-bold normal-case tracking-normal rounded-xl transition-all cursor-pointer ${
               activeTab === 'attendance'
-                ? 'bg-red-revolution text-white shadow-md'
-                : 'text-slate-650 dark:text-slate-400 hover:text-red-revolution hover:bg-white/30'
+                ? 'bg-red-revolution text-white shadow-sm'
+                : 'text-slate-650 dark:text-muted hover:text-red-revolution hover:bg-white/30'
             }`}
           >
             <UserCheck size={14} />
@@ -593,10 +594,10 @@ export const MemberHome: React.FC = () => {
               setActiveTab('org')
               setSelectedChiBo(null)
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs md:text-sm font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs md:text-sm font-bold normal-case tracking-normal rounded-xl transition-all cursor-pointer ${
               activeTab === 'org'
-                ? 'bg-red-revolution text-white shadow-md'
-                : 'text-slate-650 dark:text-slate-400 hover:text-red-revolution hover:bg-white/30'
+                ? 'bg-red-revolution text-white shadow-sm'
+                : 'text-slate-650 dark:text-muted hover:text-red-revolution hover:bg-white/30'
             }`}
           >
             <Users size={14} />
@@ -617,7 +618,7 @@ export const MemberHome: React.FC = () => {
                   <h2 className="text-lg md:text-xl font-bold text-navy dark:text-white mb-2">
                     Chưa có phiên họp chính trị nào diễn ra
                   </h2>
-                  <p className="text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed mb-6">
+                  <p className="text-xs md:text-sm font-semibold text-muted dark:text-muted max-w-md mx-auto leading-relaxed mb-6">
                     Hiện tại Ban Tổ Chức chưa mở phiên sinh hoạt chính trị. Vui lòng đợi cho đến khi có cuộc họp được kích hoạt trên hệ thống.
                   </p>
                   <RevolutionaryButton onClick={() => window.location.reload()} variant="secondary">
@@ -629,13 +630,13 @@ export const MemberHome: React.FC = () => {
                   <GlassCard className="animate-slide-up border border-red-revolution/10">
                     <div className="flex items-center gap-2 text-red-revolution dark:text-gold mb-4 border-b border-red-revolution/10 pb-2">
                       <Trophy size={18} className="text-red-revolution dark:text-gold" />
-                      <h3 className="text-xs font-black uppercase tracking-wider">Quá trình sinh hoạt của đồng chí</h3>
+                      <h3 className="text-xs font-bold normal-case tracking-normal">Quá trình sinh hoạt của đồng chí</h3>
                     </div>
 
-                    <div className="p-4 bg-white/30 dark:bg-navy/10 rounded-2xl border border-red-revolution/5">
-                      <h4 className="text-[11px] font-black uppercase text-slate-500 dark:text-cream-light mb-3 tracking-wider flex items-center gap-1">
+                    <div className="p-4 bg-white/30 dark:bg-navy/10 rounded-card border border-red-revolution/5">
+                      <h4 className="text-xs font-bold normal-case text-muted dark:text-cream-light mb-3 tracking-normal flex items-center gap-1">
                         <span>🌟 Lộ trình sinh hoạt gần đây</span>
-                        <span className="text-[9px] font-bold text-slate-400 normal-case">(Tối đa 8 phiên họp gần nhất)</span>
+                        <span className="text-xs font-bold text-muted normal-case">(Tối đa 8 phiên họp gần nhất)</span>
                       </h4>
                       <div className="flex flex-wrap items-center justify-start gap-4">
                         {historyData.slice(0, 8).map((hist, index) => {
@@ -668,13 +669,13 @@ export const MemberHome: React.FC = () => {
 
                           return (
                             <div key={hist.sessionId} className="flex flex-col items-center gap-1.5 shrink-0 w-[95px] transition-transform hover:scale-105 cursor-help" title={`${hist.title} (${hist.meetingDate})`}>
-                              <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-black text-xs ${badgeColor} shadow-sm`}>
+                              <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold text-xs ${badgeColor} shadow-sm`}>
                                 {historyData.length - index}
                               </div>
-                              <span className="text-[10px] font-bold text-navy dark:text-white text-center truncate w-full">
+                              <span className="text-xs font-bold text-navy dark:text-white text-center truncate w-full">
                                 {hist.title}
                               </span>
-                              <span className="text-[9px] font-black uppercase tracking-wider text-center">
+                              <span className="text-xs font-bold normal-case tracking-normal text-center">
                                 {badgeText}
                               </span>
                             </div>
@@ -688,13 +689,14 @@ export const MemberHome: React.FC = () => {
             ) : (
               /* 2. MEETING ACTIVE STATE */
               <div className="space-y-6 animate-slide-up">
+                {memberStatus && <SessionProgress attended={memberStatus.attended} submitted={memberStatus.examSubmitted} examOpen={meeting.status === 'exam_open'} />}
                 
                 {/* Active Meeting Card */}
                 <GlassCard className="border-l-4 border-l-red-revolution">
                   <div className="flex items-center justify-between gap-4 mb-3">
                     <div className="flex items-center gap-2 text-red-revolution dark:text-gold">
                       <Calendar size={20} />
-                      <span className="text-xs font-bold uppercase tracking-wider">Phiên họp hiện tại</span>
+                      <span className="text-xs font-bold normal-case tracking-normal">Phiên họp hiện tại</span>
                     </div>
                     <StatusBadge 
                       status={
@@ -719,13 +721,13 @@ export const MemberHome: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowCeremonyModal(true)}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 border border-red-revolution bg-red-revolution/10 hover:bg-red-revolution text-red-revolution hover:text-white dark:text-gold dark:border-gold/30 dark:hover:bg-gold/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+                      className="inline-flex min-h-11 items-center gap-2 px-1 py-2 text-primary dark:text-accent-text underline underline-offset-4 text-sm font-medium cursor-pointer"
                     >
-                      🇨🇳 Cử hành Nghi lễ Chào cờ & Quốc ca
+                      <Flag size={18} aria-hidden="true" /> Cử hành nghi lễ chào cờ & Quốc ca
                     </button>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-300 mb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm font-semibold text-muted dark:text-muted mb-6">
                     <div>📍 Địa điểm: <b>{meeting.location || 'Chưa cấu hình'}</b></div>
                     <div>📅 Ngày họp: <b>{meeting.meeting_date || 'Hôm nay'}{meeting.start_time && ` lúc ${formatTime(meeting.start_time)}`}</b></div>
                   </div>
@@ -773,7 +775,7 @@ export const MemberHome: React.FC = () => {
                     }
                     
                     return (
-                      <div className={`p-4 rounded-2xl border-2 mb-6 ${calloutBg} transition-all duration-200`}>
+                      <div className={`p-4 rounded-card border-2 mb-6 ${calloutBg} transition-all duration-200`}>
                         <div className="flex items-center gap-2 mb-1.5">
                           {showPulse && (
                             <span className="relative flex h-2 w-2">
@@ -781,11 +783,11 @@ export const MemberHome: React.FC = () => {
                               <span className={`relative inline-flex rounded-full h-2 w-2 ${pulseColor}`}></span>
                             </span>
                           )}
-                          <h4 className="text-xs font-black uppercase tracking-wider text-navy dark:text-gold">
+                          <h4 className="text-xs font-bold normal-case tracking-normal text-navy dark:text-gold">
                             {calloutTitle}
                           </h4>
                         </div>
-                        <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-355 leading-relaxed">
+                        <p className="text-xs font-semibold text-muted dark:text-slate-355 leading-relaxed">
                           {calloutDesc}
                         </p>
                       </div>
@@ -795,19 +797,19 @@ export const MemberHome: React.FC = () => {
                   {/* User checklist items */}
                   {memberStatus && (
                     <div className="border-t border-red-revolution/10 pt-4 mb-6">
-                      <h3 className="text-xs font-bold text-brown-text dark:text-cream-light uppercase tracking-wider mb-3">
+                      <h3 className="text-xs font-bold text-brown-text dark:text-cream-light normal-case tracking-normal mb-3">
                         Tiến độ của đồng chí
                       </h3>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                         {/* Item 1: Attendance */}
                         <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-navy/30 rounded-xl border border-slate-100 dark:border-slate-800">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${memberStatus.attended ? (memberStatus.attendanceStatus === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600') : memberStatus.excused ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-100 text-slate-400'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${memberStatus.attended ? (memberStatus.attendanceStatus === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600') : memberStatus.excused ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-100 text-muted'}`}>
                             <UserCheck size={18} />
                           </div>
                           <div>
-                            <div className="text-xs font-bold uppercase">1. Điểm danh</div>
-                            <div className="text-[11px] font-semibold text-slate-500">
+                            <div className="text-xs font-bold normal-case">1. Điểm danh</div>
+                            <div className="text-xs font-semibold text-muted">
                               {memberStatus.attended ? (
                                 memberStatus.attendanceStatus === 'warning' ? (
                                   <span className="text-amber-600 dark:text-amber-400 font-bold">Có cảnh báo</span>
@@ -825,12 +827,12 @@ export const MemberHome: React.FC = () => {
                         
                         {/* Item 2: Exam */}
                         <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-navy/30 rounded-xl border border-slate-100 dark:border-slate-800">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${memberStatus.examSubmitted ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${memberStatus.examSubmitted ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-muted'}`}>
                             <FileQuestion size={18} />
                           </div>
                           <div>
-                            <div className="text-xs font-bold uppercase">2. Làm bài thi</div>
-                            <div className="text-[11px] font-semibold text-slate-500">
+                            <div className="text-xs font-bold normal-case">2. Làm bài thi</div>
+                            <div className="text-xs font-semibold text-muted">
                               {memberStatus.examSubmitted ? `Đạt ${memberStatus.examScore} điểm` : 'Chưa làm bài'}
                             </div>
                           </div>
@@ -838,12 +840,12 @@ export const MemberHome: React.FC = () => {
 
                         {/* Item 3: Documents */}
                         <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-navy/30 rounded-xl border border-slate-100 dark:border-slate-800">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${documents.length > 0 ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${documents.length > 0 ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-muted'}`}>
                             <BookOpen size={18} />
                           </div>
                           <div>
-                            <div className="text-xs font-bold uppercase">3. Tài liệu họp</div>
-                            <div className="text-[11px] font-semibold text-slate-500">
+                            <div className="text-xs font-bold normal-case">3. Tài liệu họp</div>
+                            <div className="text-xs font-semibold text-muted">
                               {documents.length > 0 ? `Đã có ${documents.length} tài liệu` : 'Chưa tải lên'}
                             </div>
                           </div>
@@ -856,7 +858,7 @@ export const MemberHome: React.FC = () => {
                           <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping mt-1 shrink-0" />
                           <div>
                             <div className="font-bold text-amber-900 dark:text-amber-400 mb-0.5">⚠️ Điểm danh không định vị / Cảnh báo vị trí</div>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-450 leading-relaxed font-medium">
+                            <p className="text-xs text-muted dark:text-muted leading-relaxed font-medium">
                               Hệ thống ghi nhận sự hiện diện của đồng chí với lý do: <b>{memberStatus.attendanceWarningReason || 'Vị trí không chính xác'}</b>. Trạng thái điểm danh đang được gửi tới Ban tổ chức để phê duyệt chính thức.
                             </p>
                           </div>
@@ -890,7 +892,7 @@ export const MemberHome: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setShowAbsenceModal(true)}
-                              className="px-8 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-250 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-slate-700 shadow-sm"
+                              className="px-8 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-muted text-xs font-bold normal-case tracking-normal rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-slate-700 shadow-sm"
                             >
                               Báo xin vắng
                             </button>
@@ -914,7 +916,7 @@ export const MemberHome: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setShowAbsenceModal(true)}
-                            className="w-full sm:w-auto px-8 py-2.5 bg-slate-100 hover:bg-slate-205 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-250 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-slate-700 shadow-sm"
+                            className="w-full sm:w-auto px-8 py-2.5 bg-slate-100 hover:bg-slate-205 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-muted text-xs font-bold normal-case tracking-normal rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-slate-700 shadow-sm"
                           >
                             Báo xin vắng
                           </button>
@@ -933,10 +935,10 @@ export const MemberHome: React.FC = () => {
                         <GlassCard className="border-l-4 border-l-red-revolution">
                           <div className="flex items-center gap-2 text-red-revolution dark:text-gold mb-4 border-b border-red-revolution/10 pb-2">
                             <ListChecks size={18} />
-                            <h3 className="text-xs font-black uppercase tracking-wider">Chương trình sinh hoạt chính trị dưới cờ</h3>
+                            <h3 className="text-xs font-bold normal-case tracking-normal">Chương trình sinh hoạt chính trị dưới cờ</h3>
                           </div>
                           
-                          <div className="text-xs space-y-2 mb-4 p-3 bg-red-50/30 dark:bg-red-950/5 border border-red-105 dark:border-red-900/10 rounded-xl leading-relaxed font-semibold text-slate-655 dark:text-slate-300">
+                          <div className="text-xs space-y-2 mb-4 p-3 bg-red-50/30 dark:bg-red-950/5 border border-red-105 dark:border-red-900/10 rounded-xl leading-relaxed font-semibold text-slate-655 dark:text-muted">
                             {parsed.time_str && (
                               <div>📅 <b>Thời gian:</b> {parsed.time_str}</div>
                             )}
@@ -951,7 +953,7 @@ export const MemberHome: React.FC = () => {
                           <div className="overflow-x-auto">
                             <table className="min-w-full text-xs font-semibold text-left">
                               <thead>
-                                <tr className="border-b border-red-revolution/10 text-slate-400">
+                                <tr className="border-b border-red-revolution/10 text-muted">
                                   <th className="py-2.5 px-2 w-10 text-center">TT</th>
                                   <th className="py-2.5 px-2">Nội dung chương trình</th>
                                   <th className="py-2.5 px-2">Người điều hành</th>
@@ -966,8 +968,8 @@ export const MemberHome: React.FC = () => {
                                   >
                                     <td className="py-3 px-2 text-center font-bold text-red-revolution dark:text-gold">{item.tt || index + 1}</td>
                                     <td className="py-3 px-2 text-navy dark:text-white font-bold">{item.content}</td>
-                                    <td className="py-3 px-2 text-slate-500 dark:text-slate-400">{item.moderator || '-'}</td>
-                                    <td className="py-3 px-2 text-slate-605 dark:text-slate-350">{item.performer || '-'}</td>
+                                    <td className="py-3 px-2 text-muted dark:text-muted">{item.moderator || '-'}</td>
+                                    <td className="py-3 px-2 text-slate-605 dark:text-muted">{item.performer || '-'}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -987,7 +989,7 @@ export const MemberHome: React.FC = () => {
                   <GlassCard>
                     <div className="flex items-center gap-2 text-red-revolution dark:text-gold mb-4 border-b border-red-revolution/10 pb-2">
                       <FileText size={18} />
-                      <h3 className="text-xs font-black uppercase tracking-wider">Tài liệu chuyên đề học tập</h3>
+                      <h3 className="text-xs font-bold normal-case tracking-normal">Tài liệu chuyên đề học tập</h3>
                     </div>
                     <div className="space-y-3">
                       {documents.map((doc) => (
@@ -1001,7 +1003,7 @@ export const MemberHome: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setViewingDoc(doc)}
-                              className="px-2.5 py-1 bg-red-revolution/10 hover:bg-red-revolution/15 text-red-revolution dark:text-gold text-[10px] font-black uppercase tracking-wider rounded-lg border border-red-revolution/15 flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1 bg-red-revolution/10 hover:bg-red-revolution/15 text-red-revolution dark:text-gold text-xs font-bold normal-case tracking-normal rounded-lg border border-red-revolution/15 flex items-center gap-1 cursor-pointer"
                             >
                               <Eye size={12} />
                               <span>Xem nhanh</span>
@@ -1012,7 +1014,7 @@ export const MemberHome: React.FC = () => {
                               href={doc.file_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-650 dark:text-slate-300 text-[10px] font-black uppercase tracking-wider rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-650 dark:text-muted text-xs font-bold normal-case tracking-normal rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-1 cursor-pointer"
                             >
                               Tải về
                             </a>
@@ -1038,7 +1040,7 @@ export const MemberHome: React.FC = () => {
                 <h2 className="text-lg md:text-xl font-bold text-navy dark:text-white mb-2">
                   Chưa có phiên họp chính trị nào diễn ra
                 </h2>
-                <p className="text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed mb-6">
+                <p className="text-xs md:text-sm font-semibold text-muted dark:text-muted max-w-md mx-auto leading-relaxed mb-6">
                   Hiện tại Ban Tổ Chức chưa mở phiên sinh hoạt chính trị nên không có dữ liệu điểm danh.
                 </p>
                 <RevolutionaryButton onClick={() => window.location.reload()} variant="secondary">
@@ -1051,14 +1053,14 @@ export const MemberHome: React.FC = () => {
                   <div className="flex items-center gap-2.5 text-red-revolution dark:text-gold">
                     <UserCheck size={22} />
                     <div>
-                      <h3 className="text-sm md:text-base font-black uppercase tracking-wider">Kết quả điểm danh các chi bộ</h3>
-                      <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase mt-0.5">
+                      <h3 className="text-sm md:text-base font-bold normal-case tracking-normal">Kết quả điểm danh các chi bộ</h3>
+                      <p className="text-xs md:text-xs text-muted dark:text-muted font-bold normal-case mt-0.5">
                         Phiên họp: {meeting.title}
                       </p>
                     </div>
                   </div>
                   <div className="text-right hidden sm:block">
-                    <span className="text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/30 border border-emerald-200/50 text-emerald-650 dark:text-emerald-450 px-3 py-1 rounded-full uppercase">
+                    <span className="text-xs font-bold bg-emerald-100 dark:bg-emerald-950/30 border border-emerald-200/50 text-emerald-650 dark:text-emerald-450 px-3 py-1 rounded-full normal-case">
                       Tự động cập nhật
                     </span>
                   </div>
@@ -1081,19 +1083,19 @@ export const MemberHome: React.FC = () => {
                           const absentPercent = total > 0 ? (absent / total) * 100 : 0;
                           
                           return (
-                            <div key={cb.id} className="bg-white/40 dark:bg-navy/20 p-4 rounded-2xl border border-slate-150 dark:border-slate-800/80 shadow-sm hover:border-red-revolution/20 transition-all">
+                            <div key={cb.id} className="bg-white/40 dark:bg-navy/20 p-4 rounded-card border border-slate-150 dark:border-slate-800/80 shadow-sm hover:border-red-revolution/20 transition-all">
                               {/* Header info for Chi Bo */}
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2.5">
                                 <div className="flex items-baseline gap-2">
-                                  <span className="text-xs md:text-sm font-black text-red-deep dark:text-gold uppercase tracking-wide">
+                                  <span className="text-xs md:text-sm font-bold text-red-deep dark:text-gold normal-case tracking-normal">
                                     {cb.name}
                                   </span>
-                                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                                  <span className="text-xs font-bold text-muted dark:text-muted">
                                     • Bí thư: {cb.secretaryName || 'Chưa cập nhật'}
                                   </span>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] md:text-xs font-black">
-                                  <span className="text-slate-655 dark:text-slate-350">
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs md:text-xs font-bold">
+                                  <span className="text-slate-655 dark:text-muted">
                                     Sĩ số: <b className="text-navy dark:text-white">{total}</b> đ/c
                                   </span>
                                   <span className="text-emerald-600 dark:text-emerald-400">
@@ -1102,7 +1104,7 @@ export const MemberHome: React.FC = () => {
                                   <span className="text-amber-600 dark:text-amber-400">
                                     Vắng phép: <b>{excused}</b>
                                   </span>
-                                  <span className={absent > 0 ? 'text-rose-600 dark:text-rose-455 font-black' : 'text-slate-400'}>
+                                  <span className={absent > 0 ? 'text-rose-600 dark:text-rose-455 font-bold' : 'text-muted'}>
                                     Vắng không phép: <b>{absent}</b>
                                   </span>
                                 </div>
@@ -1119,7 +1121,7 @@ export const MemberHome: React.FC = () => {
                                         style={{ width: `${attendedPercent}%` }}
                                       >
                                         {attendedPercent >= 15 && (
-                                          <span className="text-[9px] font-black text-white px-1 truncate drop-shadow-sm">
+                                          <span className="text-xs font-bold text-white px-1 truncate drop-shadow-sm">
                                             {attended} ({Math.round(attendedPercent)}%)
                                           </span>
                                         )}
@@ -1132,7 +1134,7 @@ export const MemberHome: React.FC = () => {
                                         style={{ width: `${excusedPercent}%` }}
                                       >
                                         {excusedPercent >= 15 && (
-                                          <span className="text-[9px] font-black text-white px-1 truncate drop-shadow-sm">
+                                          <span className="text-xs font-bold text-white px-1 truncate drop-shadow-sm">
                                             {excused} phép ({Math.round(excusedPercent)}%)
                                           </span>
                                         )}
@@ -1145,7 +1147,7 @@ export const MemberHome: React.FC = () => {
                                         style={{ width: `${absentPercent}%` }}
                                       >
                                         {absentPercent >= 15 && (
-                                          <span className="text-[9px] font-black text-white px-1 truncate drop-shadow-sm">
+                                          <span className="text-xs font-bold text-white px-1 truncate drop-shadow-sm">
                                             {absent} vắng ({Math.round(absentPercent)}%)
                                           </span>
                                         )}
@@ -1153,13 +1155,13 @@ export const MemberHome: React.FC = () => {
                                     )}
                                   </>
                                 ) : (
-                                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-muted dark:text-muted">
                                     Không có đảng viên đăng ký sinh hoạt chuyên đề này
                                   </div>
                                 )}
 
                                 {/* Hover statistics tooltip inside bar */}
-                                <div className="absolute inset-0 opacity-0 hover:opacity-100 bg-black/5 dark:bg-white/5 flex items-center justify-between px-3 text-[10px] font-black text-slate-700 dark:text-slate-350 transition-opacity pointer-events-none">
+                                <div className="absolute inset-0 opacity-0 hover:opacity-100 bg-black/5 dark:bg-white/5 flex items-center justify-between px-3 text-xs font-bold text-slate-700 dark:text-muted transition-opacity pointer-events-none">
                                   <span>Tỉ lệ có mặt: {Math.round(attendedPercent)}%</span>
                                   <span>Vắng: {absent} đ/c</span>
                                 </div>
@@ -1170,7 +1172,7 @@ export const MemberHome: React.FC = () => {
                     </div>
 
                     {/* Chart Legend & Summary Info */}
-                    <div className="border-t border-slate-200/20 dark:border-slate-850 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-bold text-slate-550 dark:text-slate-400">
+                    <div className="border-t border-slate-200/20 dark:border-slate-850 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-bold text-muted dark:text-muted">
                       <div className="flex items-center gap-4">
                         <span className="flex items-center gap-1.5">
                           <span className="w-3 h-3 rounded bg-emerald-500 inline-block shadow-sm"></span>
@@ -1181,13 +1183,13 @@ export const MemberHome: React.FC = () => {
                           <span>Chưa điểm danh ({reportData.stats?.absentCount || 0} đồng chí)</span>
                         </span>
                       </div>
-                      <div className="italic text-[10px] text-slate-400 dark:text-slate-500">
+                      <div className="italic text-xs text-muted dark:text-muted">
                         * Tự động đồng bộ hóa dữ liệu mỗi 15 giây
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-slate-400 font-bold text-xs">
+                  <div className="text-center py-12 text-muted font-bold text-xs">
                     Đang tổng hợp báo cáo điểm danh chi bộ thời gian thực...
                   </div>
                 )}
@@ -1201,7 +1203,7 @@ export const MemberHome: React.FC = () => {
           <div className="animate-fade-in space-y-6">
             
             {/* 1. Giới thiệu Đảng bộ với ảnh bìa cao cấp */}
-            <div className="bg-white/60 dark:bg-navy/30 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div className="bg-white/60 dark:bg-navy/30 backdrop-blur-none border border-slate-200 dark:border-slate-800 rounded-card p-5 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                 {/* Ảnh bìa */}
                 <div className="md:col-span-4 lg:col-span-3 shrink-0">
@@ -1213,10 +1215,10 @@ export const MemberHome: React.FC = () => {
                 </div>
                 {/* Văn bản giới thiệu */}
                 <div className="md:col-span-8 lg:col-span-9 space-y-2">
-                  <h3 className="text-sm md:text-base font-black text-red-deep dark:text-gold uppercase tracking-wider">
+                  <h3 className="text-sm md:text-base font-bold text-red-deep dark:text-gold normal-case tracking-normal">
                     {settings?.organization_name || 'Giới thiệu tổ chức đảng'}
                   </h3>
-                  <p className="text-[11px] md:text-xs text-slate-700 dark:text-slate-350 leading-relaxed font-semibold">
+                  <p className="text-xs md:text-xs text-slate-700 dark:text-muted leading-relaxed font-semibold">
                     Danh sách hiện có {members.length} đảng viên sinh hoạt tại {chiBos.length} chi bộ. Thông tin tổ chức và chức danh được cập nhật theo dữ liệu do quản trị viên của đơn vị cung cấp.
                   </p>
                 </div>
@@ -1228,20 +1230,20 @@ export const MemberHome: React.FC = () => {
               <div className="inline-flex gap-1.5 bg-slate-100 dark:bg-slate-900/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 w-full sm:w-auto shadow-sm">
                 <button
                   onClick={() => setActiveOrgView('danguy')}
-                  className={`flex-1 sm:flex-initial px-4 py-2 text-[10px] md:text-[11px] font-black uppercase rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 sm:flex-initial px-4 py-2 text-xs md:text-xs font-bold normal-case rounded-lg transition-all cursor-pointer ${
                     activeOrgView === 'danguy'
                       ? 'bg-red-revolution text-white shadow-sm'
-                      : 'text-slate-650 dark:text-slate-400 hover:text-red-revolution'
+                      : 'text-slate-650 dark:text-muted hover:text-red-revolution'
                   }`}
                 >
                   Ban Chấp hành Đảng ủy
                 </button>
                 <button
                   onClick={() => setActiveOrgView('chibo')}
-                  className={`flex-1 sm:flex-initial px-4 py-2 text-[10px] md:text-[11px] font-black uppercase rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 sm:flex-initial px-4 py-2 text-xs md:text-xs font-bold normal-case rounded-lg transition-all cursor-pointer ${
                     activeOrgView === 'chibo'
                       ? 'bg-red-revolution text-white shadow-sm'
-                      : 'text-slate-650 dark:text-slate-400 hover:text-red-revolution'
+                      : 'text-slate-650 dark:text-muted hover:text-red-revolution'
                   }`}
                 >
                   Các Chi bộ Trực thuộc
@@ -1253,31 +1255,31 @@ export const MemberHome: React.FC = () => {
             {activeOrgView === 'danguy' && (
               <div className="space-y-6 animate-fade-in">
                 <div className="text-center max-w-xl mx-auto">
-                  <span className="bg-gold/15 text-gold border border-gold/30 px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
+                  <span className="bg-gold/15 text-gold border border-gold/30 px-3 py-0.5 rounded-full text-xs font-bold normal-case tracking-normal">
                     Ban Chấp hành Đảng ủy
                   </span>
-                    <h3 className="text-xs md:text-sm font-black text-red-deep dark:text-gold uppercase tracking-wider mt-2.5">
+                    <h3 className="text-xs md:text-sm font-bold text-red-deep dark:text-gold normal-case tracking-normal mt-2.5">
                     Ban Chấp hành {settings?.organization_name || 'Đảng bộ cấp xã'}
                   </h3>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mt-0.5">
+                  <p className="text-xs text-muted dark:text-muted font-bold normal-case mt-0.5">
                     {dangUyList.length > 0 ? `${dangUyList.length} đồng chí được ghi nhận theo chức danh đã cập nhật` : 'Thông tin Ban Chấp hành chưa được cập nhật'}
                   </p>
                 </div>
 
                 {/* Sơ đồ cây tổ chức phân cấp */}
-                <div className="flex flex-col items-center gap-6 relative w-full py-6 px-4 bg-white/40 dark:bg-navy/20 border border-slate-200/80 dark:border-slate-800 rounded-2xl">
+                <div className="flex flex-col items-center gap-6 relative w-full py-6 px-4 bg-white/40 dark:bg-navy/20 border border-slate-200/80 dark:border-slate-800 rounded-card">
                   {/* Đường kẻ dọc kết nối các cấp */}
                   <div className="absolute top-12 bottom-12 left-1/2 w-0.5 bg-red-revolution/15 dark:bg-gold/15 hidden md:block" />
 
                   {/* Cấp 1: Bí thư */}
                   {biThu && (
                     <div className="flex flex-col items-center z-10">
-                      <div className="flex flex-col items-center bg-gradient-to-b from-red-revolution to-red-dark border border-gold text-white p-3.5 rounded-xl shadow-md text-center w-52">
+                      <div className="flex flex-col items-center bg-gradient-to-b from-red-revolution to-red-dark border border-gold text-white p-3.5 rounded-xl shadow-sm text-center w-52">
                         <div className="w-8.5 h-8.5 rounded-full bg-gold/20 flex items-center justify-center border border-gold/40 text-gold mb-1.5 shadow-inner">
                           <Shield size={16} className="animate-pulse" />
                         </div>
-                        <h4 className="text-xs font-black tracking-wide uppercase">{biThu.full_name}</h4>
-                        <p className="text-[9px] font-bold text-gold uppercase tracking-wider mt-0.5">Bí thư Đảng ủy</p>
+                        <h4 className="text-xs font-bold tracking-normal normal-case">{biThu.full_name}</h4>
+                        <p className="text-xs font-bold text-gold normal-case tracking-normal mt-0.5">Bí thư Đảng ủy</p>
                       </div>
                     </div>
                   )}
@@ -1285,12 +1287,12 @@ export const MemberHome: React.FC = () => {
                   {/* Cấp 2: Phó Bí thư */}
                   {phoBiThu && (
                     <div className="flex flex-col items-center z-10">
-                      <div className="flex flex-col items-center bg-white dark:bg-slate-900 border border-red-revolution/40 dark:border-gold/30 text-navy dark:text-white p-3 rounded-xl shadow-md text-center w-48">
+                      <div className="flex flex-col items-center bg-white dark:bg-slate-900 border border-red-revolution/40 dark:border-gold/30 text-navy dark:text-white p-3 rounded-xl shadow-sm text-center w-48">
                         <div className="w-8 h-8 rounded-full bg-red-revolution/10 dark:bg-gold/15 text-red-revolution dark:text-gold flex items-center justify-center border border-red-revolution/20 mb-1.5">
                           <Award size={15} />
                         </div>
-                        <h4 className="text-xs font-black uppercase text-red-deep dark:text-gold truncate max-w-full px-1">{phoBiThu.full_name}</h4>
-                        <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mt-0.5">Phó Bí thư Đảng ủy</p>
+                        <h4 className="text-xs font-bold normal-case text-red-deep dark:text-gold truncate max-w-full px-1">{phoBiThu.full_name}</h4>
+                        <p className="text-xs font-bold text-muted dark:text-muted normal-case tracking-normal mt-0.5">Phó Bí thư Đảng ủy</p>
                       </div>
                     </div>
                   )}
@@ -1301,13 +1303,13 @@ export const MemberHome: React.FC = () => {
                       {uyVienList.map((m) => (
                         <div
                           key={m.id}
-                          className="flex flex-col items-center bg-white/90 dark:bg-navy/40 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 p-3 rounded-xl text-center shadow-sm"
+                          className="flex flex-col items-center bg-white/90 dark:bg-navy/40 backdrop-blur-none border border-slate-200/60 dark:border-slate-800 p-3 rounded-xl text-center shadow-sm"
                         >
-                          <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 flex items-center justify-center mb-1.5 border border-slate-200 dark:border-slate-800">
+                          <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-900 text-muted dark:text-muted flex items-center justify-center mb-1.5 border border-slate-200 dark:border-slate-800">
                             <User size={13} />
                           </div>
-                          <h5 className="text-[10.5px] font-bold text-slate-800 dark:text-slate-200 truncate max-w-full px-0.5">{m.full_name}</h5>
-                          <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">Ủy viên BCH</p>
+                          <h5 className="text-xs font-bold text-slate-800 dark:text-muted truncate max-w-full px-0.5">{m.full_name}</h5>
+                          <p className="text-xs font-bold text-muted dark:text-muted normal-case tracking-normal mt-0.5">Ủy viên BCH</p>
                         </div>
                       ))}
                     </div>
@@ -1320,13 +1322,13 @@ export const MemberHome: React.FC = () => {
             {activeOrgView === 'chibo' && (
               <div className="space-y-4 animate-fade-in">
                 <div className="text-center max-w-xl mx-auto mb-2">
-                  <span className="bg-red-revolution/10 text-red-revolution border border-red-revolution/20 px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
+                  <span className="bg-red-revolution/10 text-red-revolution border border-red-revolution/20 px-3 py-0.5 rounded-full text-xs font-bold normal-case tracking-normal">
                   Tổ chức đảng cơ sở
                   </span>
-                  <h3 className="text-xs md:text-sm font-black text-red-deep dark:text-gold uppercase tracking-wider mt-2.5">
+                  <h3 className="text-xs md:text-sm font-bold text-red-deep dark:text-gold normal-case tracking-normal mt-2.5">
                     Các Chi bộ trực thuộc Đảng bộ
                   </h3>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mt-0.5">
+                  <p className="text-xs text-muted dark:text-muted font-bold normal-case mt-0.5">
                     Nhấp vào chi bộ bất kỳ để xem danh sách Đảng viên chi tiết
                   </p>
                 </div>
@@ -1342,26 +1344,26 @@ export const MemberHome: React.FC = () => {
                           setSelectedChiBo(cb)
                           setSearchQuery('')
                         }}
-                        className="bg-white/95 dark:bg-slate-900/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] border border-slate-200/80 dark:border-slate-800/80 hover:border-red-revolution/40 hover:dark:border-gold/40 cursor-pointer flex flex-col justify-between rounded-xl p-3.5 transition-all duration-200 hover:-translate-y-1"
+                        className="bg-white/95 dark:bg-slate-900/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] border border-slate-200/80 dark:border-slate-800/80 hover:border-red-revolution/40 hover:dark:border-gold/40 cursor-pointer flex flex-col justify-between rounded-xl p-3.5 transition-all duration-200 "
                       >
                         <div>
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-black uppercase tracking-wider text-red-revolution dark:text-gold">
+                            <span className="text-xs font-bold normal-case tracking-normal text-red-revolution dark:text-gold">
                               {cb.name}
                             </span>
-                            <span className="text-[9px] font-bold bg-slate-100 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full">
+                            <span className="text-xs font-bold bg-slate-100 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 text-muted dark:text-muted px-2.5 py-0.5 rounded-full">
                               {cbMembers.length} đ/c
                             </span>
                           </div>
 
-                          <div className="space-y-1 mt-2 text-[10px] md:text-[10.5px] font-semibold text-slate-600 dark:text-slate-400">
+                          <div className="space-y-1 mt-2 text-xs md:text-xs font-semibold text-muted dark:text-muted">
                             <div className="truncate">👤 Bí thư: <span className="font-bold text-slate-800 dark:text-white">{leaders.biThu}</span></div>
                             <div className="truncate">👥 Phó Bí thư: <span className="font-bold text-slate-800 dark:text-white">{leaders.phoBiThu}</span></div>
-                            <div className="truncate">🎖️ Chi ủy: <span className="font-bold text-slate-750 dark:text-slate-300">{leaders.chiUyViens}</span></div>
+                            <div className="truncate">🎖️ Chi ủy: <span className="font-bold text-slate-750 dark:text-muted">{leaders.chiUyViens}</span></div>
                           </div>
                         </div>
 
-                        <div className="flex justify-end items-center text-[9px] font-black text-red-revolution dark:text-gold uppercase tracking-wider pt-2 border-t border-slate-100 dark:border-slate-800/60 mt-3.5">
+                        <div className="flex justify-end items-center text-xs font-bold text-red-revolution dark:text-gold normal-case tracking-normal pt-2 border-t border-slate-100 dark:border-slate-800/60 mt-3.5">
                           <span>Chi tiết danh sách</span>
                           <ChevronRight size={10} className="ml-0.5" />
                         </div>
@@ -1376,13 +1378,13 @@ export const MemberHome: React.FC = () => {
 
         {/* Modal xem tài liệu trực quan */}
         {viewingDoc && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-navy border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-none animate-fade-in">
+            <div className="bg-white dark:bg-navy border border-slate-200 dark:border-slate-800 rounded-card w-full max-w-4xl shadow-sm flex flex-col max-h-[90vh]">
               {/* Modal Header */}
               <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2 text-red-revolution dark:text-gold">
                   <FileText size={18} />
-                  <h4 className="text-xs md:text-sm font-black uppercase tracking-wider truncate max-w-lg" title={viewingDoc.title}>
+                  <h4 className="text-xs md:text-sm font-bold normal-case tracking-normal truncate max-w-lg" title={viewingDoc.title}>
                     Đọc tài liệu: {viewingDoc.title}
                   </h4>
                 </div>
@@ -1392,10 +1394,10 @@ export const MemberHome: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleSpeakDocTitle}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold normal-case tracking-normal border transition-all cursor-pointer ${
                       isSpeaking
                         ? 'bg-amber-500 text-white border-amber-500 animate-pulse'
-                        : 'bg-white dark:bg-navy border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50'
+                        : 'bg-white dark:bg-navy border-slate-200 dark:border-slate-800 text-muted dark:text-muted hover:bg-slate-50'
                     }`}
                   >
                     {isSpeaking ? <VolumeX size={12} /> : <Volume2 size={12} />}
@@ -1406,7 +1408,7 @@ export const MemberHome: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setViewingDoc(null)}
-                    className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted hover:text-muted cursor-pointer"
                   >
                     <X size={18} />
                   </button>
@@ -1416,16 +1418,16 @@ export const MemberHome: React.FC = () => {
               {/* Trình điều khiển đọc tài liệu nâng cao */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-2 bg-slate-50 dark:bg-navy/60 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-1.5 text-xs font-bold">
-                  <span className="text-[10px] text-slate-400 uppercase mr-1">Tốc độ đọc:</span>
+                  <span className="text-xs text-muted normal-case mr-1">Tốc độ đọc:</span>
                   {[0.75, 1.0, 1.25, 1.5].map((rate) => (
                     <button
                       key={rate}
                       type="button"
                       onClick={() => setSpeechRate(rate)}
-                      className={`px-2 py-0.5 rounded-md font-black border text-[10px] transition-all cursor-pointer ${
+                      className={`px-2 py-0.5 rounded-md font-bold border text-xs transition-all cursor-pointer ${
                         speechRate === rate
                           ? 'bg-red-revolution text-white border-red-revolution shadow-sm'
-                          : 'bg-white dark:bg-navy border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
+                          : 'bg-white dark:bg-navy border-slate-200 dark:border-slate-800 text-muted dark:text-muted hover:bg-slate-50'
                       }`}
                     >
                       {rate}x
@@ -1435,11 +1437,11 @@ export const MemberHome: React.FC = () => {
 
                 {voices.length > 0 && (
                   <div className="flex items-center gap-1.5 text-xs font-bold w-full sm:w-auto">
-                    <span className="text-[10px] text-slate-400 uppercase mr-1 whitespace-nowrap">Giọng đọc:</span>
+                    <span className="text-xs text-muted normal-case mr-1 whitespace-nowrap">Giọng đọc:</span>
                     <select
                       value={speechVoiceName}
                       onChange={(e) => setSpeechVoiceName(e.target.value)}
-                      className="p-1 border border-slate-200 dark:border-slate-800 rounded-md bg-white dark:bg-navy text-[10px] font-bold text-slate-600 dark:text-slate-350 outline-none w-full sm:w-48 focus:border-red-revolution cursor-pointer"
+                      className="p-1 border border-slate-200 dark:border-slate-800 rounded-md bg-white dark:bg-navy text-xs font-bold text-muted dark:text-muted outline-none w-full sm:w-48 focus:border-red-revolution cursor-pointer"
                     >
                       {voices.map((v) => (
                         <option key={v.name} value={v.name}>
@@ -1460,7 +1462,7 @@ export const MemberHome: React.FC = () => {
                   style={{ width: `${readProgress}%` }}
                 />
               </div>
-              <div className="flex justify-between items-center px-4 py-1.5 bg-yellow-50/50 dark:bg-amber-950/10 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black text-brown-text dark:text-gold uppercase tracking-wider">
+              <div className="flex justify-between items-center px-4 py-1.5 bg-yellow-50/50 dark:bg-amber-950/10 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-brown-text dark:text-gold normal-case tracking-normal">
                 <span>📖 Tiến trình nghiên cứu chuyên đề</span>
                 <span className={readProgress === 100 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ''}>
                   {readProgress === 100 ? '✅ Đã hoàn thành (100%)' : `Đang nghiên cứu: ${Math.round(readProgress)}%`}
@@ -1486,12 +1488,12 @@ export const MemberHome: React.FC = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-between p-3 border-t border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 dark:text-slate-500">
+              <div className="flex items-center justify-between p-3 border-t border-slate-100 dark:border-slate-800 text-xs font-bold text-muted dark:text-muted">
                 <span>* Tài liệu nhúng bảo mật được tải trực tiếp từ máy chủ lưu trữ.</span>
                 <button
                   type="button"
                   onClick={() => setViewingDoc(null)}
-                  className="px-4 py-1.5 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 font-black uppercase text-[9px] cursor-pointer"
+                  className="px-4 py-1.5 border border-slate-200 dark:border-slate-800 text-muted dark:text-muted rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 font-bold normal-case text-xs cursor-pointer"
                 >
                   Đóng
                 </button>
@@ -1502,16 +1504,16 @@ export const MemberHome: React.FC = () => {
 
         {/* ==================== MODAL CHI TIET CHI BO ==================== */}
         {selectedChiBo && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-navy border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[85vh]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-none animate-fade-in">
+            <div className="bg-white dark:bg-navy border border-slate-200 dark:border-slate-800 rounded-card w-full max-w-2xl shadow-sm flex flex-col max-h-[85vh]">
               
               {/* Modal Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-slate-150 dark:border-slate-800 gap-3">
                 <div>
-                  <span className="text-[9px] font-black uppercase bg-red-revolution text-white px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-bold normal-case bg-red-revolution text-white px-2 py-0.5 rounded-md">
                     Chi bộ trực thuộc
                   </span>
-                  <h4 className="text-xs md:text-sm font-black uppercase tracking-wider text-red-deep dark:text-gold mt-1">
+                  <h4 className="text-xs md:text-sm font-bold normal-case tracking-normal text-red-deep dark:text-gold mt-1">
                     {selectedChiBo.name}
                   </h4>
                 </div>
@@ -1519,7 +1521,7 @@ export const MemberHome: React.FC = () => {
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                   {/* Tìm kiếm */}
                   <div className="relative flex-1 sm:flex-initial">
-                    <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                    <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-muted">
                       <Search size={12} />
                     </div>
                     <input
@@ -1527,14 +1529,14 @@ export const MemberHome: React.FC = () => {
                       placeholder="Tìm họ tên hoặc chức vụ..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="block w-full sm:w-56 min-h-[30px] pl-8 pr-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-navy dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-red-revolution/50 text-[11px] font-semibold"
+                      className="block w-full sm:w-56 min-h-[30px] pl-8 pr-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-navy dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-red-revolution/50 text-xs font-semibold"
                     />
                   </div>
 
                   {/* Nút đóng */}
                   <button
                     onClick={() => setSelectedChiBo(null)}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted hover:text-muted cursor-pointer"
                   >
                     <X size={16} />
                   </button>
@@ -1547,16 +1549,16 @@ export const MemberHome: React.FC = () => {
                   <table className="min-w-full divide-y divide-slate-150 dark:divide-slate-800">
                     <thead className="bg-slate-100 dark:bg-slate-900/60">
                       <tr>
-                        <th scope="col" className="px-4 py-2.5 text-left text-[9px] font-black uppercase tracking-wider text-slate-500 w-12">STT</th>
-                        <th scope="col" className="px-4 py-2.5 text-left text-[9px] font-black uppercase tracking-wider text-slate-500">Đồng chí</th>
-                        <th scope="col" className="px-4 py-2.5 text-left text-[9px] font-black uppercase tracking-wider text-slate-500">Chức vụ</th>
-                        <th scope="col" className="px-4 py-2.5 text-left text-[9px] font-black uppercase tracking-wider text-slate-500">Điện thoại</th>
+                        <th scope="col" className="px-4 py-2.5 text-left text-xs font-bold normal-case tracking-normal text-muted w-12">STT</th>
+                        <th scope="col" className="px-4 py-2.5 text-left text-xs font-bold normal-case tracking-normal text-muted">Đồng chí</th>
+                        <th scope="col" className="px-4 py-2.5 text-left text-xs font-bold normal-case tracking-normal text-muted">Chức vụ</th>
+                        <th scope="col" className="px-4 py-2.5 text-left text-xs font-bold normal-case tracking-normal text-muted">Điện thoại</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-[11px] text-slate-700 dark:text-slate-300">
+                    <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-xs text-slate-700 dark:text-muted">
                       {getFilteredChiBoMembers().length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center font-bold text-slate-400">
+                          <td colSpan={4} className="px-4 py-8 text-center font-bold text-muted">
                             Không tìm thấy đồng chí nào phù hợp với từ khoá.
                           </td>
                         </tr>
@@ -1568,22 +1570,22 @@ export const MemberHome: React.FC = () => {
                           );
                           return (
                             <tr key={m.id} className="hover:bg-white/40 dark:hover:bg-navy/10 transition-colors">
-                              <td className="px-4 py-3 whitespace-nowrap text-slate-400 font-bold">{index + 1}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-muted font-bold">{index + 1}</td>
                               <td className={`px-4 py-3 whitespace-nowrap ${isLeader ? 'text-red-revolution dark:text-gold font-bold' : 'text-slate-900 dark:text-white'}`}>
                                 {m.full_name}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-450">{m.position || 'Đảng viên'}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-muted dark:text-muted">{m.position || 'Đảng viên'}</td>
                               <td className="px-4 py-3 whitespace-nowrap">
                                 {m.phone ? (
                                   <a
                                     href={`tel:${m.phone}`}
-                                    className="inline-flex items-center gap-1 text-slate-650 hover:text-red-revolution dark:text-slate-350 dark:hover:text-gold font-bold"
+                                    className="inline-flex items-center gap-1 text-slate-650 hover:text-red-revolution dark:text-muted dark:hover:text-gold font-bold"
                                   >
                                     <Phone size={10} />
                                     <span>{m.phone}</span>
                                   </a>
                                 ) : (
-                                  <span className="text-slate-400 font-medium">--</span>
+                                  <span className="text-muted font-medium">--</span>
                                 )}
                               </td>
                             </tr>
@@ -1599,7 +1601,7 @@ export const MemberHome: React.FC = () => {
               <div className="flex items-center justify-end p-3.5 border-t border-slate-150 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10">
                 <button
                   onClick={() => setSelectedChiBo(null)}
-                  className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-black uppercase text-[10px] cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-muted dark:text-muted rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-bold normal-case text-xs cursor-pointer"
                 >
                   Đóng
                 </button>
@@ -1618,11 +1620,11 @@ export const MemberHome: React.FC = () => {
         if (nextAction === 'WAITING') {
           if (showAbsenceBtn) {
             return (
-              <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/95 dark:bg-navy/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-[0_-8px_30px_rgba(0,0,0,0.15)] md:hidden flex justify-center">
+              <div className="member-action-bar fixed bottom-[calc(var(--ui-tabbar-height)+env(safe-area-inset-bottom))] left-0 right-0 z-40 p-3 bg-surface border-t border-line md:hidden flex justify-center">
                 <button
                   type="button"
                   onClick={() => setShowAbsenceModal(true)}
-                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-black uppercase tracking-wider rounded-xl border border-slate-200 dark:border-slate-750 shadow-md cursor-pointer"
+                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-muted text-xs font-bold normal-case tracking-normal rounded-xl border border-slate-200 dark:border-slate-750 shadow-sm cursor-pointer"
                 >
                   Báo vắng
                 </button>
@@ -1637,15 +1639,15 @@ export const MemberHome: React.FC = () => {
           nextAction === 'RESULT' ? 'Xem kết quả bài thi' : 'Điểm danh ngay'
         )
         return (
-          <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/95 dark:bg-navy/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-[0_-8px_30px_rgba(0,0,0,0.15)] md:hidden flex gap-3 justify-center">
-            <RevolutionaryButton onClick={handleContinueClick} className="flex-1 py-3 text-sm font-black shadow-lg">
+          <div className="member-action-bar fixed bottom-[calc(var(--ui-tabbar-height)+env(safe-area-inset-bottom))] left-0 right-0 z-40 p-3 bg-surface border-t border-line md:hidden flex gap-3 justify-center">
+            <RevolutionaryButton onClick={handleContinueClick} className="flex-1 py-3 text-sm font-bold shadow-sm">
               {btnText} <ArrowRight size={16} />
             </RevolutionaryButton>
             {nextAction === 'ATTENDANCE' && (
               <button
                 type="button"
                 onClick={() => setShowAbsenceModal(true)}
-                className="px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-black uppercase tracking-wider rounded-xl border border-slate-200 dark:border-slate-750 shadow-md cursor-pointer"
+                className="px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-muted text-xs font-bold normal-case tracking-normal rounded-xl border border-slate-200 dark:border-slate-750 shadow-sm cursor-pointer"
               >
                 Báo vắng
               </button>
@@ -1656,15 +1658,15 @@ export const MemberHome: React.FC = () => {
 
       {/* ==================== MODAL NGHI LỄ CHÀO CỜ ==================== */}
       {showCeremonyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-          <div className="bg-red-deep dark:bg-navy border border-yellow-500/30 rounded-2xl w-full max-w-2xl shadow-2xl p-6 flex flex-col text-center relative overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-none animate-fade-in">
+          <div className="bg-red-deep dark:bg-navy border border-yellow-500/30 rounded-card w-full max-w-2xl shadow-sm p-6 flex flex-col text-center relative overflow-hidden">
             {/* Brass drum background pattern decoration */}
             <div className="absolute inset-0 opacity-5 pointer-events-none bg-center bg-no-repeat bg-contain" style={{ backgroundImage: `url(${partyCommitteeIntroImg})` }} />
 
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-6 border-b border-yellow-500/10 pb-3 relative z-10">
-              <h3 className="text-sm font-black text-gold uppercase tracking-wider flex items-center gap-2 mx-auto">
-                🇨🇳 NGHI LỄ CHÀO CỜ & QUỐC CA
+              <h3 className="text-sm font-bold text-gold normal-case tracking-normal flex items-center gap-2 mx-auto">
+                <Flag size={18} aria-hidden="true" /> NGHI LỄ CHÀO CỜ & QUỐC CA
               </h3>
               <button
                 type="button"
@@ -1679,7 +1681,7 @@ export const MemberHome: React.FC = () => {
             <div className="mb-6 relative z-10 flex flex-col items-center">
               <svg 
                 viewBox="0 0 300 200" 
-                className="w-56 h-36 rounded-xl shadow-2xl border-2 border-yellow-400 bg-red-revolution animate-flag-wave relative"
+                className="w-56 h-36 rounded-xl shadow-sm border-2 border-yellow-400 bg-red-revolution animate-flag-wave relative"
               >
                 <rect width="300" height="200" fill="#D40000" />
                 <g transform="translate(150, 100)">
@@ -1690,7 +1692,7 @@ export const MemberHome: React.FC = () => {
                 </g>
               </svg>
               {ceremonyPlaying && (
-                <div className="mt-3 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-yellow-400 text-red-dark animate-pulse shadow-sm animate-fade-in">
+                <div className="mt-3 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-400 text-red-dark animate-pulse shadow-sm animate-fade-in">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-revolution"></span>
                   ĐANG CỬ HÀNH HÀNH KHÚC
                 </div>
@@ -1699,7 +1701,7 @@ export const MemberHome: React.FC = () => {
 
             {/* Lyrics Card */}
             <div className="mb-8 p-4 bg-red-dark/30 dark:bg-navy/60 rounded-xl border border-yellow-500/20 min-h-[90px] flex items-center justify-center relative z-10 shadow-inner">
-              <p className="text-sm md:text-base font-serif italic text-yellow-100 font-bold tracking-wide transition-all duration-300">
+              <p className="text-sm md:text-base font-serif italic text-yellow-100 font-bold tracking-normal transition-all duration-300">
                 {anthemLyrics[lyricsIndex].text}
               </p>
             </div>
@@ -1723,7 +1725,7 @@ export const MemberHome: React.FC = () => {
               <RevolutionaryButton
                 onClick={() => setShowCeremonyModal(false)}
                 variant="gold"
-                className="px-8 shadow-md"
+                className="px-8 shadow-sm"
               >
                 Hoàn thành Nghi lễ
               </RevolutionaryButton>
@@ -1734,16 +1736,16 @@ export const MemberHome: React.FC = () => {
 
       {/* ==================== MODAL BÁO XIN VẮNG ==================== */}
       {showAbsenceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <GlassCard className="w-full max-w-md border border-red-revolution/20 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-none animate-fade-in">
+          <GlassCard className="w-full max-w-md border border-red-revolution/20 shadow-sm relative">
             <button 
               onClick={() => setShowAbsenceModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 cursor-pointer"
+              className="absolute top-4 right-4 text-muted hover:text-slate-650 dark:hover:text-slate-200 cursor-pointer"
             >
               <X size={20} />
             </button>
 
-            <h3 className="text-sm font-black text-red-deep dark:text-gold uppercase tracking-wider mb-4 flex items-center gap-1.5">
+            <h3 className="text-sm font-bold text-red-deep dark:text-gold normal-case tracking-normal mb-4 flex items-center gap-1.5">
               <Calendar size={18} /> Báo cáo xin vắng sinh hoạt
             </h3>
 
@@ -1753,7 +1755,7 @@ export const MemberHome: React.FC = () => {
 
             <div className="space-y-4 text-xs font-semibold">
               <div>
-                <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1.5">Lý do xin vắng:</label>
+                <label className="text-xs normal-case font-bold text-muted block mb-1.5">Lý do xin vắng:</label>
                 <div className="grid grid-cols-2 gap-2">
                   {['Ốm, đau', 'Họp, công tác', 'Nghỉ phép', 'Việc gia đình'].map((reason) => (
                     <button
@@ -1763,7 +1765,7 @@ export const MemberHome: React.FC = () => {
                       className={`p-2.5 rounded-lg border text-center font-bold cursor-pointer transition-all ${
                         absenceReason === reason
                           ? 'border-red-revolution bg-red-revolution/10 text-red-revolution dark:border-gold dark:bg-gold/15 dark:text-gold shadow-sm'
-                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white/50 dark:bg-navy/20 text-slate-700 dark:text-slate-300'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white/50 dark:bg-navy/20 text-slate-700 dark:text-muted'
                       }`}
                     >
                       {reason}
@@ -1773,7 +1775,7 @@ export const MemberHome: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1.5">Ghi chú thêm (Tùy chọn):</label>
+                <label className="text-xs normal-case font-bold text-muted block mb-1.5">Ghi chú thêm (Tùy chọn):</label>
                 <textarea
                   value={absenceNotes}
                   onChange={(e) => setAbsenceNotes(e.target.value)}
@@ -1787,7 +1789,7 @@ export const MemberHome: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAbsenceModal(false)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 font-bold uppercase cursor-pointer text-[10px]"
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-muted rounded-xl border border-slate-200 dark:border-slate-700 font-bold normal-case cursor-pointer text-xs"
                 >
                   Hủy bỏ
                 </button>
@@ -1795,7 +1797,7 @@ export const MemberHome: React.FC = () => {
                   onClick={handleAbsenceSubmit}
                   loading={submittingAbsence}
                   fullWidth
-                  className="flex-1 uppercase text-[10px]"
+                  className="flex-1 normal-case text-xs"
                 >
                   Xác nhận báo vắng
                 </RevolutionaryButton>

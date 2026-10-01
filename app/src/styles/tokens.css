@@ -1,0 +1,26 @@
+:root {
+  --ui-bg: #f8f7f5; --ui-surface: #fff; --ui-surface-muted: #f1efec;
+  --ui-line: #e6e2dc; --ui-line-strong: #d3cdc5;
+  --ui-text: #2a2320; --ui-muted: #625953; --ui-subtle: #7d746c;
+  --ui-primary: #a9141b; --ui-primary-hover: #8c1016; --ui-primary-deep: #6e0d12;
+  --ui-accent: #c99a2e; --ui-accent-text: #8a6212;
+  --ui-success: #1f7a4d; --ui-success-bg: #e8f4ee;
+  --ui-warning: #8f5b0e; --ui-warning-bg: #fdf3e1;
+  --ui-danger: #b42318; --ui-danger-bg: #fdecea;
+  --ui-info: #1d5fa8; --ui-info-bg: #eaf1fa;
+  --ui-font: "Be Vietnam Pro", "Open Sans", "Roboto", system-ui, sans-serif;
+  --ui-serif: "Playfair Display", "Lora", Georgia, serif;
+  --ui-shadow: 0 2px 8px rgb(42 35 32 / 5%);
+  --ui-tabbar-height: 4.5rem;
+}
+html.dark {
+  --ui-bg: #181614; --ui-surface: #24211e; --ui-surface-muted: #302c27;
+  --ui-line: #49423b; --ui-line-strong: #655a50;
+  --ui-text: #f8f5f0; --ui-muted: #d3cdc5; --ui-subtle: #bfb5aa;
+  --ui-accent-text: #e2c576;
+  --ui-success: #91d5b1; --ui-success-bg: #183629;
+  --ui-warning: #f0d19a; --ui-warning-bg: #3c2c16;
+  --ui-danger: #ffb4aa; --ui-danger-bg: #42211d;
+  --ui-info: #a8c9f0; --ui-info-bg: #1d3046;
+  --ui-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+}

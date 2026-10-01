@@ -226,10 +226,10 @@ export const AdminDashboard: React.FC = () => {
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-xl md:text-2xl font-black text-red-deep dark:text-gold uppercase tracking-wider">
+            <h1 className="text-xl md:text-2xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
               Bảng điều hành Ban Tổ chức
             </h1>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs font-semibold text-muted dark:text-muted mt-0.5">
               {meeting ? `Theo dõi tiến độ thực tế phiên họp: "${meeting.title}"` : 'Giám sát tiến độ các phiên sinh hoạt chính trị'}
             </p>
           </div>
@@ -237,7 +237,7 @@ export const AdminDashboard: React.FC = () => {
           <button
             onClick={() => loadDashboardData(false)}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy/40 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all hover:bg-slate-50 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy/40 text-muted dark:text-muted rounded-xl text-xs font-bold transition-all hover:bg-slate-50 disabled:opacity-50"
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} /> Làm mới số liệu
           </button>
@@ -292,17 +292,17 @@ export const AdminDashboard: React.FC = () => {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                       </span>
-                      <h3 className="text-xs font-black uppercase tracking-wider">
+                      <h3 className="text-xs font-bold normal-case tracking-normal">
                         Danh sách chờ duyệt điểm danh & báo vắng ({pendingApprovals.length})
                       </h3>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400">Tự động cập nhật real-time</span>
+                    <span className="text-xs font-bold text-muted">Tự động cập nhật real-time</span>
                   </div>
 
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-xs font-semibold text-left">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase tracking-wider text-[9px]">
+                        <tr className="border-b border-slate-100 dark:border-slate-800 text-muted normal-case tracking-normal text-xs">
                           <th className="py-2 px-3">Họ và tên</th>
                           <th className="py-2 px-3">Chi bộ</th>
                           <th className="py-2 px-3">Loại yêu cầu</th>
@@ -315,21 +315,21 @@ export const AdminDashboard: React.FC = () => {
                           <tr key={appr.memberId} className="border-b border-slate-50/50 dark:border-slate-900/30 hover:bg-amber-500/5">
                             <td className="py-2.5 px-3">
                               <div className="font-bold text-navy dark:text-white">{appr.fullName}</div>
-                              <div className="text-[9px] text-slate-400 font-medium">{appr.position}</div>
+                              <div className="text-xs text-muted font-medium">{appr.position}</div>
                             </td>
-                            <td className="py-2.5 px-3 text-slate-500">{appr.chiBoName}</td>
+                            <td className="py-2.5 px-3 text-muted">{appr.chiBoName}</td>
                             <td className="py-2.5 px-3">
                               {appr.status === 'warning' ? (
-                                <span className="inline-flex bg-red-50 text-red-700 px-2 py-0.5 rounded-full text-[9px] font-black border border-red-100">
+                                <span className="inline-flex bg-red-50 text-red-700 px-2 py-0.5 rounded-full text-xs font-bold border border-red-100">
                                   ⚠️ Sai vị trí / GPS
                                 </span>
                               ) : (
-                                <span className="inline-flex bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-[9px] font-black border border-amber-100">
+                                <span className="inline-flex bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-100">
                                   ✉ Xin vắng phép
                                 </span>
                               )}
                             </td>
-                            <td className="py-2.5 px-3 text-[10px] text-slate-600 dark:text-slate-355 max-w-xs truncate" title={appr.reason}>
+                            <td className="py-2.5 px-3 text-xs text-muted dark:text-slate-355 max-w-xs truncate" title={appr.reason}>
                               {appr.status === 'warning' ? (
                                 <span>Cự ly: <b>{appr.gpsDistanceM ? Math.round(appr.gpsDistanceM) : '?'}m</b> ({appr.reason.replace(/^Vượt quá bán kính cho phép:.*?\.\s*/, '')})</span>
                               ) : (
@@ -341,7 +341,7 @@ export const AdminDashboard: React.FC = () => {
                                 <button
                                   onClick={() => handleQuickApprove(appr.memberId, appr.status)}
                                   disabled={actionLoading === appr.memberId}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer disabled:opacity-50 transition-all shadow-sm"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold normal-case tracking-normal cursor-pointer disabled:opacity-50 transition-all shadow-sm"
                                   title="Phê duyệt yêu cầu"
                                 >
                                   <Check size={12} />
@@ -350,7 +350,7 @@ export const AdminDashboard: React.FC = () => {
                                 <button
                                   onClick={() => handleQuickReject(appr.memberId)}
                                   disabled={actionLoading === appr.memberId}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer disabled:opacity-50 transition-all shadow-sm"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold normal-case tracking-normal cursor-pointer disabled:opacity-50 transition-all shadow-sm"
                                   title="Từ chối yêu cầu, đánh vắng mặt"
                                 >
                                   <X size={12} />
@@ -373,7 +373,7 @@ export const AdminDashboard: React.FC = () => {
                 <GlassCard className="h-full border-l-4 border-l-rose-600 dark:border-l-rose-500 animate-slide-up">
                   <div className="flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-2 text-rose-600 dark:text-rose-400">
                     <ShieldAlert size={16} className="animate-pulse" />
-                    <h3 className="text-xs font-black uppercase tracking-wider">
+                    <h3 className="text-xs font-bold normal-case tracking-normal">
                       Cảnh báo bảo mật hệ thống
                     </h3>
                   </div>
@@ -386,17 +386,17 @@ export const AdminDashboard: React.FC = () => {
                           <Smartphone size={14} />
                           <span>Trùng thiết bị điểm danh ({sharedDevices.length})</span>
                         </div>
-                        <ul className="space-y-2 text-[10px] text-slate-600 dark:text-slate-400 font-semibold">
+                        <ul className="space-y-2 text-xs text-muted dark:text-muted font-semibold">
                           {sharedDevices.map((dev, i) => (
                             <li key={i} className="bg-white/80 dark:bg-slate-900/40 p-2 rounded-lg border border-rose-100/50 dark:border-rose-950/50">
-                              <div className="text-slate-400 dark:text-slate-500 font-mono mb-1">
+                              <div className="text-muted dark:text-muted font-mono mb-1">
                                 Device ID: ...{dev.deviceUuid.substring(Math.max(0, dev.deviceUuid.length - 8))}
                               </div>
-                              <div className="flex flex-col gap-1 text-slate-800 dark:text-slate-200">
+                              <div className="flex flex-col gap-1 text-slate-800 dark:text-muted">
                                 {dev.members.map((m: any, idx: number) => (
                                   <div key={idx} className="flex items-center justify-between">
                                     <span className="font-extrabold text-red-700 dark:text-red-400">👤 {m.name}</span>
-                                    <span className="text-[9px] text-slate-400 font-medium">{m.chiBoName}</span>
+                                    <span className="text-xs text-muted font-medium">{m.chiBoName}</span>
                                   </div>
                                 ))}
                               </div>
@@ -413,14 +413,14 @@ export const AdminDashboard: React.FC = () => {
                           <Key size={14} />
                           <span>Mật khẩu chưa đổi ({defaultPasswordUsers.length})</span>
                         </div>
-                        <p className="text-[9px] text-slate-500 dark:text-slate-400 mb-2 leading-relaxed font-semibold">
+                        <p className="text-xs text-muted dark:text-muted mb-2 leading-relaxed font-semibold">
                           Các tài khoản dưới đây vẫn giữ nguyên mật khẩu mặc định ban đầu.
                         </p>
                         <div className="max-h-[120px] overflow-y-auto space-y-1">
                           {defaultPasswordUsers.map((u, i) => (
-                            <div key={i} className="flex justify-between items-center bg-white/60 dark:bg-slate-900/20 p-1.5 rounded border border-amber-100/30 dark:border-amber-950/30 text-[10px] font-bold text-slate-700 dark:text-slate-350">
+                            <div key={i} className="flex justify-between items-center bg-white/60 dark:bg-slate-900/20 p-1.5 rounded border border-amber-100/30 dark:border-amber-950/30 text-xs font-bold text-slate-700 dark:text-muted">
                               <span>🔑 {u.fullName}</span>
-                              <span className="text-[9px] text-slate-400 font-medium">{u.chiBoName}</span>
+                              <span className="text-xs text-muted font-medium">{u.chiBoName}</span>
                             </div>
                           ))}
                         </div>
@@ -435,7 +435,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Shortcuts Panel */}
         <GlassCard>
-          <h3 className="text-xs font-black text-brown-text dark:text-cream-light uppercase tracking-wider mb-4">
+          <h3 className="text-xs font-bold text-brown-text dark:text-cream-light normal-case tracking-normal mb-4">
             Lối tắt Quản lý nghiệp vụ Ban Tổ chức
           </h3>
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -455,7 +455,7 @@ export const AdminDashboard: React.FC = () => {
                 >
                   <Icon className="text-red-revolution dark:text-gold mb-2" size={24} />
                   <div className="font-bold text-sm text-navy dark:text-white">{shortcut.label}</div>
-                  <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{shortcut.desc}</div>
+                  <div className="text-xs font-semibold text-muted dark:text-muted mt-0.5">{shortcut.desc}</div>
                 </button>
               )
             })}

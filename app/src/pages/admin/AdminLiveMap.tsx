@@ -27,6 +27,7 @@ interface MapboxMapInstance {
   on: (event: string, callback: () => void) => void
   flyTo: (options: { center: [number, number]; zoom?: number; speed?: number }) => void
   jumpTo: (options: { center: [number, number]; zoom?: number }) => void
+  resize: () => void
 }
 
 interface MapboxMarkerInstance {
@@ -495,7 +496,7 @@ export const AdminLiveMap: React.FC = () => {
       const safeChiBo = escapeHtml(pt.chiBoName)
       const safePosition = escapeHtml(pt.position)
       const safeWarning = pt.warningReason ? escapeHtml(pt.warningReason) : null
-      const displayDistance = pt.distanceM !== null ? `${Math.round(pt.distanceM)}m` : 'Chưa rõ'
+      const displayDistance = pt.distanceM !== null ? `cách ${Math.round(pt.distanceM)} m` : 'Chưa rõ khoảng cách'
       const displayTime = pt.markedAt || 'Chưa xác định'
 
       const popupHtml = `
@@ -651,6 +652,15 @@ export const AdminLiveMap: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapStyle])
 
+  // Font size, menus and responsive layout can resize the canvas without a window resize.
+  useEffect(() => {
+    const container = mapContainerRef.current
+    if (!container) return
+    const observer = new ResizeObserver(() => mapInstanceRef.current?.resize())
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [mapStyle, selectedMeetingId, initialLoading])
+
   // 8. Cập nhật lại markers khi filteredPoints hoặc mapData thay đổi mà không khởi tạo lại Map
   useEffect(() => {
     const mapboxglObj = (window as unknown as Record<string, unknown>).mapboxgl
@@ -721,10 +731,10 @@ export const AdminLiveMap: React.FC = () => {
         {/* HEADER BẢN ĐỒ GIÁM SÁT */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black uppercase text-red-deep dark:text-gold tracking-wide flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold normal-case text-red-deep dark:text-gold tracking-normal flex items-center gap-2">
               <MapIcon className="text-red-revolution" size={24} /> Bản đồ Giám sát Vị trí Điểm danh
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-muted dark:text-muted mt-1">
               Theo dõi tọa độ GPS thực tế của Đảng viên theo thời gian thực (Google Maps Vệ tinh & Vector)
             </p>
           </div>
@@ -732,8 +742,8 @@ export const AdminLiveMap: React.FC = () => {
           {/* CÔNG TẮC BẬT/TẮT CHẾ ĐỘ ĐỘNG & NÚT LÀM MỚI */}
           <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex-wrap">
             <div className="flex items-center gap-2 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-              <Radio size={14} className={isDynamicMode ? 'text-emerald-500 animate-pulse' : 'text-slate-400'} />
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+              <Radio size={14} className={isDynamicMode ? 'text-emerald-500 animate-pulse' : 'text-muted'} />
+              <span className="text-xs font-bold text-slate-700 dark:text-muted">
                 {isDynamicMode ? 'Chế độ Động (Tự động làm mới)' : 'Chế độ Tĩnh'}
               </span>
               <button
@@ -744,7 +754,7 @@ export const AdminLiveMap: React.FC = () => {
                 }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
                     isDynamicMode ? 'translate-x-4' : 'translate-x-0'
                   }`}
                 />
@@ -765,11 +775,11 @@ export const AdminLiveMap: React.FC = () => {
         {loadError && <AlertMessage type="error" message={loadError} className="mb-6" onDismiss={() => setLoadError('')} />}
 
         {/* BỘ LỌC THÔNG MINH */}
-        <GlassCard className="p-4 mb-6 border border-red-revolution/20 shadow-md">
+        <GlassCard className="p-4 mb-6 border border-red-revolution/20 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             {/* Lọc phiên họp */}
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Phiên họp sinh hoạt:</label>
+              <label className="text-xs font-bold normal-case text-muted block mb-1">Phiên họp sinh hoạt:</label>
               <select
                 value={selectedMeetingId}
                 onChange={(e) => setSelectedMeetingId(e.target.value)}
@@ -785,7 +795,7 @@ export const AdminLiveMap: React.FC = () => {
 
             {/* Lọc chi bộ */}
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Lọc theo Chi bộ:</label>
+              <label className="text-xs font-bold normal-case text-muted block mb-1">Lọc theo Chi bộ:</label>
               <select
                 value={selectedChiBoId}
                 onChange={(e) => setSelectedChiBoId(e.target.value)}
@@ -800,7 +810,7 @@ export const AdminLiveMap: React.FC = () => {
 
             {/* Lọc bán kính GPS */}
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Trạng thái bán kính:</label>
+              <label className="text-xs font-bold normal-case text-muted block mb-1">Trạng thái bán kính:</label>
               <select
                 value={selectedLocationStatus}
                 onChange={(e) => setSelectedLocationStatus(e.target.value as 'all' | 'inside_radius' | 'outside_radius')}
@@ -814,7 +824,7 @@ export const AdminLiveMap: React.FC = () => {
 
             {/* Tìm kiếm Đảng viên */}
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Tìm kiếm theo tên:</label>
+              <label className="text-xs font-bold normal-case text-muted block mb-1">Tìm kiếm theo tên:</label>
               <div className="relative">
                 <input
                   type="text"
@@ -823,7 +833,7 @@ export const AdminLiveMap: React.FC = () => {
                   placeholder="Nhập tên Đảng viên..."
                   className="w-full text-xs p-2 pl-8 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 focus:border-red-revolution"
                 />
-                <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
+                <Search size={14} className="absolute left-2.5 top-2.5 text-muted" />
               </div>
             </div>
           </div>
@@ -837,7 +847,7 @@ export const AdminLiveMap: React.FC = () => {
               {/* Thống kê chuẩn từ summary bất biến */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                <span className="text-xs font-bold text-slate-700 dark:text-muted">
                   Đã định vị: <b className="text-emerald-600 dark:text-emerald-400">{summary.positioned}</b> đồng chí
                 </span>
                 {summary.missingGps > 0 && (
@@ -845,15 +855,15 @@ export const AdminLiveMap: React.FC = () => {
                     • Không có GPS: <b>{summary.missingGps}</b> lượt
                   </span>
                 )}
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 ml-2">
+                <span className="text-xs font-bold text-muted dark:text-muted ml-2">
                   • Tổng điểm danh: <b>{summary.totalAttendance}</b>
                 </span>
                 {hall ? (
-                  <span className="text-[10px] text-slate-400 ml-1">
+                  <span className="text-xs text-muted ml-1">
                     (Bán kính: <b>{hall.radiusM}m</b> • Diện tích: <b className="text-red-revolution dark:text-gold">{((Math.PI * Math.pow(hall.radiusM, 2)) / 10000).toFixed(4)} ha</b>)
                   </span>
                 ) : (
-                  <span className="text-[10px] text-amber-600 ml-1">Chưa cấu hình vị trí điểm danh cho phiên này</span>
+                  <span className="text-xs text-amber-600 ml-1">Chưa cấu hình vị trí điểm danh cho phiên này</span>
                 )}
               </div>
 
@@ -862,41 +872,41 @@ export const AdminLiveMap: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setMapStyle('google-hybrid')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                     mapStyle === 'google-hybrid'
-                      ? 'bg-red-revolution text-white font-black shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400'
+                      ? 'bg-red-revolution text-white font-bold shadow-sm'
+                      : 'text-muted dark:text-muted'
                   }`}
                 >
-                  🛰️ Google Vệ tinh (Mới nhất)
+                  Google Vệ tinh
                 </button>
                 <button
                   type="button"
                   onClick={() => setMapStyle('google-roadmap')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                     mapStyle === 'google-roadmap'
-                      ? 'bg-red-revolution text-white font-black shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400'
+                      ? 'bg-red-revolution text-white font-bold shadow-sm'
+                      : 'text-muted dark:text-muted'
                   }`}
                 >
-                  🗺️ Google Đường phố
+                  Google Đường phố
                 </button>
                 <button
                   type="button"
                   onClick={() => setMapStyle('mapbox://styles/mapbox/satellite-streets-v12')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                     mapStyle.includes('mapbox')
-                      ? 'bg-red-revolution text-white font-black shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400'
+                      ? 'bg-red-revolution text-white font-bold shadow-sm'
+                      : 'text-muted dark:text-muted'
                   }`}
                 >
-                  🌐 Mapbox
+                  Mapbox
                 </button>
               </div>
             </div>
 
             {/* MAP CONTAINER */}
-            <div className="relative w-full h-[520px] rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden bg-[#e5e3df] dark:bg-slate-800">
+            <div className="relative w-full h-[520px] rounded-card border-2 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-[#e5e3df] dark:bg-slate-800">
               <div ref={mapContainerRef} className="w-full h-full"></div>
             </div>
           </div>
@@ -905,10 +915,10 @@ export const AdminLiveMap: React.FC = () => {
           <div className="space-y-4">
             <GlassCard className="p-4 border border-slate-200 dark:border-slate-800 flex flex-col h-[575px]">
               <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3 mb-3">
-                <h3 className="text-xs font-black uppercase text-red-deep dark:text-gold flex items-center gap-1.5">
+                <h3 className="text-xs font-bold normal-case text-red-deep dark:text-gold flex items-center gap-1.5">
                   <Users size={16} /> Danh sách vị trí
                 </h3>
-                <span className="text-[10px] font-bold bg-red-revolution/10 text-red-revolution px-2 py-0.5 rounded-full">
+                <span className="text-xs font-bold bg-red-revolution/10 text-red-revolution px-2 py-0.5 rounded-full">
                   {filteredPoints.length} / {summary.positioned} Vị trí
                 </span>
               </div>
@@ -916,15 +926,15 @@ export const AdminLiveMap: React.FC = () => {
               {/* Scrollable member list */}
               <div className="overflow-y-auto flex-1 space-y-2.5 pr-1">
                 {loadError ? null : summary.totalAttendance === 0 ? (
-                  <div className="text-center py-12 text-slate-400 text-xs italic">
+                  <div className="text-center py-12 text-muted text-xs italic">
                     Phiên họp chưa có dữ liệu điểm danh.
                   </div>
                 ) : summary.positioned === 0 ? (
-                  <div className="text-center py-12 text-slate-400 text-xs italic px-2">
+                  <div className="text-center py-12 text-muted text-xs italic px-2">
                     Có <b>{summary.totalAttendance}</b> lượt điểm danh nhưng chưa có tọa độ GPS.
                   </div>
                 ) : filteredPoints.length === 0 ? (
-                  <div className="text-center py-12 text-slate-400 text-xs italic">
+                  <div className="text-center py-12 text-muted text-xs italic">
                     Không tìm thấy kết quả phù hợp với bộ lọc.
                   </div>
                 ) : (
@@ -932,7 +942,7 @@ export const AdminLiveMap: React.FC = () => {
                     const isOk = pt.locationStatus === 'inside_radius'
                     const lat6 = pt.latitude.toFixed(6)
                     const lng6 = pt.longitude.toFixed(6)
-                    const displayDistance = pt.distanceM !== null ? `${Math.round(pt.distanceM)}m` : 'Chưa rõ'
+                    const displayDistance = pt.distanceM !== null ? `cách ${Math.round(pt.distanceM)} m` : 'Chưa rõ khoảng cách'
                     const displayTime = pt.markedAt || 'Chưa xác định'
 
                     return (
@@ -945,9 +955,9 @@ export const AdminLiveMap: React.FC = () => {
                             <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
                               <span>{pt.fullName}</span>
                             </div>
-                            <div className="text-[10px] text-slate-400">{pt.chiBoName} • {displayTime}</div>
+                            <div className="text-xs text-muted">{pt.chiBoName} • {displayTime}</div>
                           </div>
-                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-md ${
                             isOk ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
                           }`}>
                             {displayDistance}
@@ -955,13 +965,13 @@ export const AdminLiveMap: React.FC = () => {
                         </div>
 
                         {/* Tọa độ 6 số thập phân + nút copy + bay tới */}
-                        <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-800/80 px-2 py-1 rounded-md text-[10px] font-mono">
-                          <span className="text-slate-600 dark:text-slate-300">{lat6}, {lng6}</span>
+                        <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-800/80 px-2 py-1 rounded-md text-xs font-mono">
+                          <span className="text-muted dark:text-muted">{lat6}, {lng6}</span>
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
                               onClick={() => handleCopyCoords(pt.attendanceId, pt.latitude, pt.longitude)}
-                              className="text-slate-400 hover:text-red-revolution cursor-pointer p-0.5"
+                              className="text-muted hover:text-red-revolution cursor-pointer p-0.5"
                               title="Sao chép tọa độ chuẩn 6 chữ số thập phân"
                             >
                               {copiedId === pt.attendanceId ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}

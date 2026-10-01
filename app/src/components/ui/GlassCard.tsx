@@ -14,7 +14,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`glass-card hover-lift p-4 md:p-5.5 transition-all duration-300 ${
+      className={`glass-card p-4 md:p-6 ${
         onClick ? 'cursor-pointer' : ''
       } ${className}`}
     >

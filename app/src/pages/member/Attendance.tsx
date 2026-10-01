@@ -557,19 +557,19 @@ export const Attendance: React.FC = () => {
             <div className="w-16 h-16 rounded-full bg-red-revolution/10 flex items-center justify-center text-red-revolution mx-auto mb-4 border border-red-revolution/25 animate-pulse">
               <MapPin size={32} />
             </div>
-            <h2 className="text-xl font-black text-red-deep dark:text-gold uppercase tracking-wider">
+            <h2 className="text-xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
               Xác nhận điểm danh
             </h2>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs font-semibold text-muted dark:text-muted mt-1">
               Sinh hoạt dưới nghi thức chào cờ cấp xã
             </p>
           </div>
 
           {meeting && (
             <div className="bg-red-revolution/5 p-4 rounded-xl border border-red-revolution/10 text-xs md:text-sm font-semibold text-brown-text dark:text-cream-light mb-6">
-              <h4 className="font-bold text-red-deep dark:text-gold uppercase mb-1">Phiên họp:</h4>
+              <h4 className="font-bold text-red-deep dark:text-gold normal-case mb-1">Phiên họp:</h4>
               <p className="opacity-95 text-navy dark:text-white font-bold">{meeting.title}</p>
-              <div className="mt-2 text-[11px] font-semibold text-slate-500">
+              <div className="mt-2 text-xs font-semibold text-muted">
                 📍 Địa điểm: <b>{meeting.location || 'Chưa cấu hình'}</b>
               </div>
             </div>
@@ -604,7 +604,7 @@ export const Attendance: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-5">
-              <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-semibold">
+              <p className="text-xs md:text-sm text-muted dark:text-muted leading-relaxed font-semibold">
                 Đồng chí vui lòng hoàn thành đầy đủ các hình thức xác thực điểm danh được yêu cầu dưới đây:
               </p>
 
@@ -616,25 +616,25 @@ export const Attendance: React.FC = () => {
                     : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
                 }`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-black uppercase flex items-center gap-1.5">
-                      <QrCode size={16} className={qrCompleted ? 'text-emerald-500' : 'text-slate-400'} />
+                    <span className="text-xs font-bold normal-case flex items-center gap-1.5">
+                      <QrCode size={16} className={qrCompleted ? 'text-emerald-500' : 'text-muted'} />
                       Bước {qrStep}: Quét mã QR hội trường
                     </span>
                     {qrCompleted ? (
-                      <span className="text-[10px] font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                      <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                         <Check size={10} /> Đã quét hợp lệ
                       </span>
                     ) : isScanning ? (
-                      <span className="text-[10px] text-red-revolution font-bold animate-pulse">Đang mở camera...</span>
+                      <span className="text-xs text-red-revolution font-bold animate-pulse">Đang mở camera...</span>
                     ) : null}
                   </div>
                   {qrCompleted ? (
-                    <p className="text-[11px] font-medium opacity-90">
+                    <p className="text-xs font-medium opacity-90">
                       Xác thực mã QR hội trường thành công.
                     </p>
                   ) : (
                     <div className="space-y-3">
-                      <p className="text-[11px] font-medium text-slate-400 leading-relaxed">
+                      <p className="text-xs font-medium text-muted leading-relaxed">
                         Đồng chí vui lòng quét mã QR hiển thị trên màn chiếu bằng nút dưới đây (hoặc nhập trực tiếp mã):
                       </p>
                       
@@ -643,7 +643,7 @@ export const Attendance: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setIsScanning(true)}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-red-revolution hover:bg-red-dark text-white rounded-lg text-xs font-black cursor-pointer shadow-sm transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-red-revolution hover:bg-red-dark text-white rounded-lg text-xs font-bold cursor-pointer shadow-sm transition-all"
                           >
                             <Camera size={14} /> Quét mã ngay
                           </button>
@@ -654,7 +654,7 @@ export const Attendance: React.FC = () => {
                           <button 
                             type="button" 
                             onClick={() => setIsScanning(false)}
-                            className="mt-2 text-[10px] font-black text-red-revolution uppercase tracking-wider block mx-auto cursor-pointer hover:underline"
+                            className="mt-2 text-xs font-bold text-red-revolution normal-case tracking-normal block mx-auto cursor-pointer hover:underline"
                           >
                             Hủy quét / Tự nhập
                           </button>
@@ -681,22 +681,22 @@ export const Attendance: React.FC = () => {
                     : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
                 }`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-black uppercase flex items-center gap-1.5">
-                      <MapPin size={16} className={gpsCompleted ? 'text-emerald-500' : 'text-slate-400'} />
+                    <span className="text-xs font-bold normal-case flex items-center gap-1.5">
+                      <MapPin size={16} className={gpsCompleted ? 'text-emerald-500' : 'text-muted'} />
                       Bước {gpsStep}: Định vị phòng họp (GPS)
                     </span>
                     {gpsCompleted ? (
-                      <span className="text-[10px] font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                      <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                         <Check size={10} /> Đã định vị
                       </span>
                     ) : gpsLoading ? (
-                      <span className="text-[10px] text-slate-400 font-bold animate-pulse">Đang định vị...</span>
+                      <span className="text-xs text-muted font-bold animate-pulse">Đang định vị...</span>
                     ) : (
                       methods.includes('gps') && !(qrRequired && !qrCompleted) && (
                         <button 
                           type="button" 
                           onClick={autoGetLocation}
-                          className="text-[10px] text-red-revolution underline font-bold hover:text-red-dark cursor-pointer"
+                          className="text-xs text-red-revolution underline font-bold hover:text-red-dark cursor-pointer"
                         >
                           Thử lại
                         </button>
@@ -707,15 +707,15 @@ export const Attendance: React.FC = () => {
                   {qrRequired && !qrCompleted ? (
                     <div className="text-center py-4 space-y-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-100/30 dark:bg-slate-900/30">
                       <MapPin size={24} className="text-slate-350 dark:text-slate-700 mx-auto animate-pulse" />
-                      <p className="text-[11px] font-semibold text-slate-400 px-4 leading-relaxed">
+                      <p className="text-xs font-semibold text-muted px-4 leading-relaxed">
                         Vui lòng hoàn thành <b>Bước {qrStep}: Quét mã QR</b> trước. Hệ thống sẽ tự động định vị phòng họp sau khi quét thành công.
                       </p>
                     </div>
                   ) : gpsCompleted && gpsCoords ? (
                     <div className="space-y-3 mt-3 animate-fade-in">
                       {/* Bộ chuyển đổi kiểu bản đồ Google */}
-                      <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-lg text-[10px] font-bold">
-                        <span className="text-slate-500 flex items-center gap-1">
+                      <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-lg text-xs font-bold">
+                        <span className="text-muted flex items-center gap-1">
                           <Layers size={12} /> Bản đồ định vị Google Maps:
                         </span>
                         <div className="flex gap-1">
@@ -724,8 +724,8 @@ export const Attendance: React.FC = () => {
                             onClick={() => setMiniMapStyle('google-hybrid')}
                             className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
                               miniMapStyle === 'google-hybrid'
-                                ? 'bg-red-revolution text-white font-black shadow-sm'
-                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                                ? 'bg-red-revolution text-white font-bold shadow-sm'
+                                : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
                             }`}
                           >
                             🛰️ Google Vệ tinh
@@ -735,8 +735,8 @@ export const Attendance: React.FC = () => {
                             onClick={() => setMiniMapStyle('google-roadmap')}
                             className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
                               miniMapStyle === 'google-roadmap'
-                                ? 'bg-red-revolution text-white font-black shadow-sm'
-                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                                ? 'bg-red-revolution text-white font-bold shadow-sm'
+                                : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
                             }`}
                           >
                             🗺️ Đường phố
@@ -745,7 +745,7 @@ export const Attendance: React.FC = () => {
                       </div>
 
                       {/* Khung bản đồ Google Maps Vệ tinh thu nhỏ */}
-                      <div className="relative w-full h-64 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-md overflow-hidden bg-[#e5e3df] dark:bg-slate-800">
+                      <div className="relative w-full h-64 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-[#e5e3df] dark:bg-slate-800">
                         <div ref={miniMapRef} className="w-full h-full"></div>
                       </div>
 
@@ -757,16 +757,16 @@ export const Attendance: React.FC = () => {
                       }`}>
                         <div className="space-y-0.5">
                           <p className="font-bold flex items-center gap-1">
-                            📍 Khoảng cách thực tế: <span className="text-sm font-black">{distance !== null ? Math.round(distance) : '...'}m</span>
+                            📍 Khoảng cách thực tế: <span className="text-sm font-bold">{distance !== null ? Math.round(distance) : '...'}m</span>
                           </p>
-                          <p className="text-[10px] opacity-80 font-semibold">
+                          <p className="text-xs opacity-80 font-semibold">
                             {isWithinRadius 
                               ? `Hợp lệ (Trong bán kính quy định <= ${allowedRadius}m)` 
                               : `Cảnh báo (Vượt quá bán kính cho phép ${allowedRadius}m)`
                             }
                           </p>
                         </div>
-                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border shadow-sm ${
+                        <span className={`text-xs font-bold normal-case px-2.5 py-1 rounded-lg border shadow-sm ${
                           isWithinRadius 
                             ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 border-emerald-250 dark:border-emerald-900/50' 
                             : 'bg-rose-100 dark:bg-rose-950/40 text-rose-600 border-rose-250 dark:border-rose-900/50'
@@ -775,34 +775,34 @@ export const Attendance: React.FC = () => {
                         </span>
                       </div>
                       
-                      <p className="text-[11px] font-medium text-slate-400 text-center">
+                      <p className="text-xs font-medium text-muted text-center">
                         Tọa độ GPS: <b>{gpsCoords.latitude.toFixed(6)}, {gpsCoords.longitude.toFixed(6)}</b>
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <p className="text-[11px] font-medium text-slate-400 leading-relaxed">
+                      <p className="text-xs font-medium text-muted leading-relaxed">
                         Hệ thống tự động phát hiện định vị. Nếu đợi lâu, đồng chí vui lòng nhấp nút <b>"Thử lại"</b> và đồng ý chia sẻ vị trí.
                       </p>
                       
                       {/* Hướng dẫn khắc phục khi bị từ chối quyền định vị */}
                       {(((warning && (warning.includes('cấu hình') || warning.includes('cấp quyền') || warning.includes('từ chối') || warning.includes('chưa bật')))) || permissionState === 'denied') && (
                         <div className="p-3.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 rounded-xl space-y-2 text-rose-900 dark:text-rose-300 text-xs shadow-sm">
-                          <p className="font-bold flex items-center gap-1 text-[11px] uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                          <p className="font-bold flex items-center gap-1 text-xs normal-case tracking-normal text-rose-700 dark:text-rose-400">
                             <AlertTriangle size={14} className="animate-bounce" /> Hướng dẫn mở khóa quyền định vị (GPS):
                           </p>
                           <div className="space-y-2 leading-relaxed font-medium">
                             <div>
-                              <p className="font-bold text-slate-800 dark:text-slate-200">Cách 1: Sửa nhanh trên thanh địa chỉ trình duyệt</p>
+                              <p className="font-bold text-slate-800 dark:text-muted">Cách 1: Sửa nhanh trên thanh địa chỉ trình duyệt</p>
                               <p className="pl-3 opacity-90">• <b>Với iPhone (Safari)</b>: Nhấp biểu tượng <b>aA</b> hoặc <b>ổ khóa</b> ở bên trái thanh địa chỉ trình duyệt &rarr; Chọn <b>Cài đặt trang web</b> (Website Settings) &rarr; Đổi quyền <b>Vị trí</b> (Location) thành <b>Cho phép</b> (Allow). Sau đó tải lại trang.</p>
                               <p className="pl-3 opacity-90">• <b>Với Android (Chrome)</b>: Nhấp biểu tượng <b>ổ khóa</b> bên trái thanh địa chỉ trình duyệt &rarr; Chọn <b>Quyền truy cập</b> (Permissions) &rarr; Chọn <b>Vị trí</b> và gạt nút sang <b>Cho phép</b> (Allow). Sau đó tải lại trang.</p>
                             </div>
                             <div>
-                              <p className="font-bold text-slate-800 dark:text-slate-200">Cách 2: Nếu mở qua Zalo, Facebook hoặc Viber</p>
+                              <p className="font-bold text-slate-800 dark:text-muted">Cách 2: Nếu mở qua Zalo, Facebook hoặc Viber</p>
                               <p className="pl-3 opacity-90">• Các ứng dụng này thường khóa định vị vì lý do bảo mật. Đồng chí vui lòng nhấp vào biểu tượng <b>Ba dấu chấm</b> ở góc trên cùng bên phải màn hình &rarr; Chọn <b>Mở bằng trình duyệt hệ thống</b> (Mở trong Safari hoặc Chrome) để định vị bình thường.</p>
                             </div>
                             <div>
-                              <p className="font-bold text-slate-800 dark:text-slate-200">Cách 3: Bật GPS trong cài đặt điện thoại</p>
+                              <p className="font-bold text-slate-800 dark:text-muted">Cách 3: Bật GPS trong cài đặt điện thoại</p>
                               <p className="pl-3 opacity-90">• Hãy chắc chắn điện thoại của đồng chí đã bật Định vị/Dịch vụ vị trí trong phần <b>Cài đặt chung</b> của máy.</p>
                             </div>
                           </div>
@@ -821,23 +821,23 @@ export const Attendance: React.FC = () => {
                     : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
                 }`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-black uppercase flex items-center gap-1.5">
-                      <Key size={16} className={pinCompleted ? 'text-emerald-500' : 'text-slate-400'} />
+                    <span className="text-xs font-bold normal-case flex items-center gap-1.5">
+                      <Key size={16} className={pinCompleted ? 'text-emerald-500' : 'text-muted'} />
                       Bước {pinStep}: Nhập mã PIN phòng họp
                     </span>
                     {pinCompleted && (
-                      <span className="text-[10px] font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                      <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                         <Check size={10} /> Đúng mã PIN
                       </span>
                     )}
                   </div>
                   {pinCompleted ? (
-                    <p className="text-[11px] font-medium opacity-90">
+                    <p className="text-xs font-medium opacity-90">
                       Đã xác thực mã PIN phòng họp thành công.
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      <p className="text-[11px] font-medium text-slate-400 leading-relaxed">
+                      <p className="text-xs font-medium text-muted leading-relaxed">
                         Đồng chí vui lòng nhập mã PIN gồm 4 chữ số do Ban Tổ chức công bố tại hội trường:
                       </p>
                       <input 
@@ -845,7 +845,7 @@ export const Attendance: React.FC = () => {
                         maxLength={4}
                         value={pinInput}
                         onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
-                        className="w-full text-xs font-black tracking-widest p-2 border border-slate-200 dark:border-slate-800 rounded-lg text-center focus:border-red-revolution"
+                        className="w-full text-xs font-bold tracking-normal p-2 border border-slate-200 dark:border-slate-800 rounded-lg text-center focus:border-red-revolution"
                         placeholder="Nhập mã PIN gồm 4 chữ số..."
                       />
                     </div>
@@ -861,25 +861,25 @@ export const Attendance: React.FC = () => {
                     : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
                 }`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-black uppercase flex items-center gap-1.5">
-                      <Camera size={16} className={photoCompleted || photoFile ? 'text-emerald-500' : 'text-slate-400'} />
+                    <span className="text-xs font-bold normal-case flex items-center gap-1.5">
+                      <Camera size={16} className={photoCompleted || photoFile ? 'text-emerald-500' : 'text-muted'} />
                       Bước {photoStep}: Chụp ảnh selfie tại chỗ
                     </span>
                     {(photoCompleted || photoFile) && (
-                      <span className="text-[10px] font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                      <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                         <Check size={10} /> Đã chụp ảnh
                       </span>
                     )}
                   </div>
                   <div className="space-y-3">
-                    <p className="text-[11px] font-medium text-slate-400 leading-relaxed">
+                    <p className="text-xs font-medium text-muted leading-relaxed">
                       Vui lòng chụp ảnh selfie cận mặt tại phòng họp để làm minh chứng xác thực hiện diện (chụp ảnh thật tại chỗ).
                     </p>
                     
                     {photoPreview ? (
-                      <div className="relative w-32 h-32 rounded-xl overflow-hidden border-2 border-slate-200 mx-auto shadow-md">
+                      <div className="relative w-32 h-32 rounded-xl overflow-hidden border-2 border-slate-200 mx-auto shadow-sm">
                         <img src={photoPreview} alt="Selfie preview" className="w-full h-full object-cover" />
-                        <label className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] font-black uppercase text-center py-1.5 cursor-pointer">
+                        <label className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-xs font-bold normal-case text-center py-1.5 cursor-pointer">
                           Chụp lại
                           <input 
                             type="file" 
@@ -892,7 +892,7 @@ export const Attendance: React.FC = () => {
                       </div>
                     ) : (
                       <div className="text-center py-2">
-                        <label className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-revolution hover:bg-red-dark text-white rounded-xl text-xs font-black cursor-pointer shadow-sm transition-all">
+                        <label className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-revolution hover:bg-red-dark text-white rounded-xl text-xs font-bold cursor-pointer shadow-sm transition-all">
                           <Camera size={14} /> Chụp ảnh ngay
                           <input 
                             type="file" 
@@ -923,8 +923,8 @@ export const Attendance: React.FC = () => {
                   </p>
                 )}
                 {isSubmitDisabled && !loading && (
-                  <p className="text-[10px] text-center text-slate-400 font-bold mt-2 flex items-center justify-center gap-1">
-                    <AlertTriangle size={12} className="text-slate-400" /> Vui lòng hoàn thành tất cả các bước xác thực ở trên.
+                  <p className="text-xs text-center text-muted font-bold mt-2 flex items-center justify-center gap-1">
+                    <AlertTriangle size={12} className="text-muted" /> Vui lòng hoàn thành tất cả các bước xác thực ở trên.
                   </p>
                 )}
               </div>

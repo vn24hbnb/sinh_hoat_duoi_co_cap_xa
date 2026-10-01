@@ -71,7 +71,7 @@ export const GuideFaq: React.FC = () => {
             ⚠️ Nếu định vị báo lỗi hoặc đồng chí chặn quyền truy cập vị trí:
           </p>
           <p>
-            Hệ thống <b>vẫn ghi nhận điểm danh có mặt thành công</b> và tự động chuyển tiếp luồng, tuy nhiên trạng thái điểm danh sẽ ghi nhận cảnh báo <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200">Warning</span> kèm theo lý do lên màn hình của Ban Tổ Chức để duyệt thủ công. Đồng chí hoàn toàn không bị chặn tiến trình sinh hoạt chính trị.
+            Hệ thống <b>vẫn ghi nhận điểm danh có mặt thành công</b> và tự động chuyển tiếp luồng, tuy nhiên trạng thái điểm danh sẽ ghi nhận cảnh báo <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full border border-amber-200">Warning</span> kèm theo lý do lên màn hình của Ban Tổ Chức để duyệt thủ công. Đồng chí hoàn toàn không bị chặn tiến trình sinh hoạt chính trị.
           </p>
         </div>
       )
@@ -188,10 +188,10 @@ export const GuideFaq: React.FC = () => {
           <div className="w-12 h-12 rounded-full bg-red-revolution/10 text-red-revolution dark:text-gold flex items-center justify-center mx-auto mb-3">
             <BookOpen size={24} />
           </div>
-          <h1 className="text-xl md:text-3xl font-black text-red-deep dark:text-gold uppercase tracking-wider">
+          <h1 className="text-xl md:text-3xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
             Hướng dẫn & Hỏi đáp
           </h1>
-          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+          <p className="text-xs font-bold text-muted dark:text-muted mt-1 normal-case tracking-normal">
             Cẩm nang hướng dẫn sử dụng hệ thống sinh hoạt chính trị điện tử
           </p>
         </div>
@@ -200,30 +200,30 @@ export const GuideFaq: React.FC = () => {
         <div className="flex justify-center gap-2 mb-6">
           <button
             onClick={() => setCategoryFilter('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all uppercase tracking-wider border ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all normal-case tracking-normal border ${
               categoryFilter === 'all'
-                ? 'bg-red-revolution text-white border-red-revolution shadow-md'
-                : 'bg-white/50 dark:bg-navy/35 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                ? 'bg-red-revolution text-white border-red-revolution shadow-sm'
+                : 'bg-white/50 dark:bg-navy/35 border-slate-200 dark:border-slate-800 text-muted dark:text-muted hover:bg-slate-100'
             }`}
           >
             Tất cả
           </button>
           <button
             onClick={() => setCategoryFilter('member')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all uppercase tracking-wider border ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all normal-case tracking-normal border ${
               categoryFilter === 'member'
-                ? 'bg-red-revolution text-white border-red-revolution shadow-md'
-                : 'bg-white/50 dark:bg-navy/35 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                ? 'bg-red-revolution text-white border-red-revolution shadow-sm'
+                : 'bg-white/50 dark:bg-navy/35 border-slate-200 dark:border-slate-800 text-muted dark:text-muted hover:bg-slate-100'
             }`}
           >
             Đảng viên
           </button>
           <button
             onClick={() => setCategoryFilter('admin')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all uppercase tracking-wider border ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all normal-case tracking-normal border ${
               categoryFilter === 'admin'
-                ? 'bg-red-revolution text-white border-red-revolution shadow-md'
-                : 'bg-white/50 dark:bg-navy/35 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                ? 'bg-red-revolution text-white border-red-revolution shadow-sm'
+                : 'bg-white/50 dark:bg-navy/35 border-slate-200 dark:border-slate-800 text-muted dark:text-muted hover:bg-slate-100'
             }`}
           >
             Ban Tổ chức / Admin
@@ -253,23 +253,23 @@ export const GuideFaq: React.FC = () => {
                   <div className="flex items-center gap-3.5 pr-4">
                     <div className={`p-2 rounded-xl shrink-0 ${
                       isOpen
-                        ? 'bg-red-revolution text-white dark:bg-gold dark:text-navy shadow-md'
-                        : 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400'
+                        ? 'bg-red-revolution text-white dark:bg-gold dark:text-navy shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-900 text-muted dark:text-muted'
                     }`}>
                       <Icon size={16} />
                     </div>
-                    <span className="text-xs md:text-sm font-black text-slate-800 dark:text-slate-200">
+                    <span className="text-xs md:text-sm font-bold text-slate-800 dark:text-muted">
                       {item.question}
                     </span>
                   </div>
-                  <div className="text-slate-400 shrink-0">
+                  <div className="text-muted shrink-0">
                     {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </div>
                 </button>
 
                 {/* Accordion Content body */}
                 {isOpen && (
-                  <div className="p-4.5 bg-slate-50/30 dark:bg-slate-950/15 border-t border-slate-100 dark:border-slate-900 text-xs md:text-sm text-slate-600 dark:text-slate-300 font-semibold animate-fade-in">
+                  <div className="p-4.5 bg-slate-50/30 dark:bg-slate-950/15 border-t border-slate-100 dark:border-slate-900 text-xs md:text-sm text-muted dark:text-muted font-semibold animate-fade-in">
                     {item.answer}
                   </div>
                 )}
@@ -279,11 +279,11 @@ export const GuideFaq: React.FC = () => {
         </div>
 
         {/* Footer info banner */}
-        <div className="mt-8 text-center bg-white/30 dark:bg-navy/10 border border-slate-200/50 dark:border-slate-800/40 p-4 rounded-2xl">
-          <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+        <div className="mt-8 text-center bg-white/30 dark:bg-navy/10 border border-slate-200/50 dark:border-slate-800/40 p-4 rounded-card">
+          <p className="text-xs font-bold text-muted dark:text-muted normal-case tracking-normal">
             Hệ thống Sinh hoạt chính trị điện tử dưới nghi thức chào cờ
           </p>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+          <p className="text-xs text-muted dark:text-muted mt-1 font-semibold">
             Nếu có sự cố phát sinh khác, vui lòng liên hệ quản trị viên của xã.
           </p>
         </div>

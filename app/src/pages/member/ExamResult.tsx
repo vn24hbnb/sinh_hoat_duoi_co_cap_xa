@@ -297,35 +297,35 @@ export const ExamResult: React.FC = () => {
                   <Award size={36} />
                 </div>
 
-                <h2 className="text-xl md:text-2xl font-black text-red-deep dark:text-gold uppercase tracking-wider">
+                <h2 className="text-xl md:text-2xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
                   Kết quả bài kiểm tra
                 </h2>
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 mb-6">
+                <p className="text-xs font-bold text-muted dark:text-muted mt-1 mb-6">
                   Chuyên đề: {result.attempt.title}
                 </p>
 
                 {/* Metric cards */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="p-4 bg-red-revolution/5 rounded-xl border border-red-revolution/10">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Điểm số</span>
-                    <span className="text-3xl font-black text-red-revolution dark:text-gold">{result.attempt.score.toFixed(1)}</span>
+                    <span className="text-xs font-bold text-muted dark:text-muted normal-case tracking-normal block mb-1">Điểm số</span>
+                    <span className={`text-3xl font-bold ${result.attempt.score >= 8 ? 'text-success' : result.attempt.score < 5 ? 'text-danger' : 'text-ink'}`}>{result.attempt.score.toFixed(1)}</span>
                   </div>
                   <div className="p-4 bg-red-revolution/5 rounded-xl border border-red-revolution/10">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Đúng / Tổng</span>
-                    <span className="text-lg font-black text-navy dark:text-cream-light mt-1.5 block">
+                    <span className="text-xs font-bold text-muted dark:text-muted normal-case tracking-normal block mb-1">Đúng / Tổng</span>
+                    <span className="text-lg font-bold text-navy dark:text-cream-light mt-1.5 block">
                       {result.attempt.correctCount} / {result.attempt.totalQuestions}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-3 text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-300 mb-8 max-w-sm mx-auto text-left border-t border-slate-100 dark:border-slate-800 pt-4">
+                <div className="space-y-3 text-xs md:text-sm font-semibold text-muted dark:text-muted mb-8 max-w-sm mx-auto text-left border-t border-slate-100 dark:border-slate-800 pt-4">
                   <div className="flex justify-between">
                     <span>⏱️ Thời gian làm bài:</span>
                     <span className="text-navy dark:text-white font-bold">{formatTimeSpent(result.attempt.durationSeconds || 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>🏆 Xếp loại đánh giá:</span>
-                    <span className={`font-black ${
+                    <span className={`font-bold ${
                       result.attempt.score >= 8.5 ? 'text-red-revolution dark:text-gold' : 'text-navy dark:text-white'
                     }`}>
                       {classification?.label}
@@ -350,7 +350,7 @@ export const ExamResult: React.FC = () => {
 
             {/* BẢNG XẾP HẠNG THI ĐUA */}
             {loadingReport ? (
-              <div className="py-6 flex justify-center bg-white/40 dark:bg-navy/30 rounded-2xl border border-red-revolution/10">
+              <div className="py-6 flex justify-center bg-white/40 dark:bg-navy/30 rounded-card border border-red-revolution/10">
                 <LoadingSpinner message="Đang tải bảng xếp hạng thi đua..." />
               </div>
             ) : reportData ? (
@@ -361,12 +361,12 @@ export const ExamResult: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-red-revolution dark:text-gold border-b border-red-revolution/10 pb-1.5">
                       <Trophy size={16} />
-                      <h3 className="text-xs font-black uppercase tracking-wider">Bảng xếp hạng thi đua Chi bộ</h3>
+                      <h3 className="text-xs font-bold normal-case tracking-normal">Bảng xếp hạng thi đua Chi bộ</h3>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="min-w-full text-[11px] font-semibold text-left">
+                      <table className="min-w-full text-xs font-semibold text-left">
                         <thead>
-                          <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400">
+                          <tr className="border-b border-slate-100 dark:border-slate-800 text-muted">
                             <th className="py-1.5 px-2 text-center w-12">Thứ hạng</th>
                             <th className="py-1.5 px-2">Tên chi bộ</th>
                             <th className="py-1.5 px-2">Sĩ số (Có mặt/Tổng)</th>
@@ -377,19 +377,19 @@ export const ExamResult: React.FC = () => {
                           {reportData.chiBoReports.map((cb: any, idx: number) => (
                             <tr key={cb.id} className="border-b border-slate-50/50 dark:border-slate-900/30 hover:bg-red-revolution/5">
                               <td className="py-1.5 px-2 text-center">
-                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black ${
+                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-bold ${
                                   idx === 0 ? "bg-amber-100 text-amber-700" :
                                   idx === 1 ? "bg-slate-100 text-slate-700" :
-                                  idx === 2 ? "bg-orange-100 text-orange-700" : "text-slate-500"
+                                  idx === 2 ? "bg-orange-100 text-orange-700" : "text-muted"
                                 }`}>
                                   {idx + 1}
                                 </span>
                               </td>
                               <td className="py-1.5 px-2 font-bold text-navy dark:text-white">{cb.name}</td>
-                              <td className="py-1.5 px-2 text-slate-500">
+                              <td className="py-1.5 px-2 text-muted">
                                 {cb.totalAttended}/{cb.totalRequired} ({cb.attendanceRate}%)
                               </td>
-                              <td className="py-1.5 px-2 text-right font-black text-red-revolution dark:text-gold">{cb.avgScore.toFixed(2)}</td>
+                              <td className="py-1.5 px-2 text-right font-bold text-red-revolution dark:text-gold">{cb.avgScore.toFixed(2)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -404,12 +404,12 @@ export const ExamResult: React.FC = () => {
                   <div className="space-y-3 lg:pl-8">
                     <div className="flex items-center gap-2 text-red-revolution dark:text-gold border-b border-red-revolution/10 pb-1.5">
                       <Users size={16} />
-                      <h3 className="text-xs font-black uppercase tracking-wider">Xếp hạng kiểm tra đảng viên</h3>
+                      <h3 className="text-xs font-bold normal-case tracking-normal">Xếp hạng kiểm tra đảng viên</h3>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="min-w-full text-[11px] font-semibold text-left">
+                      <table className="min-w-full text-xs font-semibold text-left">
                         <thead>
-                          <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400">
+                          <tr className="border-b border-slate-100 dark:border-slate-800 text-muted">
                             <th className="py-1.5 px-2 text-center w-12">Hạng</th>
                             <th className="py-1.5 px-2">Họ và tên</th>
                             <th className="py-1.5 px-2">Chi bộ</th>
@@ -425,18 +425,18 @@ export const ExamResult: React.FC = () => {
                             return (
                               <tr key={m.memberId} className="border-b border-slate-50/50 dark:border-slate-900/30 hover:bg-red-revolution/5">
                                 <td className="py-1.5 px-2 text-center">
-                                  <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black ${
+                                  <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-bold ${
                                     idx === 0 ? "bg-amber-100 text-amber-700" :
                                     idx === 1 ? "bg-slate-100 text-slate-700" :
-                                    idx === 2 ? "bg-orange-100 text-orange-700" : "text-slate-500"
+                                    idx === 2 ? "bg-orange-100 text-orange-700" : "text-muted"
                                   }`}>
                                     {idx + 1}
                                   </span>
                                 </td>
                                 <td className="py-1.5 px-2 font-bold text-navy dark:text-white">{m.fullName}</td>
-                                <td className="py-1.5 px-2 text-slate-500">{m.chiBoName}</td>
-                                <td className="py-1.5 px-2 text-center font-black text-red-revolution dark:text-gold">{m.score.toFixed(1)}</td>
-                                <td className="py-1.5 px-2 text-right text-slate-500">{timeStr}</td>
+                                <td className="py-1.5 px-2 text-muted">{m.chiBoName}</td>
+                                <td className="py-1.5 px-2 text-center font-bold text-red-revolution dark:text-gold">{m.score.toFixed(1)}</td>
+                                <td className="py-1.5 px-2 text-right text-muted">{timeStr}</td>
                               </tr>
                             )
                           })}
@@ -454,14 +454,14 @@ export const ExamResult: React.FC = () => {
               <GlassCard>
                 <div className="flex items-center gap-2 text-red-revolution dark:text-gold mb-6 border-b border-red-revolution/10 pb-3">
                   <BookOpen size={18} />
-                  <h3 className="text-xs font-black uppercase tracking-wider">Đáp án chi tiết chuyên đề</h3>
+                  <h3 className="text-xs font-bold normal-case tracking-normal">Đáp án chi tiết chuyên đề</h3>
                 </div>
 
                 <div className="space-y-6">
                   {result.answers.map((ans: any, idx: number) => (
                     <div key={ans.id} className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white/40 dark:bg-navy/20 text-xs md:text-sm">
                       <div className="flex items-start gap-2 mb-3">
-                        <span className="shrink-0 font-black text-red-revolution dark:text-gold">Câu {idx + 1}:</span>
+                        <span className="shrink-0 font-bold text-red-revolution dark:text-gold">Câu {idx + 1}:</span>
                         <span className="font-bold text-navy dark:text-white leading-relaxed">{ans.content}</span>
                       </div>
 
@@ -488,14 +488,14 @@ export const ExamResult: React.FC = () => {
 
                           return (
                             <div key={opt.k} className={`flex items-start gap-1.5 ${optClass}`}>
-                              <span className="font-black">{opt.k}.</span>
+                              <span className="font-bold">{opt.k}.</span>
                               <span className="flex-1">{opt.v} {badge}</span>
                             </div>
                           )
                         })}
                       </div>
 
-                      <div className="bg-red-revolution/5 p-3 rounded-lg border border-red-revolution/5 text-[11px] font-semibold text-slate-500">
+                      <div className="bg-red-revolution/5 p-3 rounded-lg border border-red-revolution/5 text-xs font-semibold text-muted">
                         <div>
                           🎯 Trạng thái: {ans.selectedOption ? (
                             ans.isCorrect ? (
@@ -507,8 +507,8 @@ export const ExamResult: React.FC = () => {
                             <span className="text-amber-600 font-bold">Đồng chí CHƯA TRẢ LỜI câu hỏi này</span>
                           )}
                         </div>
-                        <div className="mt-1 text-navy dark:text-slate-300">
-                          🔑 Đáp án đúng của Ban Tổ Chức: <b className="text-emerald-600 font-black">{ans.correctOption}</b>
+                        <div className="mt-1 text-navy dark:text-muted">
+                          🔑 Đáp án đúng của Ban Tổ Chức: <b className="text-emerald-600 font-bold">{ans.correctOption}</b>
                         </div>
                       </div>
                     </div>

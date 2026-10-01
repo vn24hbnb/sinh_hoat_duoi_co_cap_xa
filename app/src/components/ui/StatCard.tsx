@@ -27,21 +27,21 @@ export const StatCard: React.FC<StatCardProps> = ({
   }
 
   return (
-    <div className={`glass-card p-6 flex items-center justify-between gap-4 border border-red-revolution/10 shadow-md ${className}`}>
+    <div className={`glass-card p-6 flex items-center justify-between gap-4 border border-red-revolution/10 shadow-sm ${className}`}>
       <div className="flex-1">
-        <span className="text-xs font-bold text-brown-text/80 dark:text-cream-light/60 uppercase tracking-wider block mb-1">
+        <span className="text-xs font-bold text-brown-text/80 dark:text-cream-light/60 normal-case tracking-normal block mb-1">
           {title}
         </span>
-        <h3 className="text-2xl md:text-3xl font-black text-red-deep dark:text-gold tracking-tight">
+        <h3 className="text-2xl md:text-3xl font-bold text-ink tracking-tight">
           {value}
         </h3>
         {description && (
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs font-semibold text-muted dark:text-muted mt-1">
             {description}
           </p>
         )}
         {trend && (
-          <span className={`text-[11px] font-bold mt-1.5 flex items-center gap-1 ${trendColor[trendType]}`}>
+          <span className={`text-xs font-bold mt-1.5 flex items-center gap-1 ${trendColor[trendType]}`}>
             {trend}
           </span>
         )}

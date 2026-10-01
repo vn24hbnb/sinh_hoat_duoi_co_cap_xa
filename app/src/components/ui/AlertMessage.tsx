@@ -45,16 +45,17 @@ export const AlertMessage: React.FC<AlertMessageProps> = ({
   const Icon = currentStyle.icon
 
   return (
-    <div className={`p-4 border-l-4 rounded-r-xl flex gap-3 shadow-sm relative ${currentStyle.bg} ${currentStyle.text} ${className}`}>
+    <div role={type === 'error' ? 'alert' : 'status'} className={`p-4 border rounded-card flex gap-3 relative ${currentStyle.bg} ${currentStyle.text} ${className}`}>
       <Icon className="w-5 h-5 shrink-0 mt-0.5" />
       <div className="flex-1 pr-6">
-        {title && <h4 className="font-bold text-sm md:text-base uppercase tracking-wide mb-0.5">{title}</h4>}
+        {title && <h4 className="font-bold text-sm md:text-base normal-case tracking-normal mb-0.5">{title}</h4>}
         <p className="text-xs md:text-sm font-semibold opacity-90 leading-relaxed">{message}</p>
       </div>
       {onDismiss && (
         <button 
           onClick={onDismiss}
-          className="absolute top-4 right-4 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+          aria-label="Đóng thông báo"
+          className="absolute top-1 right-1 min-w-11 min-h-11 flex items-center justify-center cursor-pointer"
           type="button"
         >
           <X className="w-4 h-4" />
@@ -63,4 +64,3 @@ export const AlertMessage: React.FC<AlertMessageProps> = ({
     </div>
   )
 }
-

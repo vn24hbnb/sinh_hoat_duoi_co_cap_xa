@@ -397,10 +397,10 @@ export const ExamIntro: React.FC = () => {
               <div className="w-16 h-16 rounded-full bg-red-revolution/10 flex items-center justify-center text-red-revolution mx-auto mb-4 border border-red-revolution/20">
                 <FileQuestion size={32} />
               </div>
-              <h2 className="text-xl font-black text-red-deep dark:text-gold uppercase tracking-wider">
+              <h2 className="text-xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
                 {exam ? exam.title : 'Bài kiểm tra nhận thức'}
               </h2>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-xs font-semibold text-muted dark:text-muted mt-1">
                 Sinh hoạt dưới nghi thức chào cờ cấp xã
               </p>
             </div>
@@ -450,7 +450,7 @@ export const ExamIntro: React.FC = () => {
           /* QUIZ MODE */
           <GlassCard className="border border-red-revolution/20">
             {isOffline && (
-              <div className="bg-red-600 text-white text-[11px] font-black py-2 px-3 text-center rounded-xl mb-4 animate-pulse">
+              <div className="bg-red-600 text-white text-xs font-bold py-2 px-3 text-center rounded-xl mb-4 animate-pulse">
                 ⚠️ Kết nối mạng không ổn định. Dữ liệu làm bài thi của đồng chí đang được tự động lưu trữ tạm thời trên thiết bị.
               </div>
             )}
@@ -458,22 +458,22 @@ export const ExamIntro: React.FC = () => {
             {/* Header: Progress, Font adjustments, TTS and Countdown */}
             <div className="flex flex-col gap-3 mb-4 border-b border-red-revolution/10 pb-4">
               <div className="flex justify-between items-center w-full">
-                <span className="text-xs font-black text-red-revolution dark:text-gold uppercase tracking-wider">
+                <span className="text-xs font-bold text-red-revolution dark:text-gold normal-case tracking-normal">
                   Câu hỏi {currentIdx + 1} / {questions.length}
                 </span>
                 
                 <div className="flex items-center gap-2">
                   {/* Trạng thái đồng bộ đáp án */}
                   {syncStatus === 'syncing' ? (
-                    <span className="text-[10px] font-black text-amber-600 bg-amber-100 dark:bg-amber-950/40 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                    <span className="text-xs font-bold text-amber-600 bg-amber-100 dark:bg-amber-950/40 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
                       🔄 Đang đồng bộ...
                     </span>
                   ) : syncStatus === 'pending' ? (
-                    <span className="text-[10px] font-black text-rose-600 bg-rose-100 dark:bg-rose-950/40 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="text-xs font-bold text-rose-600 bg-rose-100 dark:bg-rose-950/40 px-2 py-0.5 rounded-full flex items-center gap-1">
                       💾 Lưu tạm trên máy
                     </span>
                   ) : (
-                    <span className="text-[10px] font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-1">
                       ✅ Đã đồng bộ
                     </span>
                   )}
@@ -492,7 +492,7 @@ export const ExamIntro: React.FC = () => {
               {/* Utility Bar: FontSize Adjuster & TTS Speaker */}
               <div className="flex items-center justify-between bg-slate-50 dark:bg-navy/40 p-2 rounded-xl border border-slate-100 dark:border-slate-800/80">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase mr-1">Cỡ chữ:</span>
+                  <span className="text-xs font-bold text-muted normal-case mr-1">Cỡ chữ:</span>
                   {[
                     { id: 'normal', label: 'A', class: 'text-xs' },
                     { id: 'large', label: 'A+', class: 'text-sm' },
@@ -502,10 +502,10 @@ export const ExamIntro: React.FC = () => {
                       key={size.id}
                       type="button"
                       onClick={() => setFontSize(size.id as any)}
-                      className={`w-6 h-6 rounded-md font-black flex items-center justify-center border transition-all ${
+                      className={`w-6 h-6 rounded-md font-bold flex items-center justify-center border transition-all ${
                         fontSize === size.id
                           ? 'bg-red-revolution text-white border-red-revolution'
-                          : 'bg-white dark:bg-navy border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
+                          : 'bg-white dark:bg-navy border-slate-200 dark:border-slate-800 text-muted dark:text-muted hover:bg-slate-50'
                       } ${size.class}`}
                     >
                       {size.label}
@@ -516,10 +516,10 @@ export const ExamIntro: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleSpeakQuestion}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold normal-case tracking-normal border transition-all cursor-pointer ${
                     isSpeaking
                       ? 'bg-amber-500 text-white border-amber-500 animate-pulse'
-                      : 'bg-white dark:bg-navy border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50'
+                      : 'bg-white dark:bg-navy border-slate-200 dark:border-slate-800 text-muted dark:text-muted hover:bg-slate-50'
                   }`}
                   title={isSpeaking ? 'Dừng đọc câu hỏi' : 'Đọc câu hỏi tiếng Việt'}
                 >
@@ -561,13 +561,13 @@ export const ExamIntro: React.FC = () => {
                   } ${
                     questions[currentIdx]?.selectedOption === opt.key
                       ? 'border-red-revolution bg-red-revolution/10 text-red-deep dark:text-gold shadow-sm'
-                      : 'border-slate-200 dark:border-slate-800 hover:bg-cream-light/60 dark:hover:bg-navy/30 text-slate-700 dark:text-slate-300'
+                      : 'border-slate-200 dark:border-slate-800 hover:bg-cream-light/60 dark:hover:bg-navy/30 text-slate-700 dark:text-muted'
                   }`}
                 >
-                  <span className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 font-black text-xs ${
+                  <span className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 font-bold text-xs ${
                     questions[currentIdx]?.selectedOption === opt.key
                       ? 'border-red-revolution bg-red-revolution text-white'
-                      : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-navy/40 text-slate-500'
+                      : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-navy/40 text-muted'
                   }`}>
                     {opt.key}
                   </span>
@@ -581,7 +581,7 @@ export const ExamIntro: React.FC = () => {
               <button
                 disabled={currentIdx === 0 || submitting}
                 onClick={handlePrev}
-                className="flex-1 py-3 text-xs font-bold uppercase tracking-wider rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                className="flex-1 py-3 text-xs font-bold normal-case tracking-normal rounded-xl border border-slate-200 dark:border-slate-800 text-muted dark:text-muted hover:bg-slate-50 disabled:opacity-40 transition-colors"
               >
                 Câu trước
               </button>
@@ -598,7 +598,7 @@ export const ExamIntro: React.FC = () => {
                 <button
                   disabled={submitting}
                   onClick={handleNext}
-                  className="flex-1 py-3 text-xs font-bold uppercase tracking-wider rounded-xl bg-red-revolution text-white hover:bg-red-deep flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] transition-all disabled:opacity-50"
+                  className="flex-1 py-3 text-xs font-bold normal-case tracking-normal rounded-xl bg-red-revolution text-white hover:bg-red-deep flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50"
                 >
                   Câu tiếp theo <ArrowRight size={14} />
                 </button>
@@ -607,7 +607,7 @@ export const ExamIntro: React.FC = () => {
 
             {/* Warning indicator */}
             {questions.filter(q => !q.selectedOption).length > 0 && (
-              <div className="mt-4 flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400 font-semibold justify-center">
+              <div className="mt-4 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-semibold justify-center">
                 <AlertTriangle size={12} />
                 <span>Còn {questions.filter(q => !q.selectedOption).length} câu hỏi chưa hoàn thành.</span>
               </div>

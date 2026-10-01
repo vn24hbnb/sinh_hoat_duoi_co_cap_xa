@@ -5,6 +5,7 @@ import { PatternBackground } from '../../components/ui/PatternBackground'
 import { PortalHeader } from '../../components/layout/PortalHeader'
 import { RedNavigationBar } from '../../components/layout/RedNavigationBar'
 import { GlassCard } from '../../components/ui/GlassCard'
+import { AgendaEditor } from '../../components/ui/AgendaEditor'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { RevolutionaryButton } from '../../components/ui/RevolutionaryButton'
 import { AlertMessage } from '../../components/ui/AlertMessage'
@@ -1212,10 +1213,10 @@ export const MeetingManager: React.FC = () => {
       <main className="max-w-7xl mx-auto py-4 px-3 sm:px-4 lg:px-5">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
-            <h1 className="text-xl md:text-2xl font-black text-red-deep dark:text-gold uppercase tracking-wider">
+            <h1 className="text-xl md:text-2xl font-bold text-red-deep dark:text-gold normal-case tracking-normal">
               Quản lý phiên họp
             </h1>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs font-semibold text-muted dark:text-muted mt-0.5">
               Tạo mới, điều khiển, thiết lập đề thi trắc nghiệm và giám sát điểm danh theo Chi bộ
             </p>
           </div>
@@ -1230,7 +1231,7 @@ export const MeetingManager: React.FC = () => {
             </RevolutionaryButton>
             <RevolutionaryButton 
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1.5 shadow-md"
+              className="flex items-center gap-1.5 shadow-sm"
             >
               <Plus size={18} /> Tạo phiên họp mới
             </RevolutionaryButton>
@@ -1256,16 +1257,16 @@ export const MeetingManager: React.FC = () => {
                       } 
                       label={getStatusBadgeLabel(meeting.status)} 
                     />
-                    <span className="text-xs text-slate-500 font-bold">Ngày họp: {meeting.meeting_date || 'Hôm nay'}{meeting.start_time && ` lúc ${formatTime(meeting.start_time)}`}</span>
+                    <span className="text-xs text-muted font-bold">Ngày họp: {meeting.meeting_date || 'Hôm nay'}{meeting.start_time && ` lúc ${formatTime(meeting.start_time)}`}</span>
                   </div>
                   <h2 className="text-lg font-bold text-navy dark:text-white mb-2">
                     {meeting.title}
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  <p className="text-xs text-muted dark:text-muted font-semibold leading-relaxed">
                     📍 Địa điểm: <b>{meeting.location || 'Chưa cấu hình'}</b> | 📝 Đảng viên tham gia: <b>{stats.total} Đ/c</b>
                   </p>
                   {meeting.agenda && (
-                    <p className="text-[11px] text-slate-400 font-medium mt-1.5 italic">
+                    <p className="text-xs text-muted font-medium mt-1.5 italic">
                       Nội dung chuyên đề: {meeting.agenda}
                     </p>
                   )}
@@ -1290,12 +1291,12 @@ export const MeetingManager: React.FC = () => {
               <div className="flex justify-between items-center mb-4 border-b border-red-revolution/10 pb-2">
                 <div className="flex items-center gap-2 text-red-revolution dark:text-gold">
                   <ListChecks size={18} />
-                  <h3 className="text-xs font-black uppercase tracking-wider">Chương trình sinh hoạt chính trị dưới cờ</h3>
+                  <h3 className="text-xs font-bold normal-case tracking-normal">Chương trình sinh hoạt chính trị dưới cờ</h3>
                 </div>
                 {!isStructuredAgenda && (
                   <button
                     onClick={handleConvertAgendaToStructured}
-                    className="px-3 py-1 bg-red-revolution/10 hover:bg-red-revolution/20 text-red-revolution dark:text-gold text-[10px] font-black uppercase tracking-wider rounded-lg border border-red-revolution/15 transition-all cursor-pointer"
+                    className="px-3 py-1 bg-red-revolution/10 hover:bg-red-revolution/20 text-red-revolution dark:text-gold text-xs font-bold normal-case tracking-normal rounded-lg border border-red-revolution/15 transition-all cursor-pointer"
                   >
                     ⚙️ Thiết lập chương trình chi tiết
                   </button>
@@ -1306,7 +1307,7 @@ export const MeetingManager: React.FC = () => {
                 <div className="space-y-4 text-xs md:text-sm font-semibold">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-slate-500 mb-1">Thời gian sinh hoạt</label>
+                      <label className="block text-muted mb-1">Thời gian sinh hoạt</label>
                       <input
                         type="text"
                         value={agendaTime}
@@ -1316,7 +1317,7 @@ export const MeetingManager: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-slate-500 mb-1">Địa điểm sinh hoạt</label>
+                      <label className="block text-muted mb-1">Địa điểm sinh hoạt</label>
                       <input
                         type="text"
                         value={agendaLocation}
@@ -1326,7 +1327,7 @@ export const MeetingManager: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-slate-500 mb-1">Thành phần tham dự</label>
+                      <label className="block text-muted mb-1">Thành phần tham dự</label>
                       <input
                         type="text"
                         value={agendaParticipants}
@@ -1340,7 +1341,7 @@ export const MeetingManager: React.FC = () => {
                   <div className="overflow-x-auto mt-2">
                     <table className="min-w-full text-xs font-semibold text-left">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400">
+                        <tr className="border-b border-slate-100 dark:border-slate-800 text-muted">
                           <th className="py-2 px-1 w-10 text-center">TT</th>
                           <th className="py-2 px-2">Nội dung công việc</th>
                           <th className="py-2 px-2">Người điều hành</th>
@@ -1351,7 +1352,7 @@ export const MeetingManager: React.FC = () => {
                       <tbody>
                         {agendaItems.map((item, index) => (
                           <tr key={index} className="border-b border-slate-50 dark:border-slate-900">
-                            <td className="py-2 px-1 text-center font-bold text-slate-400">{index + 1}</td>
+                            <td className="py-2 px-1 text-center font-bold text-muted">{index + 1}</td>
                             <td className="py-2 px-2">
                               <input
                                 type="text"
@@ -1382,7 +1383,7 @@ export const MeetingManager: React.FC = () => {
                             <td className="py-2 px-1 text-center">
                               <button
                                 onClick={() => handleDeleteAgendaItem(index)}
-                                className="p-1.5 text-slate-400 hover:text-red-revolution transition-colors cursor-pointer"
+                                className="p-1.5 text-muted hover:text-red-revolution transition-colors cursor-pointer"
                               >
                                 <X size={14} />
                               </button>
@@ -1396,7 +1397,7 @@ export const MeetingManager: React.FC = () => {
                   <div className="flex justify-between items-center mt-3 pt-2 border-t border-slate-100 dark:border-slate-800">
                     <button
                       onClick={handleAddAgendaItem}
-                      className="px-3 py-1.5 bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-250 text-[10px] font-black uppercase tracking-wider rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      className="px-3 py-1.5 bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-muted text-xs font-bold normal-case tracking-normal rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                     >
                       ➕ Thêm nội dung sinh hoạt
                     </button>
@@ -1404,14 +1405,14 @@ export const MeetingManager: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setIsStructuredAgenda(false)}
-                        className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-navy/30 dark:hover:bg-navy/55 text-slate-500 text-[10px] font-black uppercase tracking-wider rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                        className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-navy/30 dark:hover:bg-navy/55 text-muted text-xs font-bold normal-case tracking-normal rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       >
                         Hủy cấu trúc
                       </button>
                       <RevolutionaryButton
                         onClick={handleSaveAgenda}
                         loading={savingAgenda}
-                        className="px-6 py-1.5 text-[10px] font-black uppercase tracking-wider"
+                        className="px-6 py-1.5 text-xs font-bold normal-case tracking-normal"
                       >
                         💾 Lưu chương trình chi tiết
                       </RevolutionaryButton>
@@ -1419,11 +1420,11 @@ export const MeetingManager: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="text-xs text-slate-500 font-semibold leading-relaxed">
+                <div className="text-xs text-muted font-semibold leading-relaxed">
                   {meeting.agenda ? (
                     <p className="italic">Chương trình sinh hoạt hiện tại: {meeting.agenda}</p>
                   ) : (
-                    <p className="italic text-slate-450">Chưa cấu hình chương trình sinh hoạt chi tiết cho phiên này.</p>
+                    <p className="italic text-muted">Chưa cấu hình chương trình sinh hoạt chi tiết cho phiên này.</p>
                   )}
                 </div>
               )}
@@ -1432,14 +1433,14 @@ export const MeetingManager: React.FC = () => {
             {/* CARD 2: THIẾT LẬP ĐỀ THI TRẮC NGHIỆM CHUYÊN ĐỀ */}
             <GlassCard>
               <div className="flex justify-between items-center gap-4 mb-2.5 border-b border-red-revolution/10 pb-2">
-                <h3 className="text-xs font-black text-brown-text dark:text-cream-light uppercase tracking-wider flex items-center gap-1.5">
+                <h3 className="text-xs font-bold text-brown-text dark:text-cream-light normal-case tracking-normal flex items-center gap-1.5">
                   <BookOpen size={16} className="text-red-revolution" /> Thiết lập đề thi trắc nghiệm
                 </h3>
                 {isExamEditable && examConfig && !isEditingExam && (
                   <RevolutionaryButton 
                     onClick={() => setIsEditingExam(true)} 
                     variant="secondary"
-                    className="text-[10px] py-1 px-2.5 flex items-center gap-1"
+                    className="text-xs py-1 px-2.5 flex items-center gap-1"
                   >
                     <Edit3 size={12} /> Chỉnh sửa cấu hình
                   </RevolutionaryButton>
@@ -1456,7 +1457,7 @@ export const MeetingManager: React.FC = () => {
                   <form onSubmit={handleSaveExamConfig} className="space-y-4 text-xs md:text-sm font-semibold">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-slate-500 mb-1">Tiêu đề bài kiểm tra *</label>
+                        <label className="block text-muted mb-1">Tiêu đề bài kiểm tra *</label>
                         <input
                           type="text"
                           required
@@ -1468,7 +1469,7 @@ export const MeetingManager: React.FC = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-500 mb-1">Thời gian làm bài *</label>
+                          <label className="block text-muted mb-1">Thời gian làm bài *</label>
                           <div className="relative">
                             <input
                               type="number"
@@ -1478,11 +1479,11 @@ export const MeetingManager: React.FC = () => {
                               onChange={(e) => setExamDuration(Number(e.target.value))}
                               className="w-full p-2.5 pr-8 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-bold outline-none"
                             />
-                            <span className="absolute right-3 top-2.5 text-slate-400 font-bold text-xs">phút</span>
+                            <span className="absolute right-3 top-2.5 text-muted font-bold text-xs">phút</span>
                           </div>
                         </div>
                         <div>
-                          <label className="block text-slate-500 mb-1">Số câu hỏi thi *</label>
+                          <label className="block text-muted mb-1">Số câu hỏi thi *</label>
                           <div className="relative">
                             <input
                               type="number"
@@ -1492,14 +1493,14 @@ export const MeetingManager: React.FC = () => {
                               onChange={(e) => setExamQuestionCount(Number(e.target.value))}
                               className="w-full p-2.5 pr-8 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-bold outline-none"
                             />
-                            <span className="absolute right-3 top-2.5 text-slate-400 font-bold text-xs">câu</span>
+                            <span className="absolute right-3 top-2.5 text-muted font-bold text-xs">câu</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-slate-500 mb-2">Chọn bộ đề thi (Tự động trộn câu hỏi) *</label>
+                      <label className="block text-muted mb-2">Chọn bộ đề thi (Tự động trộn câu hỏi) *</label>
                       {availableBanks.length === 0 ? (
                         <div className="text-amber-600 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-xl p-3 text-xs font-semibold">
                           ⚠️ Chưa có bộ đề thi nào được tạo trong hệ thống. Đồng chí vui lòng qua menu <b>"Ngân hàng đề thi"</b> để tạo bộ đề và nhập câu hỏi trước.
@@ -1523,7 +1524,7 @@ export const MeetingManager: React.FC = () => {
                               />
                               <div className="min-w-0">
                                 <span className="font-bold text-xs block truncate">{bank.name}</span>
-                                <span className="text-[10px] text-slate-500 truncate block mt-0.5">{bank.description || 'Không mô tả'}</span>
+                                <span className="text-xs text-muted truncate block mt-0.5">{bank.description || 'Không mô tả'}</span>
                               </div>
                             </label>
                           ))}
@@ -1536,7 +1537,7 @@ export const MeetingManager: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setIsEditingExam(false)}
-                          className="px-4 py-2 text-xs font-bold text-slate-500 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50"
+                          className="px-4 py-2 text-xs font-bold text-muted border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50"
                         >
                           Hủy bỏ
                         </button>
@@ -1551,7 +1552,7 @@ export const MeetingManager: React.FC = () => {
                     </div>
                   </form>
                 ) : (
-                  <div className="text-center py-6 text-xs text-slate-500">
+                  <div className="text-center py-6 text-xs text-muted">
                     Phiên họp này hiện tại chưa có đề thi trắc nghiệm được cấu hình và không thể thay đổi ở trạng thái hiện tại.
                   </div>
                 )
@@ -1559,15 +1560,15 @@ export const MeetingManager: React.FC = () => {
                 /* HIỂN THỊ THÔNG TIN ĐỀ THI ĐÃ CẤU HÌNH */
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center text-xs md:text-sm font-semibold">
                   <div className="md:col-span-8 space-y-2">
-                    <div className="text-navy dark:text-white text-sm font-black flex items-center gap-1.5">
+                    <div className="text-navy dark:text-white text-sm font-bold flex items-center gap-1.5">
                       <ListChecks size={16} className="text-emerald-500" /> {examConfig.title}
                     </div>
-                    <div className="flex flex-wrap gap-4 text-slate-500 dark:text-slate-400 font-medium pl-5">
+                    <div className="flex flex-wrap gap-4 text-muted dark:text-muted font-medium pl-5">
                       <span className="flex items-center gap-1"><Clock size={14} /> Thời gian: <b>{Math.floor(examConfig.duration_seconds / 60)} phút</b></span>
                       <span>• Số câu hỏi: <b>{examConfig.questions_per_user} câu</b></span>
                       <span>• Trạng thái bài thi: <b>{examConfig.status === 'draft' ? 'Bản nháp' : examConfig.status === 'open' ? 'Đang mở' : 'Đã đóng'}</b></span>
                     </div>
-                    <div className="pl-5 text-[11px] text-slate-400">
+                    <div className="pl-5 text-xs text-muted">
                       Bộ đề gán liên kết: <b className="text-red-revolution dark:text-gold">
                         {availableBanks.filter(b => selectedBankIds.includes(b.id)).map(b => b.name).join(', ') || 'Chưa gán bộ đề'}
                       </b>
@@ -1576,7 +1577,7 @@ export const MeetingManager: React.FC = () => {
                       <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 rounded-lg text-xs font-bold shadow-sm">
                         📝 Đã làm bài: <b>{examAttempts.length} đồng chí</b>
                       </span>
-                      <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-700/30 rounded-lg text-xs font-bold shadow-sm">
+                      <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-800/40 text-muted dark:text-muted border border-slate-200 dark:border-slate-700/30 rounded-lg text-xs font-bold shadow-sm">
                         ❌ Chưa làm bài: <b>{Math.max(0, stats.total - examAttempts.length)} đồng chí</b>
                       </span>
                     </div>
@@ -1593,14 +1594,14 @@ export const MeetingManager: React.FC = () => {
             {/* CARD 2.5: CẤU HÌNH ĐIỂM DANH NÂNG CAO */}
             <GlassCard className="animate-fade-in">
               <div className="flex justify-between items-center gap-4 mb-2.5 border-b border-red-revolution/10 pb-2">
-                <h3 className="text-xs font-black text-brown-text dark:text-cream-light uppercase tracking-wider flex items-center gap-1.5">
+                <h3 className="text-xs font-bold text-brown-text dark:text-cream-light normal-case tracking-normal flex items-center gap-1.5">
                   <MapPin size={16} className="text-red-revolution" /> Cấu hình thông số & hình thức điểm danh
                 </h3>
                 {meeting && ['draft', 'active', 'attendance_open'].includes(meeting.status) && !isEditingAttendance && (
                   <RevolutionaryButton 
                     onClick={() => setIsEditingAttendance(true)} 
                     variant="secondary"
-                    className="text-[10px] py-1 px-2.5 flex items-center gap-1"
+                    className="text-xs py-1 px-2.5 flex items-center gap-1"
                   >
                     Thay đổi cấu hình
                   </RevolutionaryButton>
@@ -1612,7 +1613,7 @@ export const MeetingManager: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* HÌNH THỨC ĐIỂM DANH */}
                     <div className="space-y-3">
-                      <label className="text-xs font-black text-slate-600 dark:text-slate-400 uppercase">Hình thức điểm danh (chọn nhiều):</label>
+                      <label className="text-xs font-bold text-muted dark:text-muted normal-case">Hình thức điểm danh (chọn nhiều):</label>
                       <div className="space-y-2">
                         {[
                           { id: 'gps', label: 'Xác thực định vị GPS phòng họp', icon: MapPin },
@@ -1639,7 +1640,7 @@ export const MeetingManager: React.FC = () => {
                                 }}
                                 className="rounded text-red-revolution"
                               />
-                              <Icon size={16} className={isChecked ? 'text-red-revolution' : 'text-slate-400'} />
+                              <Icon size={16} className={isChecked ? 'text-red-revolution' : 'text-muted'} />
                               <span>{method.label}</span>
                             </label>
                           )
@@ -1653,11 +1654,11 @@ export const MeetingManager: React.FC = () => {
                       {selectedMethods.includes('gps') && (
                         <div className="space-y-2.5 p-3 bg-red-revolution/5 rounded-xl border border-red-revolution/10">
                           <div className="flex justify-between items-center">
-                            <span className="text-[11px] font-bold text-red-deep dark:text-gold uppercase">Thiết lập tọa độ phòng họp:</span>
+                            <span className="text-xs font-bold text-red-deep dark:text-gold normal-case">Thiết lập tọa độ phòng họp:</span>
                             <button
                               type="button"
                               onClick={handleSaveNewHallPreset}
-                              className="px-2 py-0.5 bg-gold/20 text-red-deep dark:text-gold border border-gold/40 rounded-md text-[9px] font-black hover:bg-gold/30 transition-colors cursor-pointer flex items-center gap-1"
+                              className="px-2 py-0.5 bg-gold/20 text-red-deep dark:text-gold border border-gold/40 rounded-md text-xs font-bold hover:bg-gold/30 transition-colors cursor-pointer flex items-center gap-1"
                               title="Lưu vị trí tọa độ đang chọn làm mẫu phòng họp tái sử dụng"
                             >
                               <Bookmark size={10} /> Lưu thành mẫu
@@ -1666,7 +1667,7 @@ export const MeetingManager: React.FC = () => {
 
                           {/* Chọn vị trí từ danh sách đã lưu (Hall Presets) */}
                           <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
-                            <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">📍 Chọn nhanh phòng họp đã lưu:</label>
+                            <label className="text-xs font-bold text-muted normal-case block mb-1">📍 Chọn nhanh phòng họp đã lưu:</label>
                             <select
                               value={selectedPresetId}
                               onChange={(e) => handleSelectHallPreset(e.target.value)}
@@ -1682,7 +1683,7 @@ export const MeetingManager: React.FC = () => {
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[9px] font-bold uppercase text-slate-400">Vĩ độ (Latitude):</label>
+                              <label className="text-xs font-bold normal-case text-muted">Vĩ độ (Latitude):</label>
                               <input 
                                 type="text" 
                                 value={gpsLat} 
@@ -1696,7 +1697,7 @@ export const MeetingManager: React.FC = () => {
                               />
                             </div>
                             <div>
-                              <label className="text-[9px] font-bold uppercase text-slate-400">Kinh độ (Longitude):</label>
+                              <label className="text-xs font-bold normal-case text-muted">Kinh độ (Longitude):</label>
                               <input 
                                 type="text" 
                                 value={gpsLng} 
@@ -1712,7 +1713,7 @@ export const MeetingManager: React.FC = () => {
                           </div>
                           <div className="flex gap-2 items-center flex-wrap md:flex-nowrap">
                             <div className="flex-1 min-w-[80px]">
-                              <label className="text-[9px] font-bold uppercase text-slate-400">Bán kính quét (mét):</label>
+                              <label className="text-xs font-bold normal-case text-muted">Bán kính quét (mét):</label>
                               <input 
                                 type="number" 
                                 value={gpsRadius} 
@@ -1725,7 +1726,7 @@ export const MeetingManager: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={handleGetCurrentLocation}
-                                className="px-2.5 py-1.5 bg-red-deep text-white text-[10px] font-black rounded-lg hover:bg-red-dark transition-colors cursor-pointer whitespace-nowrap"
+                                className="px-2.5 py-1.5 bg-red-deep text-white text-xs font-bold rounded-lg hover:bg-red-dark transition-colors cursor-pointer whitespace-nowrap"
                                 title="Tự động lấy vị trí hiện tại của thiết bị"
                               >
                                 GPS Tự động
@@ -1733,7 +1734,7 @@ export const MeetingManager: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={handleOpenMapModal}
-                                className="px-2.5 py-1.5 bg-gold/90 text-red-deep hover:bg-gold text-[10px] font-black rounded-lg transition-colors cursor-pointer border border-gold/40 whitespace-nowrap"
+                                className="px-2.5 py-1.5 bg-gold/90 text-red-deep hover:bg-gold text-xs font-bold rounded-lg transition-colors cursor-pointer border border-gold/40 whitespace-nowrap"
                                 title="Mở bản đồ tương tác hoặc dán tọa độ Google Maps"
                               >
                                 📍 Bản đồ / Google Map
@@ -1746,13 +1747,13 @@ export const MeetingManager: React.FC = () => {
                       {/* PIN Configuration */}
                       {selectedMethods.includes('pin') && (
                         <div className="space-y-2 p-3 bg-yellow-500/5 rounded-xl border border-yellow-500/10">
-                          <label className="text-[11px] font-bold text-yellow-600 dark:text-gold uppercase block">Thiết lập mã PIN điểm danh (4 chữ số):</label>
+                          <label className="text-xs font-bold text-yellow-600 dark:text-gold normal-case block">Thiết lập mã PIN điểm danh (4 chữ số):</label>
                           <input 
                             type="text"
                             maxLength={4}
                             value={pinCode}
                             onChange={(e) => setPinCode(e.target.value.replace(/\D/g, ''))}
-                            className="w-full text-xs font-black tracking-widest p-1.5 border border-slate-200 dark:border-slate-800 rounded-md text-center focus:border-yellow-500" 
+                            className="w-full text-xs font-bold tracking-normal p-1.5 border border-slate-200 dark:border-slate-800 rounded-md text-center focus:border-yellow-500"
                             placeholder="Ví dụ: 1234"
                           />
                         </div>
@@ -1761,7 +1762,7 @@ export const MeetingManager: React.FC = () => {
                       {/* QR Configuration */}
                       {selectedMethods.includes('qr') && (
                         <div className="space-y-2 p-3 bg-blue-500/5 rounded-xl border border-blue-500/10">
-                          <label className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase block">Token mã QR điểm danh:</label>
+                          <label className="text-xs font-bold text-blue-600 dark:text-blue-400 normal-case block">Token mã QR điểm danh:</label>
                           <input 
                             type="text"
                             value={qrToken}
@@ -1785,7 +1786,7 @@ export const MeetingManager: React.FC = () => {
                     <RevolutionaryButton
                       type="submit"
                       loading={savingAttendance}
-                      className="text-xs font-black py-2 px-5"
+                      className="text-xs font-bold py-2 px-5"
                     >
                       Lưu cấu hình
                     </RevolutionaryButton>
@@ -1796,10 +1797,10 @@ export const MeetingManager: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Hiển thị các phương thức được áp dụng */}
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Các hình thức bắt buộc:</span>
+                      <span className="text-xs font-bold text-muted normal-case block mb-1">Các hình thức bắt buộc:</span>
                       <div className="flex flex-wrap gap-2">
                         {selectedMethods.map(m => (
-                          <span key={m} className="px-2.5 py-1 bg-red-revolution/10 dark:bg-gold/10 text-red-revolution dark:text-gold text-[10px] font-black uppercase rounded-lg border border-red-revolution/15 flex items-center gap-1">
+                          <span key={m} className="px-2.5 py-1 bg-red-revolution/10 dark:bg-gold/10 text-red-revolution dark:text-gold text-xs font-bold normal-case rounded-lg border border-red-revolution/15 flex items-center gap-1">
                             {m === 'gps' && <><MapPin size={12} /> Định vị GPS</>}
                             {m === 'qr' && <><QrCode size={12} /> Quét mã QR</>}
                             {m === 'pin' && <><Key size={12} /> Nhập mã PIN</>}
@@ -1810,22 +1811,22 @@ export const MeetingManager: React.FC = () => {
                     </div>
 
                     {/* Hiển thị chi tiết thông số */}
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
                       {selectedMethods.includes('gps') && (
                         <div className="col-span-2">
-                          <span className="text-slate-400 block text-[9px] uppercase">Tọa độ & Cự ly:</span>
+                          <span className="text-muted block text-xs normal-case">Tọa độ & Cự ly:</span>
                           <span className="text-navy dark:text-white font-bold">📍 {gpsLat && gpsLng ? `${gpsLat}, ${gpsLng}` : 'Chưa cấu hình địa điểm'} (Bán kính: {gpsRadius}m)</span>
                         </div>
                       )}
                       {selectedMethods.includes('pin') && (
                         <div>
-                          <span className="text-slate-400 block text-[9px] uppercase">Mã PIN công bố:</span>
-                          <span className="text-yellow-600 dark:text-gold font-black tracking-widest text-sm">🔑 {pinCode || 'Chưa thiết lập'}</span>
+                          <span className="text-muted block text-xs normal-case">Mã PIN công bố:</span>
+                          <span className="text-yellow-600 dark:text-gold font-bold tracking-normal text-sm">🔑 {pinCode || 'Chưa thiết lập'}</span>
                         </div>
                       )}
                       {selectedMethods.includes('qr') && (
                         <div>
-                          <span className="text-slate-400 block text-[9px] uppercase">Mã QR Code:</span>
+                          <span className="text-muted block text-xs normal-case">Mã QR Code:</span>
                           <button
                             onClick={() => setQrModalOpen(true)}
                             className="text-blue-600 dark:text-blue-400 font-bold underline hover:text-blue-800 flex items-center gap-1 cursor-pointer"
@@ -1843,7 +1844,7 @@ export const MeetingManager: React.FC = () => {
             {/* CARD 2.6: VĂN BẢN, TÀI LIỆU KÈM THEO PHIÊN HỌP */}
             <GlassCard className="animate-fade-in">
               <div className="flex justify-between items-center gap-4 mb-2.5 border-b border-red-revolution/10 pb-2">
-                <h3 className="text-xs font-black text-brown-text dark:text-cream-light uppercase tracking-wider flex items-center gap-1.5">
+                <h3 className="text-xs font-bold text-brown-text dark:text-cream-light normal-case tracking-normal flex items-center gap-1.5">
                   <BookOpen size={16} className="text-red-revolution" /> Văn bản, tài liệu kèm theo phiên họp
                 </h3>
               </div>
@@ -1852,12 +1853,12 @@ export const MeetingManager: React.FC = () => {
                 <div className="space-y-4">
                   {/* Danh sách tài liệu đính kèm */}
                   <div className="space-y-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                    <span className="text-xs font-bold text-muted normal-case block mb-1">
                       Danh sách tài liệu đã tải lên ({documents.length}):
                     </span>
                     
                     {documents.length === 0 ? (
-                      <p className="text-xs italic text-slate-400 py-1">Chưa có tài liệu nào được đính kèm phiên họp này.</p>
+                      <p className="text-xs italic text-muted py-1">Chưa có tài liệu nào được đính kèm phiên họp này.</p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {documents.map((doc) => (
@@ -1866,7 +1867,7 @@ export const MeetingManager: React.FC = () => {
                             className="flex items-center justify-between p-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-white/40 dark:bg-navy/10 hover:border-red-revolution/20 transition-all text-xs"
                           >
                             <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white font-extrabold text-[10px] ${
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white font-extrabold text-xs ${
                                 doc.file_type === 'pdf' ? 'bg-red-500' : 'bg-blue-600'
                               }`}>
                                 {doc.file_type === 'pdf' ? 'PDF' : 'DOC'}
@@ -1875,7 +1876,7 @@ export const MeetingManager: React.FC = () => {
                                 <p className="font-bold text-navy dark:text-white truncate" title={doc.title}>
                                   {doc.title}
                                 </p>
-                                <p className="text-[9px] text-slate-400 mt-0.5">
+                                <p className="text-xs text-muted mt-0.5">
                                   {doc.file_type?.toUpperCase()} • {new Date(doc.created_at).toLocaleDateString('vi-VN')}
                                 </p>
                               </div>
@@ -1886,7 +1887,7 @@ export const MeetingManager: React.FC = () => {
                                 href={doc.file_url} 
                                 target="_blank" 
                                 rel="noreferrer" 
-                                className="p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                className="p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-muted dark:text-muted hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                                 title="Xem / Tải về"
                               >
                                 <ArrowRight size={12} />
@@ -1909,13 +1910,13 @@ export const MeetingManager: React.FC = () => {
 
                   {/* Form tải lên tài liệu mới */}
                   <form onSubmit={handleUploadDocument} className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                    <span className="text-xs font-bold text-muted normal-case block mb-1">
                       Tải tài liệu mới lên:
                     </span>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-bold uppercase text-slate-400 block">Tên hiển thị tài liệu:</label>
+                        <label className="text-xs font-bold normal-case text-muted block">Tên hiển thị tài liệu:</label>
                         <input 
                           type="text" 
                           value={uploadTitle}
@@ -1926,13 +1927,13 @@ export const MeetingManager: React.FC = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-bold uppercase text-slate-400 block">Chọn file (.doc, .docx, .pdf):</label>
+                        <label className="text-xs font-bold normal-case text-muted block">Chọn file (.doc, .docx, .pdf):</label>
                         <input 
                           id="meeting-doc-file-input"
                           type="file"
                           accept=".pdf,.doc,.docx"
                           onChange={handleFileChange}
-                          className="w-full text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-red-revolution/10 file:text-red-revolution hover:file:bg-red-revolution/15 file:cursor-pointer cursor-pointer border border-slate-200 dark:border-slate-800 rounded-lg p-1 bg-white/40 dark:bg-navy/10"
+                          className="w-full text-xs text-muted file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-bold file:normal-case file:bg-red-revolution/10 file:text-red-revolution hover:file:bg-red-revolution/15 file:cursor-pointer cursor-pointer border border-slate-200 dark:border-slate-800 rounded-lg p-1 bg-white/40 dark:bg-navy/10"
                         />
                       </div>
                     </div>
@@ -1946,7 +1947,7 @@ export const MeetingManager: React.FC = () => {
                           onChange={(e) => setIsCompressPdf(e.target.checked)}
                           className="rounded text-emerald-600 focus:ring-emerald-500"
                         />
-                        <label htmlFor="compress-pdf-checkbox" className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 cursor-pointer">
+                        <label htmlFor="compress-pdf-checkbox" className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 cursor-pointer">
                           Bật chế độ nén tối ưu hóa dung lượng (PDF)
                         </label>
                       </div>
@@ -1954,7 +1955,7 @@ export const MeetingManager: React.FC = () => {
 
                     {/* Trạng thái nén/tải lên */}
                     {uploadingDoc && (
-                      <div className="space-y-1.5 p-2.5 bg-red-revolution/5 rounded-lg border border-red-revolution/10 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+                      <div className="space-y-1.5 p-2.5 bg-red-revolution/5 rounded-lg border border-red-revolution/10 text-xs font-semibold text-muted dark:text-muted">
                         <div className="flex items-center justify-between">
                           <span>{compressionStatus || 'Đang xử lý tải lên...'}</span>
                           {uploadProgress !== null && <span>{uploadProgress}%</span>}
@@ -1975,7 +1976,7 @@ export const MeetingManager: React.FC = () => {
                         type="submit"
                         disabled={!uploadFile || uploadingDoc}
                         loading={uploadingDoc}
-                        className="text-[10px] font-black py-1.5 px-4"
+                        className="text-xs font-bold py-1.5 px-4"
                       >
                         Tải tài liệu lên
                       </RevolutionaryButton>
@@ -1983,7 +1984,7 @@ export const MeetingManager: React.FC = () => {
                   </form>
                 </div>
               ) : (
-                <p className="text-xs italic text-slate-400 py-2 text-center">
+                <p className="text-xs italic text-muted py-2 text-center">
                   Đồng chí vui lòng chọn hoặc mở một phiên họp để quản trị tài liệu kèm theo.
                 </p>
               )}
@@ -1992,16 +1993,16 @@ export const MeetingManager: React.FC = () => {
             {/* CARD 3: GIÁM SÁT ĐIỂM DANH ĐẢNG VIÊN TÓM GỌN THEO CHI BỘ */}
             <GlassCard className="animate-fade-in">
               <div className="flex justify-between items-center gap-4 mb-2.5 border-b border-red-revolution/10 pb-2">
-                <h3 className="text-xs font-black text-brown-text dark:text-cream-light uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-brown-text dark:text-cream-light normal-case tracking-normal">
                   Giám sát điểm danh Đảng viên theo Chi bộ ({stats.attended}/{stats.total})
                 </h3>
-                <span className="text-[10px] font-bold text-slate-400">
+                <span className="text-xs font-bold text-muted">
                   GPS Cảnh báo: {stats.warning} | Vắng phép: {stats.excused} | Vắng không phép: {stats.absent}
                 </span>
               </div>
 
               {participants.length === 0 ? (
-                <div className="text-center py-6 text-xs text-slate-500 font-semibold">
+                <div className="text-center py-6 text-xs text-muted font-semibold">
                   Chưa có danh sách đảng viên chốt tham dự cho cuộc họp này.
                 </div>
               ) : (
@@ -2024,14 +2025,14 @@ export const MeetingManager: React.FC = () => {
                           className="flex items-center justify-between p-2.5 px-3.5 cursor-pointer bg-slate-50/50 dark:bg-navy/50 hover:bg-red-revolution/5 transition-colors font-bold text-xs md:text-sm"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-red-revolution dark:text-gold font-black">{chiBoName}</span>
-                            <span className="text-[10px] bg-red-revolution/10 text-red-deep dark:bg-gold/10 dark:text-gold px-2 py-0.5 rounded-full font-bold">
+                            <span className="text-red-revolution dark:text-gold font-bold">{chiBoName}</span>
+                            <span className="text-xs bg-red-revolution/10 text-red-deep dark:bg-gold/10 dark:text-gold px-2 py-0.5 rounded-full font-bold">
                               Có mặt: {cbAttended} | Vắng phép: {listCB.filter(p => p.status === 'excused').length} | Tổng: {cbTotal}
                             </span>
                           </div>
                           
-                          <div className="flex items-center gap-1.5 text-slate-400">
-                            <span className="text-[10px] font-medium hidden sm:inline">
+                          <div className="flex items-center gap-1.5 text-muted">
+                            <span className="text-xs font-medium hidden sm:inline">
                               {isExpanded ? 'Click để thu gọn' : 'Click để xem chi tiết'}
                             </span>
                             {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -2043,7 +2044,7 @@ export const MeetingManager: React.FC = () => {
                           <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-white/10 overflow-x-auto">
                             <table className="min-w-full text-xs font-semibold text-left">
                               <thead>
-                                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400">
+                                <tr className="border-b border-slate-100 dark:border-slate-800 text-muted">
                                   <th className="py-2 px-3">Họ và tên</th>
                                   <th className="py-2 px-3">Chức vụ</th>
                                   <th className="py-2 px-3 text-center">Trạng thái</th>
@@ -2055,29 +2056,29 @@ export const MeetingManager: React.FC = () => {
                                 {listCB.map((p) => (
                                   <tr key={p.memberId} className="border-b border-slate-50/50 dark:border-slate-900/30 hover:bg-red-revolution/5">
                                     <td className="py-2.5 px-3 font-bold text-navy dark:text-white">{p.fullName}</td>
-                                    <td className="py-2.5 px-3 text-slate-500">{p.position}</td>
+                                    <td className="py-2.5 px-3 text-muted">{p.position}</td>
                                     <td className="py-2.5 px-3 text-center">
                                       {p.status === 'present' && (
-                                        <span className="inline-flex bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-bold border border-emerald-100">
+                                        <span className="inline-flex bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-bold border border-emerald-100">
                                           ✓ Có mặt
                                         </span>
                                       )}
                                       {p.status === 'warning' && (
                                         <div className="flex flex-col items-center gap-1">
-                                          <span className="inline-flex bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-bold border border-amber-100">
+                                          <span className="inline-flex bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-100">
                                             ⚠️ Cảnh báo
                                           </span>
                                           <div className="flex items-center gap-1 mt-0.5">
                                             <button
                                               onClick={() => handleEvaluate(p.memberId, 'present')}
-                                              className="px-1.5 py-0.5 text-[9px] font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-md cursor-pointer transition-all shadow-sm"
+                                              className="px-1.5 py-0.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-md cursor-pointer transition-all shadow-sm"
                                               title="Phê duyệt Có mặt"
                                             >
                                               Duyệt có mặt
                                             </button>
                                             <button
                                               onClick={() => handleEvaluate(p.memberId, 'absent')}
-                                              className="px-1.5 py-0.5 text-[9px] font-black bg-red-revolution hover:bg-red-deep text-white rounded-md cursor-pointer transition-all shadow-sm"
+                                              className="px-1.5 py-0.5 text-xs font-bold bg-red-revolution hover:bg-red-deep text-white rounded-md cursor-pointer transition-all shadow-sm"
                                               title="Từ chối, đánh Vắng mặt"
                                             >
                                               Đánh vắng
@@ -2086,17 +2087,17 @@ export const MeetingManager: React.FC = () => {
                                         </div>
                                       )}
                                       {p.status === 'excused' && (
-                                        <span className="inline-flex bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400 px-2 py-0.5 rounded-full text-[10px] font-bold border border-amber-200/50">
+                                        <span className="inline-flex bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-200/50">
                                           ✉ Vắng phép
                                         </span>
                                       )}
                                       {p.status === 'absent' && (
-                                        <span className="inline-flex bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-200">
+                                        <span className="inline-flex bg-slate-100 text-muted px-2 py-0.5 rounded-full text-xs font-bold border border-slate-200">
                                           - Vắng mặt
                                         </span>
                                       )}
                                     </td>
-                                    <td className="py-2.5 px-3 text-[10px] text-slate-400">
+                                    <td className="py-2.5 px-3 text-xs text-muted">
                                       {p.status === 'excused' ? (
                                         <span className="text-amber-700 dark:text-amber-400 font-bold block max-w-[200px] leading-tight">
                                           Lý do: {p.warningReason || 'Vắng có lý do'}
@@ -2107,11 +2108,11 @@ export const MeetingManager: React.FC = () => {
                                             <span>🕒 {new Date(p.markedAt).toLocaleTimeString('vi-VN')}</span>
                                           </div>
                                           {p.gpsDistanceM !== null && (
-                                            <div className="flex items-center gap-1 mt-0.5 text-[9px]">
-                                              <span className="text-slate-400">📍 Cự ly thực tế:</span>
+                                            <div className="flex items-center gap-1 mt-0.5 text-xs">
+                                              <span className="text-muted">📍 Cự ly thực tế:</span>
                                               <span className={`font-bold px-1 py-0.2 rounded ${
                                                 p.gpsValid === false 
-                                                  ? "bg-red-50 text-red-revolution dark:bg-rose-950/30 dark:text-rose-400 border border-red-100 dark:border-rose-900/30 font-black" 
+                                                  ? "bg-red-50 text-red-revolution dark:bg-rose-950/30 dark:text-rose-400 border border-red-100 dark:border-rose-900/30 font-bold"
                                                   : "text-emerald-600 dark:text-emerald-400 font-semibold"
                                               }`}>
                                                 {p.gpsDistanceM}m
@@ -2119,7 +2120,7 @@ export const MeetingManager: React.FC = () => {
                                             </div>
                                           )}
                                           {p.warningReason && (
-                                            <span className="text-amber-600 dark:text-amber-400 font-bold block text-[9px] mt-0.5 max-w-[200px] leading-tight">
+                                            <span className="text-amber-600 dark:text-amber-400 font-bold block text-xs mt-0.5 max-w-[200px] leading-tight">
                                               ({p.warningReason})
                                             </span>
                                           )}
@@ -2133,13 +2134,13 @@ export const MeetingManager: React.FC = () => {
                                         const attempt = examAttempts.find(a => a.member_id === p.memberId)
                                         if (attempt) {
                                           return (
-                                            <span className="inline-flex bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-bold border border-emerald-100 dark:border-emerald-900/30">
+                                            <span className="inline-flex bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 px-2 py-0.5 rounded-full text-xs font-bold border border-emerald-100 dark:border-emerald-900/30">
                                               ✓ Đã nộp ({attempt.score}đ)
                                             </span>
                                           )
                                         }
                                         return (
-                                          <span className="inline-flex bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-455 px-2 py-0.5 rounded-full text-[10px] font-bold border border-rose-100 dark:border-rose-900/30">
+                                          <span className="inline-flex bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-455 px-2 py-0.5 rounded-full text-xs font-bold border border-rose-100 dark:border-rose-900/30">
                                             ✗ Chưa nộp
                                           </span>
                                         )
@@ -2164,7 +2165,7 @@ export const MeetingManager: React.FC = () => {
               <Users size={24} />
             </div>
             <h3 className="text-sm font-bold text-navy dark:text-white mb-1">Không có phiên họp chính trị nào được chọn điều khiển</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4 font-semibold">
+            <p className="text-xs text-muted max-w-sm mx-auto mb-4 font-semibold">
               Đồng chí cần tạo phiên họp mới hoặc nhấn nút **"Chọn điều khiển"** từ danh sách lịch sử ở bảng dưới đây để bắt đầu sinh hoạt chính trị.
             </p>
             <RevolutionaryButton onClick={() => setShowCreateModal(true)} variant="secondary" className="px-6">
@@ -2176,18 +2177,18 @@ export const MeetingManager: React.FC = () => {
         {/* LỊCH SỬ PHIÊN HỌP & BẢN NHÁP */}
         <div className="mt-4">
           <GlassCard>
-            <h3 className="text-xs font-black text-brown-text dark:text-cream-light uppercase tracking-wider mb-2.5 pb-1.5 border-b border-red-revolution/10">
+            <h3 className="text-xs font-bold text-brown-text dark:text-cream-light normal-case tracking-normal mb-2.5 pb-1.5 border-b border-red-revolution/10">
               Danh sách phiên họp chính trị (Tất cả Bản nháp & Lịch sử)
             </h3>
             {historyMeetings.length === 0 ? (
-              <div className="text-center py-6 text-xs text-slate-500 font-semibold">
+              <div className="text-center py-6 text-xs text-muted font-semibold">
                 Không có phiên họp lịch sử hoặc bản nháp nào khác.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-xs md:text-sm font-semibold text-left">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-muted">
                       <th className="py-3 px-4">Tên phiên họp</th>
                       <th className="py-3 px-4">Ngày họp</th>
                       <th className="py-3 px-4">Địa điểm</th>
@@ -2199,8 +2200,8 @@ export const MeetingManager: React.FC = () => {
                     {historyMeetings.map((item) => (
                       <tr key={item.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-red-revolution/5">
                         <td className="py-3 px-4 font-bold text-navy dark:text-white">{item.title}</td>
-                        <td className="py-3 px-4 text-slate-500">{item.meeting_date || 'Không rõ'}{item.start_time && ` lúc ${formatTime(item.start_time)}`}</td>
-                        <td className="py-3 px-4 text-slate-500">{item.location || 'Chưa cấu hình'}</td>
+                        <td className="py-3 px-4 text-muted">{item.meeting_date || 'Không rõ'}{item.start_time && ` lúc ${formatTime(item.start_time)}`}</td>
+                        <td className="py-3 px-4 text-muted">{item.location || 'Chưa cấu hình'}</td>
                         <td className="py-3 px-4">
                           <StatusBadge 
                             status={
@@ -2214,7 +2215,7 @@ export const MeetingManager: React.FC = () => {
                         <td className="py-2.5 px-4 text-center flex justify-center gap-1">
                           <button
                             onClick={() => loadData(false, item.id)}
-                            className="inline-flex items-center gap-1 text-[10px] bg-red-revolution text-white hover:bg-red-deep dark:bg-gold dark:text-navy dark:hover:bg-amber-400 font-bold px-2.5 py-1 rounded transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 text-xs bg-red-revolution text-white hover:bg-red-deep dark:bg-gold dark:text-navy dark:hover:bg-amber-400 font-bold px-2.5 py-1 rounded transition-colors cursor-pointer"
                           >
                             Chọn điều khiển <ArrowRight size={10} />
                           </button>
@@ -2238,21 +2239,21 @@ export const MeetingManager: React.FC = () => {
 
       {/* MODAL XÓA PHIÊN HỌP BẢO MẬT CAO */}
       {showDeleteModal && meetingToDelete && (
-        <div className="fixed inset-0 bg-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <GlassCard className="max-w-md w-full border border-red-revolution/20 shadow-2xl relative">
+        <div className="fixed inset-0 bg-navy/60 backdrop-blur-none flex items-center justify-center p-4 z-50 animate-fade-in">
+          <GlassCard className="max-w-md w-full border border-red-revolution/20 shadow-sm relative">
             <button 
               onClick={() => setShowDeleteModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-red-revolution transition-colors"
+              className="absolute top-4 right-4 text-muted hover:text-red-revolution transition-colors"
             >
               <X size={20} />
             </button>
 
             <div className="flex items-center gap-2 text-red-revolution dark:text-gold mb-4 border-b border-red-revolution/10 pb-3">
               <ShieldAlert size={20} className="text-red-revolution animate-pulse" />
-              <h3 className="text-sm font-black uppercase tracking-wider">Xác nhận xóa phiên họp</h3>
+              <h3 className="text-sm font-bold normal-case tracking-normal">Xác nhận xóa phiên họp</h3>
             </div>
 
-            <p className="text-xs font-semibold text-slate-500 mb-3 leading-relaxed">
+            <p className="text-xs font-semibold text-muted mb-3 leading-relaxed">
               Hành động này sẽ xóa vĩnh viễn phiên họp: <b className="text-navy dark:text-white">"{meetingToDelete.title}"</b> cùng toàn bộ hồ sơ điểm danh, bài kiểm tra và kết quả liên quan. Không thể khôi phục dữ liệu sau khi xóa.
             </p>
 
@@ -2260,7 +2261,7 @@ export const MeetingManager: React.FC = () => {
 
             <form onSubmit={handleDeleteMeetingSecure} className="space-y-4 text-xs md:text-sm font-semibold">
               <div>
-                <label className="block text-slate-500 mb-1">Mật khẩu xác nhận Admin *</label>
+                <label className="block text-muted mb-1">Mật khẩu xác nhận Admin *</label>
                 <input
                   type="password"
                   required
@@ -2272,7 +2273,7 @@ export const MeetingManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-500 mb-1">
+                <label className="block text-muted mb-1">
                   Nhập lại tên cuộc họp (không dấu, không khoảng cách) *
                 </label>
                 <input
@@ -2283,7 +2284,7 @@ export const MeetingManager: React.FC = () => {
                   placeholder={`Ví dụ: ${cleanMeetingName(meetingToDelete.title)}`}
                   className="w-full p-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-mono outline-none focus:border-red-revolution text-xs"
                 />
-                <span className="text-[10px] text-slate-400 font-medium block mt-1">
+                <span className="text-xs text-muted font-medium block mt-1">
                   Gợi ý nhập đúng: <b className="text-red-revolution dark:text-gold">{cleanMeetingName(meetingToDelete.title)}</b>
                 </span>
               </div>
@@ -2292,14 +2293,14 @@ export const MeetingManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 py-3 text-xs font-bold uppercase rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 transition-colors"
+                  className="flex-1 py-3 text-xs font-bold normal-case rounded-xl border border-slate-200 dark:border-slate-800 text-muted hover:bg-slate-50 transition-colors"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={deleteLoading || !deleteConfirmPassword || !deleteConfirmNameInput}
-                  className="flex-1 py-3 text-xs font-bold uppercase rounded-xl bg-red-revolution hover:bg-red-deep dark:bg-gold dark:text-navy dark:hover:bg-amber-400 text-white flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors cursor-pointer"
+                  className="flex-1 py-3 text-xs font-bold normal-case rounded-xl bg-red-revolution hover:bg-red-deep dark:bg-gold dark:text-navy dark:hover:bg-amber-400 text-white flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors cursor-pointer"
                 >
                   {deleteLoading ? (
                     <>
@@ -2319,18 +2320,20 @@ export const MeetingManager: React.FC = () => {
 
       {/* MODAL TẠO PHIÊN HỌP MỚI */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <GlassCard className="max-w-md w-full border border-red-revolution/20 shadow-2xl relative">
+        <div role="dialog" aria-modal="true" aria-label="Tạo phiên sinh hoạt mới" className="fixed inset-0 bg-navy/60 flex items-center justify-center p-4 z-50 animate-fade-in">
+          <GlassCard className="max-w-2xl w-full max-h-[calc(100dvh-2rem)] overflow-y-auto border border-line relative">
             <button 
               onClick={() => setShowCreateModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-red-revolution transition-colors"
+              type="button"
+              aria-label="Đóng form tạo phiên họp"
+              className="absolute top-1 right-1 min-w-11 min-h-11 flex items-center justify-center text-muted hover:text-primary"
             >
               <X size={20} />
             </button>
 
             <div className="flex items-center gap-2 text-red-revolution dark:text-gold mb-6 border-b border-red-revolution/10 pb-3">
               <Calendar size={20} />
-              <h3 className="text-sm font-black uppercase tracking-wider">Tạo phiên sinh hoạt mới</h3>
+              <h3 className="text-sm font-bold normal-case tracking-normal">Tạo phiên sinh hoạt mới</h3>
             </div>
 
             <form onSubmit={handleCreateMeeting} className="space-y-4 text-xs md:text-sm font-semibold">
@@ -2342,13 +2345,13 @@ export const MeetingManager: React.FC = () => {
                   onChange={(e) => handleToggleTemplate(e.target.checked)}
                   className="w-4 h-4 text-red-revolution border-slate-350 rounded focus:ring-red-revolution cursor-pointer"
                 />
-                <label htmlFor="applyTemplate" className="text-[11px] font-bold text-red-revolution dark:text-gold cursor-pointer select-none">
+                <label htmlFor="applyTemplate" className="text-xs font-bold text-red-revolution dark:text-gold cursor-pointer select-none">
                   Chèn chương trình sinh hoạt cơ bản
                 </label>
               </div>
 
               <div>
-                <label className="block text-slate-500 mb-1">Tiêu đề phiên họp *</label>
+                <label className="block text-muted mb-1">Tiêu đề phiên họp *</label>
                 <input
                   type="text"
                   required
@@ -2361,7 +2364,7 @@ export const MeetingManager: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-500 mb-1">Ngày sinh hoạt *</label>
+                  <label className="block text-muted mb-1">Ngày sinh hoạt *</label>
                   <input
                     type="date"
                     required
@@ -2371,7 +2374,7 @@ export const MeetingManager: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-500 mb-1">Giờ sinh hoạt (có thể bổ sung sau)</label>
+                  <label className="block text-muted mb-1">Giờ sinh hoạt (có thể bổ sung sau)</label>
                   <input
                     type="time"
                     value={formTime}
@@ -2380,7 +2383,7 @@ export const MeetingManager: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-500 mb-1">Địa điểm họp (có thể cấu hình sau)</label>
+                  <label className="block text-muted mb-1">Địa điểm họp (có thể cấu hình sau)</label>
                   <input
                     type="text"
                   value={formLocation}
@@ -2392,17 +2395,11 @@ export const MeetingManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-500 mb-1">Nội dung tóm tắt chuyên đề</label>
-                <textarea
-                  value={formAgenda}
-                  onChange={(e) => setFormAgenda(e.target.value)}
-                  placeholder="Tóm tắt nội dung học tập chuyên đề của tháng..."
-                  rows={3}
-                  className="w-full p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-semibold outline-none focus:border-red-revolution resize-none"
-                />
+                <label className="block text-muted mb-1">Nội dung tóm tắt chuyên đề</label>
+                <AgendaEditor value={formAgenda} onChange={setFormAgenda} />
               </div>
 
-              <div className="bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 p-3 rounded-xl border border-amber-200 text-[11px] font-medium flex gap-2">
+              <div className="bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 p-3 rounded-xl border border-amber-200 text-xs font-medium flex gap-2">
                 <span className="shrink-0 mt-0.5">⚠️</span>
                 <span><b>Chú ý:</b> Hệ thống sẽ tự động chốt toàn bộ đảng viên đang hoạt động làm danh sách tham gia phiên họp này.</span>
               </div>
@@ -2411,7 +2408,7 @@ export const MeetingManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-3 text-xs font-bold uppercase rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 transition-colors"
+                  className="flex-1 py-3 text-xs font-bold normal-case rounded-xl border border-slate-200 dark:border-slate-800 text-muted hover:bg-slate-50 transition-colors"
                 >
                   Hủy bỏ
                 </button>
@@ -2426,11 +2423,11 @@ export const MeetingManager: React.FC = () => {
 
       {/* MODAL HIỂN THỊ QR CODE ĐIỂM DANH */}
       {qrModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 text-center animate-scale-in">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-none flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-card max-w-sm w-full p-6 shadow-sm border border-slate-100 dark:border-slate-800 text-center animate-scale-in">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">Mã QR Điểm danh hội trường</span>
-              <button onClick={() => setQrModalOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+              <span className="text-xs font-bold text-slate-700 dark:text-muted normal-case tracking-normal">Mã QR Điểm danh hội trường</span>
+              <button onClick={() => setQrModalOpen(false)} className="text-muted hover:text-muted cursor-pointer">
                 <X size={18} />
               </button>
             </div>
@@ -2446,11 +2443,11 @@ export const MeetingManager: React.FC = () => {
             <h4 className="text-xs font-bold text-navy dark:text-white mb-2 leading-relaxed">
               {meeting?.title}
             </h4>
-            <p className="text-[10px] text-slate-400 mb-4 font-semibold leading-relaxed">
+            <p className="text-xs text-muted mb-4 font-semibold leading-relaxed">
               Đồng chí dùng camera điện thoại hoặc ứng dụng quét mã trên để mở đường dẫn xác nhận điểm danh tự động.
             </p>
             
-            <RevolutionaryButton onClick={() => setQrModalOpen(false)} fullWidth className="text-xs font-black">
+            <RevolutionaryButton onClick={() => setQrModalOpen(false)} fullWidth className="text-xs font-bold">
               Đóng lại
             </RevolutionaryButton>
           </div>
@@ -2458,18 +2455,18 @@ export const MeetingManager: React.FC = () => {
       )}
       {/* MODAL BẢN ĐỒ VÀ GOOGLE MAPS */}
       {showMapModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-5 shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-in flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-none flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-card max-w-xl w-full p-5 shadow-sm border border-slate-100 dark:border-slate-800 animate-scale-in flex flex-col max-h-[90vh]">
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-2">
                 <MapPin className="text-red-revolution" size={18} />
-                <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                <span className="text-xs font-bold text-slate-700 dark:text-muted normal-case tracking-normal">
                   Cấu hình vị trí phòng họp
                 </span>
               </div>
               <button 
                 onClick={() => setShowMapModal(false)} 
-                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="text-muted hover:text-muted cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -2480,7 +2477,7 @@ export const MeetingManager: React.FC = () => {
               
               {/* Option 1: Search & Pick on interactive Map */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-red-deep dark:text-gold uppercase block">
+                <label className="text-xs font-bold text-red-deep dark:text-gold normal-case block">
                   Cách 1: Tìm kiếm & Click chọn trực tiếp trên Bản đồ
                 </label>
                 
@@ -2496,23 +2493,23 @@ export const MeetingManager: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleSearchLocation}
-                    className="px-3 py-1.5 bg-red-revolution text-white text-[10px] font-black rounded-lg hover:bg-red-dark transition-colors cursor-pointer animate-pulse-subtle"
+                    className="px-3 py-1.5 bg-red-revolution text-white text-xs font-bold rounded-lg hover:bg-red-dark transition-colors cursor-pointer animate-pulse-subtle"
                   >
                     Tìm kiếm
                   </button>
                 </div>
 
                 {/* Switcher chế độ xem Bản đồ: Google Maps Mới Nhất vs Mapbox */}
-                <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-lg text-[10px] font-bold">
-                  <span className="text-slate-500">Chế độ bản đồ:</span>
+                <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-lg text-xs font-bold">
+                  <span className="text-muted">Chế độ bản đồ:</span>
                   <div className="flex gap-1">
                     <button
                       type="button"
                       onClick={() => setMapStyle('google-hybrid')}
                       className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
                         mapStyle === 'google-hybrid'
-                          ? 'bg-red-revolution text-white font-black shadow-sm'
-                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                          ? 'bg-red-revolution text-white font-bold shadow-sm'
+                          : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
                       }`}
                     >
                       🛰️ Google Vệ tinh (Mới nhất)
@@ -2522,8 +2519,8 @@ export const MeetingManager: React.FC = () => {
                       onClick={() => setMapStyle('google-roadmap')}
                       className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
                         mapStyle === 'google-roadmap'
-                          ? 'bg-red-revolution text-white font-black shadow-sm'
-                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                          ? 'bg-red-revolution text-white font-bold shadow-sm'
+                          : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
                       }`}
                     >
                       🗺️ Google Đường phố
@@ -2533,8 +2530,8 @@ export const MeetingManager: React.FC = () => {
                       onClick={() => setMapStyle('mapbox://styles/mapbox/satellite-streets-v12')}
                       className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
                         mapStyle.includes('mapbox')
-                          ? 'bg-red-revolution text-white font-black shadow-sm'
-                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                          ? 'bg-red-revolution text-white font-bold shadow-sm'
+                          : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
                       }`}
                     >
                       🌐 Mapbox
@@ -2546,17 +2543,17 @@ export const MeetingManager: React.FC = () => {
                 <div 
                   ref={mapRef} 
                   style={{ height: '260px' }} 
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 shadow-md overflow-hidden z-10"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden z-10"
                 ></div>
               </div>
 
               {/* Option 2: Paste Coordinates from Google Maps */}
               <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/50 dark:border-slate-800 space-y-2">
-                <label className="text-[10px] font-bold text-red-deep dark:text-gold uppercase block">
+                <label className="text-xs font-bold text-red-deep dark:text-gold normal-case block">
                   Cách 2: Nhập tọa độ thủ công hoặc copy từ Google Maps
                 </label>
                 
-                <div className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                <div className="text-xs text-muted font-medium leading-relaxed">
                   Đồng chí truy cập <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-red-revolution hover:underline font-bold inline-flex items-center gap-0.5">Google Maps <ArrowRight size={10} /></a>, click chuột phải vào phòng họp, bấm vào dòng tọa độ đầu tiên để sao chép, sau đó dán vào ô bên dưới:
                 </div>
 
@@ -2572,13 +2569,13 @@ export const MeetingManager: React.FC = () => {
               {/* Coordinates Preview with Copy Button */}
               <div className="bg-red-revolution/5 p-3 rounded-xl border border-red-revolution/10 space-y-2">
                 <div className="flex justify-between items-center border-b border-red-revolution/10 pb-1.5">
-                  <span className="text-[10px] font-bold text-red-deep dark:text-gold uppercase flex items-center gap-1">
+                  <span className="text-xs font-bold text-red-deep dark:text-gold normal-case flex items-center gap-1">
                     <MapPin size={12} /> Tọa độ chốt chuẩn (6 chữ số thập phân):
                   </span>
                   <button
                     type="button"
                     onClick={() => handleCopyCoordsToClipboard(tempLat, tempLng)}
-                    className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-red-revolution dark:text-gold text-[10px] font-black rounded-lg hover:bg-slate-50 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                    className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-red-revolution dark:text-gold text-xs font-bold rounded-lg hover:bg-slate-50 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
                   >
                     {copiedState ? (
                       <>
@@ -2594,12 +2591,12 @@ export const MeetingManager: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3 pt-0.5">
                   <div className="text-center bg-white/60 dark:bg-slate-900/60 p-1.5 rounded-lg border border-slate-200/50 dark:border-slate-800">
-                    <div className="text-[8px] font-bold uppercase text-slate-400 font-sans">Vĩ độ (Latitude)</div>
-                    <div className="text-xs font-black text-navy dark:text-white font-mono mt-0.5 select-all">{tempLat || '---'}</div>
+                    <div className="text-xs font-bold normal-case text-muted font-sans">Vĩ độ (Latitude)</div>
+                    <div className="text-xs font-bold text-navy dark:text-white font-mono mt-0.5 select-all">{tempLat || '---'}</div>
                   </div>
                   <div className="text-center bg-white/60 dark:bg-slate-900/60 p-1.5 rounded-lg border border-slate-200/50 dark:border-slate-800">
-                    <div className="text-[8px] font-bold uppercase text-slate-400 font-sans">Kinh độ (Longitude)</div>
-                    <div className="text-xs font-black text-navy dark:text-white font-mono mt-0.5 select-all">{tempLng || '---'}</div>
+                    <div className="text-xs font-bold normal-case text-muted font-sans">Kinh độ (Longitude)</div>
+                    <div className="text-xs font-bold text-navy dark:text-white font-mono mt-0.5 select-all">{tempLng || '---'}</div>
                   </div>
                 </div>
               </div>
@@ -2611,14 +2608,14 @@ export const MeetingManager: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowMapModal(false)}
-                className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-800 text-muted dark:text-muted text-xs font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Hủy bỏ
               </button>
               <RevolutionaryButton 
                 type="button"
                 onClick={handleConfirmMapCoords}
-                className="flex-1 text-xs font-black"
+                className="flex-1 text-xs font-bold"
               >
                 Xác nhận tọa độ
               </RevolutionaryButton>

@@ -22,13 +22,13 @@ export const RevolutionaryButton: React.FC<RevolutionaryButtonProps> = ({
   fullWidth = false
 }) => {
   // Base classes for mobile-friendly size, centering, animations, and active state
-  const baseClasses = 'min-h-[48px] px-6 py-2.5 rounded-xl font-bold uppercase tracking-wider text-sm md:text-base transition-all duration-200 active:scale-[0.98] inline-flex items-center justify-center gap-2 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none'
+  const baseClasses = 'min-h-[48px] px-6 py-3 rounded-control font-semibold text-sm md:text-base transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none'
   
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-red-revolution to-red-dark text-white border border-red-deep hover:from-red-dark hover:to-red-deep focus:ring-red-revolution hover:shadow-lg',
-    secondary: 'bg-white text-red-dark border border-red-revolution/20 hover:bg-cream-light focus:ring-red-revolution',
-    gold: 'bg-gradient-to-r from-gold to-yellow-500 text-brown-text border border-yellow-600 hover:from-yellow-500 hover:to-yellow-600 focus:ring-gold hover:shadow-lg',
-    danger: 'bg-red-deep text-white border border-red-900 hover:bg-red-950 focus:ring-red-deep'
+    primary: 'bg-primary text-white border border-primary hover:bg-primary-hover',
+    secondary: 'bg-surface text-ink border border-line hover:bg-surface-muted',
+    gold: 'bg-[#f4e8c8] text-[#4a090c] border border-accent hover:bg-[#e2c576]',
+    danger: 'bg-[#b42318] text-white border border-[#b42318] hover:bg-[#8c1c13]'
   }
 
   const widthClass = fullWidth ? 'w-full flex' : ''
@@ -38,6 +38,7 @@ export const RevolutionaryButton: React.FC<RevolutionaryButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
+      aria-busy={loading}
       className={`${baseClasses} ${variantClasses[variant]} ${widthClass} ${className}`}
     >
       {loading ? (
