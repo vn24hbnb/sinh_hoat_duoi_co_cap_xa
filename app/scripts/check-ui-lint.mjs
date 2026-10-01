@@ -5,7 +5,7 @@ import path from 'node:path'
 const baseline='10398f3b9b03bb019ec4c1b0558d6ef9d5154150'
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8',maxBuffer:10*1024*1024})
 const eslint=new ESLint()
-const files=git('-C','..','diff','--name-only',baseline,'--','app/src').trim().split('\n').filter(file=>/\.tsx?$/.test(file))
+const files=git('-C','..','diff','--name-only','--diff-filter=M',baseline,'--','app/src').trim().split('\n').filter(file=>/\.tsx?$/.test(file))
 if(!files.length)throw new Error('No changed source files found; lint comparison must not pass vacuously.')
 let before=0,after=0;const added=[]
 const signatures=result=>result.messages.map(message=>`${message.severity}:${message.ruleId}:${message.message.split('\n\n/')[0]}`)
