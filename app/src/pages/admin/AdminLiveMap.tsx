@@ -86,6 +86,7 @@ export const AdminLiveMap: React.FC = () => {
   // Model dữ liệu bản đồ hợp đồng duy nhất từ mapAttendanceService
   const [mapData, setMapData] = useState<SessionMapData | null>(null)
   const [loadedOrganizationId, setLoadedOrganizationId] = useState<string | null>(null)
+  const currentMapData = mapData?.meetingSessionId === selectedMeetingId ? mapData : null
 
   // Bộ lọc UI
   const [selectedChiBoId, setSelectedChiBoId] = useState<string>('all')
@@ -229,8 +230,15 @@ export const AdminLiveMap: React.FC = () => {
   useEffect(() => {
     if (loadedOrganizationId !== organizationId) return
     if (selectedMeetingId && meetings.some(meeting => meeting.id === selectedMeetingId)) {
+      activeAbortControllerRef.current?.abort()
+      requestSequenceRef.current += 1
+      isFetchingRef.current = false
       const timer = window.setTimeout(() => { void loadSessionMapData(selectedMeetingId, 'initial') }, 0)
-      return () => window.clearTimeout(timer)
+      return () => {
+        window.clearTimeout(timer)
+        requestSequenceRef.current += 1
+        activeAbortControllerRef.current?.abort()
+      }
     }
   }, [selectedMeetingId, meetings, organizationId, loadedOrganizationId, loadSessionMapData])
 
@@ -266,8 +274,8 @@ export const AdminLiveMap: React.FC = () => {
 
   // 5. Derived state: Lọc danh sách điểm danh sử dụng useMemo
   const filteredPoints = useMemo(() => {
-    if (!mapData) return []
-    return mapData.points.filter((pt) => {
+    if (!currentMapData) return []
+    return currentMapData.points.filter((pt) => {
       if (selectedChiBoId !== 'all') {
         if (pt.chiBoId !== selectedChiBoId && pt.chiBoName !== selectedChiBoId) {
           const matchedCb = chiBos.find(c => c.id === selectedChiBoId)
@@ -286,7 +294,7 @@ export const AdminLiveMap: React.FC = () => {
       }
       return true
     })
-  }, [mapData, selectedChiBoId, selectedLocationStatus, searchMemberQuery, chiBos])
+  }, [currentMapData, selectedChiBoId, selectedLocationStatus, searchMemberQuery, chiBos])
 
   // 6. Hàm vẽ/cập nhật toàn bộ Markers trên Mapbox (Tách riêng khỏi khởi tạo map)
   const renderMapMarkers = useCallback((map: MapboxMapInstance, mapboxgl: unknown) => {
@@ -308,9 +316,9 @@ export const AdminLiveMap: React.FC = () => {
     markersRef.current.forEach(m => m.remove())
     markersRef.current = []
 
-    if (!mapData?.hall) return
+    if (!currentMapData?.hall) return
 
-    const hall = mapData.hall
+    const hall = currentMapData.hall
     const mapboxGlobal = mapboxgl as {
       Marker: new (element: HTMLElement, options?: { anchor?: string }) => MapboxMarkerInstance
       Popup: new (options?: { offset?: number }) => { setHTML: (html: string) => unknown }
@@ -521,7 +529,7 @@ export const AdminLiveMap: React.FC = () => {
 
       markersRef.current.push(marker)
     })
-  }, [mapData, filteredPoints, isDynamicMode])
+  }, [currentMapData, filteredPoints, isDynamicMode])
 
   const renderMapMarkersRef = useRef(renderMapMarkers)
   useEffect(() => {
@@ -557,9 +565,9 @@ export const AdminLiveMap: React.FC = () => {
       }
       mapboxgl.accessToken = MAPBOX_TOKEN
 
-      const hallLat = mapData?.hall?.latitude ?? 0
-      const hallLng = mapData?.hall?.longitude ?? 0
-      const hasVenue = Boolean(mapData?.hall)
+      const hallLat = currentMapData?.hall?.latitude ?? 0
+      const hallLng = currentMapData?.hall?.longitude ?? 0
+      const hasVenue = Boolean(currentMapData?.hall)
 
       if (mapInstanceRef.current) {
         try {
@@ -648,9 +656,9 @@ export const AdminLiveMap: React.FC = () => {
     const mapboxglObj = (window as unknown as Record<string, unknown>).mapboxgl
     if (mapInstanceRef.current && mapboxglObj) {
       renderMapMarkers(mapInstanceRef.current, mapboxglObj)
-      if (mapData?.hall) {
+      if (currentMapData?.hall) {
         mapInstanceRef.current.flyTo({
-          center: [mapData.hall.longitude, mapData.hall.latitude],
+          center: [currentMapData.hall.longitude, currentMapData.hall.latitude],
           zoom: 15,
           speed: 1.2
         })
@@ -658,7 +666,7 @@ export const AdminLiveMap: React.FC = () => {
         mapInstanceRef.current.jumpTo({ center: [0, 0], zoom: 2 })
       }
     }
-  }, [filteredPoints, mapData, renderMapMarkers])
+  }, [filteredPoints, currentMapData, renderMapMarkers])
 
   // Hàm bay tới vị trí Đảng viên (Focus on map)
   const handleFlyToMember = (lat: number, lng: number) => {
@@ -688,7 +696,7 @@ export const AdminLiveMap: React.FC = () => {
     return <LoadingSpinner message="Đang tải bản đồ giám sát điểm danh..." fullScreen />
   }
 
-  const summary = mapData?.summary || {
+  const summary = currentMapData?.summary || {
     totalAttendance: 0,
     positioned: 0,
     missingGps: 0,
@@ -697,7 +705,7 @@ export const AdminLiveMap: React.FC = () => {
     unknown: 0
   }
 
-  const hall = mapData?.hall ?? null
+  const hall = currentMapData?.hall ?? null
 
   return (
     <PatternBackground>
