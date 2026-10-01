@@ -3,34 +3,45 @@ import assert from 'node:assert/strict'
 import { loadService, queryMock } from './load-service.mjs'
 import * as gps from '../src/utils/gps.ts'
 
-async function setup(rows = [], error = null) {
+async function setup(rows = [], error = null, sessionError = null) {
   const db = queryMock(rows, error)
+  const sessionDb = queryMock(sessionError ? null : { id: 'meeting-a' }, sessionError)
   const { mapAttendanceService } = await loadService('../src/services/mapAttendanceService.ts', {
-    './supabaseClient': { supabase: db.client },
+    './supabaseClient': { supabase: { from(table) { return table === 'meeting_sessions' ? sessionDb.client.from(table) : db.client.from(table) } } },
+    './tenantService': { tenantService: { requireOrganizationId: () => 'org-a' } },
     './meetingUiSettingsService': { meetingUiSettingsService: {
       getSettings: async () => ({ gps_lat: 21, gps_lng: 104, gps_radius_m: 200 }),
     } },
     '../utils/gps': gps,
     './attendanceService': { DEFAULT_MEETING_LAT: null, DEFAULT_MEETING_LNG: null, MAX_ALLOWED_DISTANCE_METERS: 200 },
   })
-  return { service: mapAttendanceService, db }
+  return { service: mapAttendanceService, db, sessionDb }
 }
 
 test('map rejects empty session instead of loading data from all sessions', async () => {
-  const { service, db } = await setup()
+  const { service, db, sessionDb } = await setup()
   await assert.rejects(service.getSessionMapData('  '), /MISSING_SESSION_ID/)
   assert.equal(db.calls.length, 0)
+  assert.equal(sessionDb.calls.length, 0)
 })
 
 test('map queries actual GPS column names and filters the exact meeting session', async () => {
-  const { service, db } = await setup()
+  const { service, db, sessionDb } = await setup()
   const result = await service.getSessionMapData(' meeting-a ')
   assert.equal(result.meetingSessionId, 'meeting-a')
   assert.ok(db.calls.some(call => call[0] === 'eq' && call[1] === 'meeting_session_id' && call[2] === 'meeting-a'))
+  assert.ok(db.calls.some(call => call[0] === 'eq' && call[1] === 'organization_id' && call[2] === 'org-a'))
+  assert.ok(sessionDb.calls.some(call => call[0] === 'eq' && call[1] === 'organization_id' && call[2] === 'org-a'))
   const select = db.calls.find(call => call[0] === 'select')[1]
   assert.match(select, /gps_lat/)
   assert.match(select, /gps_lng/)
   assert.doesNotMatch(select, /\blatitude\b|\blongitude\b/)
+})
+
+test('map rejects inaccessible or foreign-commune sessions before reading GPS', async () => {
+  const {service,db}=await setup([],null,{message:'not found'})
+  await assert.rejects(service.getSessionMapData('foreign-session'),/không thuộc xã/)
+  assert.equal(db.calls.length,0)
 })
 
 test('map separates absent GPS from valid coordinates and retains server GPS verdict', async () => {

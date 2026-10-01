@@ -11,6 +11,7 @@ import { StatusBadge } from '../src/components/ui/StatusBadge'
 import { RevolutionaryButton } from '../src/components/ui/RevolutionaryButton'
 import { SessionProgress } from '../src/components/ui/SessionProgress'
 import { AgendaEditor } from '../src/components/ui/AgendaEditor'
+import { SatelliteMap } from '../src/components/ui/SatelliteMap'
 import '../src/index.css'
 const session={id:'fixture',username:'fixture',role:'member' as const,mustChangePassword:false,memberId:'fixture',memberName:'Tài khoản kiểm thử',position:'',chiBoId:'fixture',chiBoName:'',organizationId:'fixture',organizationName:'',isGlobalAdmin:false}
 export function Preview(){
@@ -19,6 +20,7 @@ export function Preview(){
   return <AuthContext.Provider value={{user:session,loading:false,organizationId:'fixture',organizations:[],login:async()=>session,logout:async()=>{},changePassword:async()=>{},selectOrganization:()=>{}}}><BrowserRouter>
     <RedNavigationBar isAuthenticated/>
     <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <SatelliteMap className="h-[420px]" hall={{latitude:21.327,longitude:103.91,radiusM:200,source:'meeting_settings'}} />
       <h1 className="text-2xl">Kiểm thử giao diện độc lập</h1><p className="text-muted">Không kết nối dữ liệu nghiệp vụ. Kiểm tra màu, font, cỡ chữ và thao tác an toàn.</p>
       <button className="min-h-11 border border-line rounded-control px-4" onClick={()=>{document.documentElement.classList.toggle('dark',!dark);setDark(!dark)}}>{dark?'Chuyển sang sáng':'Chuyển sang tối'}</button>
       <SessionProgress attended={false} submitted={false} examOpen/>

@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { tenantService } from './tenantService'
 import { meetingUiSettingsService } from './meetingUiSettingsService'
 import { calculateDistance } from '../utils/gps'
 import { MAX_ALLOWED_DISTANCE_METERS } from './attendanceService'
@@ -28,11 +29,16 @@ export const mapAttendanceService = {
     }
 
     const trimmedSessionId = meetingSessionId.trim()
+    const organizationId = tenantService.requireOrganizationId()
+    const { data: session, error: sessionError } = await supabase.from('meeting_sessions')
+      .select('id').eq('id', trimmedSessionId).eq('organization_id', organizationId).single()
+    if (sessionError || !session) throw new Error('Phiên họp không thuộc xã đang chọn hoặc không thể truy cập.')
+    const cacheKey = `${organizationId}:${trimmedSessionId}`
 
     // 1. Tải thông tin Hội trường (dùng cache nếu có và không yêu cầu forceReload)
     let hall: HallLocation
-    if (!options?.forceReloadSettings && hallSettingsCache.has(trimmedSessionId)) {
-      hall = hallSettingsCache.get(trimmedSessionId)!
+    if (!options?.forceReloadSettings && hallSettingsCache.has(cacheKey)) {
+      hall = hallSettingsCache.get(cacheKey)!
     } else {
       const settings = await meetingUiSettingsService.getSettings(trimmedSessionId)
       if (settings?.gps_lat == null || settings?.gps_lng == null) {
@@ -44,7 +50,7 @@ export const mapAttendanceService = {
         radiusM: settings.gps_radius_m || MAX_ALLOWED_DISTANCE_METERS,
         source: 'meeting_settings'
       }
-      hallSettingsCache.set(trimmedSessionId, hall)
+      hallSettingsCache.set(cacheKey, hall)
     }
 
     // 2. Truy vấn dữ liệu meeting_attendance cô lập strictly theo meeting_session_id
@@ -72,6 +78,7 @@ export const mapAttendanceService = {
         )
       `)
       .eq('meeting_session_id', trimmedSessionId)
+      .eq('organization_id', organizationId)
       .order('marked_at', { ascending: true })
 
     if (error) {
@@ -179,7 +186,9 @@ export const mapAttendanceService = {
    */
   clearHallCache(meetingSessionId?: string) {
     if (meetingSessionId) {
-      hallSettingsCache.delete(meetingSessionId)
+      for (const key of hallSettingsCache.keys()) {
+        if (key.endsWith(`:${meetingSessionId}`)) hallSettingsCache.delete(key)
+      }
     } else {
       hallSettingsCache.clear()
     }

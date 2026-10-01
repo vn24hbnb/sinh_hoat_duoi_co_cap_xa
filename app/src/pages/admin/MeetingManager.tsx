@@ -1,3 +1,5 @@
+import { SatelliteMap } from '../../components/ui/SatelliteMap'
+import type { MapStyle } from '../../components/ui/SatelliteMap'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Play, ToggleLeft, CheckCircle, RefreshCw, Users, Calendar, ArrowRight, X, BookOpen, Edit3, Clock, ListChecks, Trash2, ChevronDown, ChevronUp, ShieldAlert, MapPin, QrCode, Key, Camera, Copy, Bookmark, Check } from 'lucide-react'
@@ -91,7 +93,7 @@ export const MeetingManager: React.FC = () => {
   const [tempLng, setTempLng] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [googleMapsPaste, setGoogleMapsPaste] = useState('')
-  const [mapStyle, setMapStyle] = useState<string>('google-hybrid')
+  const [mapStyle, setMapStyle] = useState<MapStyle>('satellite')
   
   // Preset mẫu địa điểm phòng họp & Clipboard
   const [hallPresets, setHallPresets] = useState<HallPreset[]>(() => hallPresetService.getPresets())
@@ -133,9 +135,6 @@ export const MeetingManager: React.FC = () => {
     setTimeout(() => setCopiedState(false), 2000)
   }
   
-  const mapRef = React.useRef<HTMLDivElement>(null)
-  const mapInstanceRef = React.useRef<any>(null)
-  const markerInstanceRef = React.useRef<any>(null)
 
   // Văn bản, tài liệu kèm theo phiên họp
   const [documents, setDocuments] = useState<any[]>([])
@@ -358,12 +357,7 @@ export const MeetingManager: React.FC = () => {
       setTempLat(latVal.toFixed(6))
       setTempLng(lngVal.toFixed(6))
       
-      if (mapInstanceRef.current && markerInstanceRef.current) {
-        if (mapInstanceRef.current.flyTo) {
-          mapInstanceRef.current.flyTo({ center: [lngVal, latVal], zoom: 17 })
-          markerInstanceRef.current.setLngLat([lngVal, latVal])
-        }
-      }
+
     }
   }
 
@@ -381,12 +375,7 @@ export const MeetingManager: React.FC = () => {
         setTempLat(latNum.toFixed(6))
         setTempLng(lngNum.toFixed(6))
         
-        if (mapInstanceRef.current && markerInstanceRef.current) {
-          if (mapInstanceRef.current.flyTo) {
-            mapInstanceRef.current.flyTo({ center: [lngNum, latNum], zoom: 17 })
-            markerInstanceRef.current.setLngLat([lngNum, latNum])
-          }
-        }
+
       } else {
         alert('Không tìm thấy vị trí. Vui lòng thử tìm từ khóa khác.')
       }
@@ -394,141 +383,6 @@ export const MeetingManager: React.FC = () => {
       console.error('Lỗi tìm địa điểm:', err)
     }
   }
-
-  // Load Mapbox GL JS map dynamically when Map modal opens
-  useEffect(() => {
-    if (!showMapModal) return
-
-    const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''
-
-    // Inject CSS
-    const cssId = 'mapbox-gl-css-cdn'
-    if (!document.getElementById(cssId)) {
-      const link = document.createElement('link')
-      link.id = cssId
-      link.rel = 'stylesheet'
-      link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css'
-      document.head.appendChild(link)
-    }
-
-    const initMap = () => {
-      if (typeof window === 'undefined' || !(window as any).mapboxgl || !mapRef.current) {
-        setTimeout(initMap, 50)
-        return
-      }
-
-      const mapboxgl = (window as any).mapboxgl
-      mapboxgl.accessToken = MAPBOX_TOKEN
-      
-      const hasCoordinates = Boolean(tempLat && tempLng)
-      const initialLat = hasCoordinates ? parseFloat(tempLat) : 0
-      const initialLng = hasCoordinates ? parseFloat(tempLng) : 0
-
-      // Clean up previous map if exists
-      if (mapInstanceRef.current) {
-        try {
-          mapInstanceRef.current.remove()
-        } catch (e) {
-          console.error('Lỗi xóa map instance cũ:', e)
-        }
-        mapInstanceRef.current = null
-      }
-
-      let activeStyle: any = mapStyle
-      if (mapStyle === 'google-hybrid' || mapStyle === 'google-roadmap') {
-        activeStyle = {
-          version: 8,
-          sources: {
-            'google-raster': {
-              type: 'raster',
-              tiles: [
-                mapStyle === 'google-hybrid'
-                  ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'
-                  : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'
-              ],
-              tileSize: 256,
-              maxzoom: 20
-            }
-          },
-          layers: [
-            {
-              id: 'google-raster-layer',
-              type: 'raster',
-              source: 'google-raster',
-              minzoom: 0,
-              maxzoom: 22
-            }
-          ]
-        }
-      }
-
-      const map = new mapboxgl.Map({
-        container: mapRef.current,
-        style: activeStyle,
-        center: [initialLng, initialLat],
-        zoom: hasCoordinates ? 16.5 : 2,
-        maxZoom: 18.5, // Giới hạn mức zoom an toàn tránh bị đen màn hình
-        minZoom: 1
-      })
-
-      // Add navigation control (Zoom, Rotation)
-      map.addControl(new mapboxgl.NavigationControl(), 'top-right')
-
-      // Add Fullscreen control
-      map.addControl(new mapboxgl.FullscreenControl(), 'top-right')
-
-      // Add Draggable Marker
-      const marker = new mapboxgl.Marker({
-        draggable: true,
-        color: '#D90429'
-      })
-      .setLngLat([initialLng, initialLat])
-      .addTo(map)
-
-      const updateFields = (lt: number, ln: number) => {
-        setTempLat(lt.toFixed(6))
-        setTempLng(ln.toFixed(6))
-      }
-
-      marker.on('dragend', () => {
-        const lngLat = marker.getLngLat()
-        updateFields(lngLat.lat, lngLat.lng)
-      })
-
-      map.on('click', (e: any) => {
-        marker.setLngLat(e.lngLat)
-        updateFields(e.lngLat.lat, e.lngLat.lng)
-      })
-
-      mapInstanceRef.current = map
-      markerInstanceRef.current = marker
-    }
-
-    // Inject JS
-    const jsId = 'mapbox-gl-js-cdn'
-    if (!(window as any).mapboxgl) {
-      if (!document.getElementById(jsId)) {
-        const script = document.createElement('script')
-        script.id = jsId
-        script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js'
-        script.onload = initMap
-        document.body.appendChild(script)
-      }
-    } else {
-      setTimeout(initMap, 100)
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        try {
-          mapInstanceRef.current.remove()
-        } catch (e) {
-          console.error('Lỗi cleanup map instance:', e)
-        }
-        mapInstanceRef.current = null
-      }
-    }
-  }, [showMapModal, mapStyle])
 
   const handleSaveAttendanceConfig = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -2499,52 +2353,36 @@ export const MeetingManager: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Switcher chế độ xem Bản đồ: Google Maps Mới Nhất vs Mapbox */}
-                <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-lg text-xs font-bold">
+                {/* Nền bản đồ không dùng Mapbox */}
+                <div className="flex flex-wrap gap-2 justify-between items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-lg text-xs font-bold">
                   <span className="text-muted">Chế độ bản đồ:</span>
                   <div className="flex gap-1">
                     <button
                       type="button"
-                      onClick={() => setMapStyle('google-hybrid')}
+                      onClick={() => setMapStyle('satellite')}
                       className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
-                        mapStyle === 'google-hybrid'
+                        mapStyle === 'satellite'
                           ? 'bg-red-revolution text-white font-bold shadow-sm'
                           : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
                       }`}
                     >
-                      🛰️ Google Vệ tinh (Mới nhất)
+                      Vệ tinh Esri
                     </button>
                     <button
                       type="button"
-                      onClick={() => setMapStyle('google-roadmap')}
+                      onClick={() => setMapStyle('street')}
                       className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
-                        mapStyle === 'google-roadmap'
+                        mapStyle === 'street'
                           ? 'bg-red-revolution text-white font-bold shadow-sm'
                           : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
                       }`}
                     >
-                      🗺️ Google Đường phố
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMapStyle('mapbox://styles/mapbox/satellite-streets-v12')}
-                      className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
-                        mapStyle.includes('mapbox')
-                          ? 'bg-red-revolution text-white font-bold shadow-sm'
-                          : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
-                      }`}
-                    >
-                      🌐 Mapbox
+                      Đường phố
                     </button>
                   </div>
                 </div>
 
-                {/* Mapbox Map Div */}
-                <div 
-                  ref={mapRef} 
-                  style={{ height: '260px' }} 
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden z-10"
-                ></div>
+                <SatelliteMap style={mapStyle} className="h-[320px]" position={tempLat && tempLng ? { latitude: Number(tempLat), longitude: Number(tempLng) } : null} onPick={p => { setTempLat(p.latitude.toFixed(6)); setTempLng(p.longitude.toFixed(6)) }} />
               </div>
 
               {/* Option 2: Paste Coordinates from Google Maps */}

@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { SatelliteMap } from '../../components/ui/SatelliteMap'
+import type { MapStyle } from '../../components/ui/SatelliteMap'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MapPin, ArrowRight, QrCode, Key, Camera, Check, AlertTriangle, Layers } from 'lucide-react'
 import { Html5Qrcode } from 'html5-qrcode'
@@ -38,9 +40,7 @@ export const Attendance: React.FC = () => {
   const [gpsCoords, setGpsCoords] = useState<{ latitude: number; longitude: number; accuracy?: number } | null>(null)
 
   // Mini Map Refs & State
-  const miniMapRef = useRef<HTMLDivElement>(null)
-  const miniMapInstanceRef = useRef<any>(null)
-  const [miniMapStyle, setMiniMapStyle] = useState<string>('google-hybrid')
+  const [miniMapStyle, setMiniMapStyle] = useState<MapStyle>('satellite')
   
   const [pinRequired, setPinRequired] = useState(false)
   const [pinInput, setPinInput] = useState('')
@@ -83,204 +83,6 @@ export const Attendance: React.FC = () => {
   const allowedRadius = (uiSettings?.gps_radius_m && uiSettings.gps_radius_m > 0) 
     ? uiSettings.gps_radius_m 
     : MAX_ALLOWED_DISTANCE_METERS
-
-  // Khởi tạo Google Maps Vệ tinh thu nhỏ kèm đường thẳng nối vị trí Đảng viên đến Hội trường
-  useEffect(() => {
-    if (!gpsCompleted || !gpsCoords || !miniMapRef.current || targetLat === null || targetLng === null) return
-
-    const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''
-
-    // Nạp CSS Mapbox
-    const cssId = 'mapbox-gl-css-cdn'
-    if (!document.getElementById(cssId)) {
-      const link = document.createElement('link')
-      link.id = cssId
-      link.rel = 'stylesheet'
-      link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css'
-      document.head.appendChild(link)
-    }
-
-    const initMiniMap = () => {
-      if (typeof window === 'undefined' || !(window as any).mapboxgl || !miniMapRef.current) {
-        setTimeout(initMiniMap, 50)
-        return
-      }
-
-      const mapboxgl = (window as any).mapboxgl
-      mapboxgl.accessToken = MAPBOX_TOKEN
-
-      // Clean up map cũ nếu có
-      if (miniMapInstanceRef.current) {
-        try {
-          miniMapInstanceRef.current.remove()
-        } catch (e) {}
-        miniMapInstanceRef.current = null
-      }
-
-      const userLat = gpsCoords.latitude
-      const userLng = gpsCoords.longitude
-
-      let activeStyle: any = miniMapStyle
-      if (miniMapStyle === 'google-hybrid' || miniMapStyle === 'google-roadmap') {
-        activeStyle = {
-          version: 8,
-          sources: {
-            'google-raster': {
-              type: 'raster',
-              tiles: [
-                miniMapStyle === 'google-hybrid'
-                  ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'
-                  : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'
-              ],
-              tileSize: 256,
-              maxzoom: 22
-            }
-          },
-          layers: [
-            {
-              id: 'google-raster-layer',
-              type: 'raster',
-              source: 'google-raster',
-              minzoom: 0,
-              maxzoom: 22
-            }
-          ]
-        }
-      }
-
-      const midLat = (userLat + targetLat) / 2
-      const midLng = (userLng + targetLng) / 2
-
-      const map = new mapboxgl.Map({
-        container: miniMapRef.current,
-        style: activeStyle,
-        center: [midLng, midLat],
-        zoom: 16.5,
-        maxZoom: 18.5,
-        minZoom: 5
-      })
-
-      map.addControl(new mapboxgl.NavigationControl(), 'top-right')
-
-      miniMapInstanceRef.current = map
-
-      map.on('load', () => {
-        // 1. Ghim Tâm Hội trường
-        const hallEl = document.createElement('div')
-        hallEl.className = 'w-7 h-7 rounded-full bg-red-revolution border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black'
-        hallEl.innerHTML = 'HT'
-        hallEl.title = 'Hội trường sinh hoạt'
-
-        const hallPopup = new mapboxgl.Popup({ offset: 20 }).setHTML(`
-          <div style="font-family: sans-serif; padding: 4px; text-align: center;">
-            <div style="font-weight: bold; color: #D90429; font-size: 11px;">🏛️ HỘI TRƯỜNG PHIÊN HỌP</div>
-            <div style="font-size: 10px; color: #475569; margin-top: 2px;">Bán kính cho phép: <b>${allowedRadius}m</b></div>
-          </div>
-        `)
-
-        new mapboxgl.Marker(hallEl)
-          .setLngLat([targetLng, targetLat])
-          .setPopup(hallPopup)
-          .addTo(map)
-
-        // 2. Ghim Vị trí Đảng viên
-        const userPinColor = isWithinRadius ? '#10B981' : '#F59E0B'
-        const userEl = document.createElement('div')
-        userEl.className = 'w-7 h-7 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black animate-pulse'
-        userEl.style.backgroundColor = userPinColor
-        userEl.innerHTML = 'ĐC'
-        userEl.title = 'Vị trí hiện tại của đồng chí'
-
-        const userPopup = new mapboxgl.Popup({ offset: 20 }).setHTML(`
-          <div style="font-family: sans-serif; padding: 4px; text-align: center;">
-            <div style="font-weight: bold; color: ${userPinColor}; font-size: 11px;">📍 VỊ TRÍ CỦA ĐỒNG CHÍ</div>
-            <div style="font-size: 10px; color: #475569; margin-top: 2px;">Cự ly: <b>${distance !== null ? Math.round(distance) : 0}m</b></div>
-            <div style="font-size: 9px; font-family: monospace; color: #0f172a; margin-top: 4px;">${userLat.toFixed(6)}, ${userLng.toFixed(6)}</div>
-          </div>
-        `)
-
-        new mapboxgl.Marker(userEl)
-          .setLngLat([userLng, userLat])
-          .setPopup(userPopup)
-          .addTo(map)
-
-        // 3. ĐƯỜNG THẲNG NỐI TỪ ĐẢNG VIÊN ĐẾN HỘI TRƯỜNG (Polyline LineString)
-        const lineColor = isWithinRadius ? '#10B981' : '#EF4444'
-        map.addSource('direct-connecting-line', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: [
-                [userLng, userLat],
-                [targetLng, targetLat]
-              ]
-            }
-          }
-        })
-
-        map.addLayer({
-          id: 'direct-connecting-line-layer',
-          type: 'line',
-          source: 'direct-connecting-line',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          paint: {
-            'line-color': lineColor,
-            'line-width': 4,
-            'line-dasharray': [2, 1]
-          }
-        })
-
-        // 4. HIỂN THỊ THẺ THÔNG BÁO CHIỀU DÀI CỰ LY TẠI ĐIỂM GIỮA ĐƯỜNG NỐI
-        const distLabelEl = document.createElement('div')
-        distLabelEl.className = 'px-2.5 py-1 bg-white/95 dark:bg-slate-900/95 text-slate-900 dark:text-gold text-[10px] font-black rounded-full shadow-lg border border-slate-200 dark:border-slate-800 whitespace-nowrap cursor-pointer'
-        distLabelEl.style.borderColor = lineColor
-        distLabelEl.innerHTML = `📏 Cự ly: ${distance !== null ? Math.round(distance) : 0}m`
-
-        new mapboxgl.Marker(distLabelEl)
-          .setLngLat([midLng, midLat])
-          .addTo(map)
-
-        // 5. Tự động thu phóng fitBounds bao gồm cả 2 điểm
-        const bounds = new mapboxgl.LngLatBounds()
-        bounds.extend([userLng, userLat])
-        bounds.extend([targetLng, targetLat])
-
-        map.fitBounds(bounds, {
-          padding: { top: 40, bottom: 40, left: 40, right: 40 },
-          maxZoom: 18
-        })
-      })
-    }
-
-    // Nạp JS Mapbox
-    const jsId = 'mapbox-gl-js-cdn'
-    if (!(window as any).mapboxgl) {
-      if (!document.getElementById(jsId)) {
-        const script = document.createElement('script')
-        script.id = jsId
-        script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js'
-        script.onload = initMiniMap
-        document.body.appendChild(script)
-      }
-    } else {
-      setTimeout(initMiniMap, 50)
-    }
-
-    return () => {
-      if (miniMapInstanceRef.current) {
-        try {
-          miniMapInstanceRef.current.remove()
-        } catch (e) {}
-        miniMapInstanceRef.current = null
-      }
-    }
-  }, [gpsCompleted, gpsCoords, miniMapStyle])
 
   // Nút điểm danh chỉ hoạt động khi hoàn thành tất cả các bước được yêu cầu
   const isSubmitDisabled = 
@@ -716,25 +518,25 @@ export const Attendance: React.FC = () => {
                       {/* Bộ chuyển đổi kiểu bản đồ Google */}
                       <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-lg text-xs font-bold">
                         <span className="text-muted flex items-center gap-1">
-                          <Layers size={12} /> Bản đồ định vị Google Maps:
+                          <Layers size={12} /> Bản đồ vị trí:
                         </span>
                         <div className="flex gap-1">
                           <button
                             type="button"
-                            onClick={() => setMiniMapStyle('google-hybrid')}
+                            onClick={() => setMiniMapStyle('satellite')}
                             className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
-                              miniMapStyle === 'google-hybrid'
+                              miniMapStyle === 'satellite'
                                 ? 'bg-red-revolution text-white font-bold shadow-sm'
                                 : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
                             }`}
                           >
-                            🛰️ Google Vệ tinh
+                            🛰️ Vệ tinh Esri
                           </button>
                           <button
                             type="button"
-                            onClick={() => setMiniMapStyle('google-roadmap')}
+                            onClick={() => setMiniMapStyle('street')}
                             className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
-                              miniMapStyle === 'google-roadmap'
+                              miniMapStyle === 'street'
                                 ? 'bg-red-revolution text-white font-bold shadow-sm'
                                 : 'bg-white dark:bg-slate-800 text-muted dark:text-muted'
                             }`}
@@ -746,7 +548,7 @@ export const Attendance: React.FC = () => {
 
                       {/* Khung bản đồ Google Maps Vệ tinh thu nhỏ */}
                       <div className="relative w-full h-64 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-[#e5e3df] dark:bg-slate-800">
-                        <div ref={miniMapRef} className="w-full h-full"></div>
+                        <SatelliteMap style={miniMapStyle} className="h-full w-full" hall={{ latitude: targetLat, longitude: targetLng, radiusM: allowedRadius, source: 'meeting_settings' }} userPosition={gpsCoords} />
                       </div>
 
                       {/* Thẻ khoảng cách thực tế và Trạng thái hợp lệ */}

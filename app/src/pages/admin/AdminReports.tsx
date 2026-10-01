@@ -184,7 +184,7 @@ export const AdminReports: React.FC = () => {
       if (currentSession) {
         selectedMeetingIdRef.current = currentSession.id
         setSelectedMeetingId(currentSession.id)
-        const data = await reportService.compileMeetingReport(currentSession.id)
+        const data = await reportService.compileMeetingReport(currentSession.id, organizationId)
         if (!isCurrentRequest()) return
         setReport(data)
       } else {
@@ -231,7 +231,9 @@ export const AdminReports: React.FC = () => {
   const handleSelectMeeting = (id: string) => {
     selectedMeetingIdRef.current = id
     setSelectedMeetingId(id)
-    void loadReportData(false, id)
+    setReport(null)
+    setMeeting(null)
+    void loadReportData(true, id)
   }
   const exportToWord = () => {
     if (!report) return
@@ -365,9 +367,9 @@ export const AdminReports: React.FC = () => {
       />
       
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-red-deep dark:text-gold normal-case tracking-normal flex items-center gap-2">
+        <div className="grid grid-cols-1 gap-4 mb-6 report-toolbar">
+          <div className="min-w-0 w-full report-heading">
+            <h1 className="text-xl md:text-2xl font-bold text-red-deep dark:text-gold normal-case tracking-normal flex flex-wrap items-center gap-2">
               Báo cáo & Vinh danh phiên họp
               {autoRefresh && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 normal-case tracking-normal">
@@ -383,12 +385,12 @@ export const AdminReports: React.FC = () => {
           
           {/* Dropdown chọn xem lại hồ sơ phiên họp cũ */}
           {meetingsList.length > 0 && (
-            <div className="flex items-center gap-2 w-full lg:w-auto text-xs md:text-sm font-bold">
+            <div className="flex flex-wrap items-center gap-2 w-full min-w-0 text-xs md:text-sm font-bold">
               <span className="text-muted dark:text-muted shrink-0">Hồ sơ phiên:</span>
               <select
                 value={selectedMeetingId}
                 onChange={(e) => handleSelectMeeting(e.target.value)}
-                className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-bold outline-none focus:border-red-revolution w-full lg:w-64"
+                className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-bold outline-none focus:border-red-revolution w-full sm:w-auto sm:flex-1 min-w-0"
               >
                 {meetingsList.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -399,7 +401,7 @@ export const AdminReports: React.FC = () => {
             </div>
           )}
           
-          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto shrink-0 justify-end no-print">
+          <div className="flex flex-wrap items-center gap-2 w-full min-w-0 justify-start lg:justify-end no-print">
             {meeting && (
               <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/70 dark:bg-navy/40 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-muted cursor-pointer hover:bg-slate-50 dark:hover:bg-navy/60 transition-colors select-none shadow-sm">
                 <input

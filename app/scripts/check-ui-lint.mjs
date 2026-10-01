@@ -16,7 +16,7 @@ for(const file of files){
   const remaining=signatures(old);before+=old.errorCount;after+=current.errorCount
   for(const message of signatures(current)){const index=remaining.indexOf(message);if(index>=0)remaining.splice(index,1);else added.push({file,message})}
 }
-for(const file of ['src/components/ui/AgendaEditor.tsx','src/components/ui/GrowingTextarea.tsx','src/components/ui/SessionProgress.tsx','src/utils/agenda.ts','tests/ui-preview.tsx','tests/ui-regression.test.mjs','scripts/check-ui-lint.mjs']){
+for(const file of ['src/components/ui/AgendaEditor.tsx','src/components/ui/GrowingTextarea.tsx','src/components/ui/SessionProgress.tsx','src/components/ui/SatelliteMap.tsx','src/utils/agenda.ts','tests/ui-preview.tsx','tests/ui-regression.test.mjs','tests/tenant-report.test.mjs','scripts/check-ui-lint.mjs']){
   const [result]=await eslint.lintFiles(file)
   after+=result.errorCount
   for(const message of signatures(result))added.push({file,message})

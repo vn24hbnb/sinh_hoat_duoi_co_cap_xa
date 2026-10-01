@@ -26,10 +26,15 @@ test('empty agenda and invalid item indexes are supported without data loss',()=
 })
 
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8',maxBuffer:10*1024*1024})
-test('UI refresh leaves backend, auth, route guards and dependencies byte-identical',()=>{
+test('authorized map/report fixes leave other backend, auth and route guards byte-identical',()=>{
   const files=git('ls-tree','-r','--full-tree','--name-only',baseline).trim().split('\n').filter(file=>file.startsWith('app/src/services/')||file.startsWith('supabase/')||file.startsWith('app/src/types/')||['app/src/contexts/AuthContext.tsx','app/src/App.tsx','app/package.json','app/package-lock.json'].includes(file))
   assert.ok(files.length>20)
-  for(const file of files)assert.equal(readFileSync(new URL(`../../${file}`,import.meta.url),'utf8'),git('show',`${baseline}:${file}`),file)
+  const authorized=new Set(['app/src/services/reportService.ts','app/src/services/mapAttendanceService.ts','app/package.json','app/package-lock.json'])
+  for(const file of files.filter(file=>!authorized.has(file)))assert.equal(readFileSync(new URL(`../../${file}`,import.meta.url),'utf8'),git('show',`${baseline}:${file}`),file)
+  const oldPackage=JSON.parse(git('show',`${baseline}:app/package.json`)),currentPackage=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'))
+  assert.equal(currentPackage.dependencies.leaflet,'1.9.4');assert.equal(currentPackage.devDependencies['@types/leaflet'],'1.9.22')
+  delete currentPackage.dependencies.leaflet;delete currentPackage.devDependencies['@types/leaflet']
+  assert.deepEqual(currentPackage,oldPackage)
 })
 function businessNodes(source,file){
   const ast=ts.createSourceFile(file,source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX)
@@ -47,6 +52,19 @@ test('all page service requests and business action handlers remain unchanged',(
   let count=0
   for(const file of files){
     const previous=businessNodes(git('show',`${baseline}:${file}`),file),current=businessNodes(readFileSync(new URL(`../../${file}`,import.meta.url),'utf8'),file)
+    // Only explicitly requested map-display handlers and scoped report/map reads may differ.
+    if(file.endsWith('/AdminLiveMap.tsx')){
+      delete current.functions.handleFlyToMember;delete previous.functions.handleFlyToMember
+      current.calls=current.calls.filter(call=>!call.endsWith(".eq('organization_id', requestOrganizationId)")).map(call=>call.replace(/\.eq\('organization_id', requestOrganizationId\)/g,''))
+    }
+    if(file.endsWith('/MeetingManager.tsx'))for(const key of ['handlePasteGoogleMapsCoords','handleSearchLocation']){delete current.functions[key];delete previous.functions[key]}
+    if(file.endsWith('/AdminReports.tsx')){
+      current.calls=current.calls.map(call=>call.replace('compileMeetingReport(currentSession.id, organizationId)','compileMeetingReport(currentSession.id)'))
+      assert.match(current.functions.handleSelectMeeting,/setReport\(null\)/)
+      assert.match(current.functions.handleSelectMeeting,/setMeeting\(null\)/)
+      assert.match(current.functions.handleSelectMeeting,/loadReportData\(true, id\)/)
+      delete current.functions.handleSelectMeeting;delete previous.functions.handleSelectMeeting
+    }
     assert.deepEqual(current,previous,file)
     count+=current.calls.length
   }

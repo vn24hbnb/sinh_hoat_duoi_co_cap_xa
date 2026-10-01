@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { tenantService } from './tenantService'
 import * as XLSX from 'xlsx'
 
 export interface ChiBoReport {
@@ -46,12 +47,14 @@ export const reportService = {
   /**
    * Generates a comprehensive meeting report containing stats, chi bo rankings, and top 10 members
    */
-  async compileMeetingReport(sessionId: string): Promise<MeetingReportData> {
+  async compileMeetingReport(sessionId: string, organizationId = tenantService.requireOrganizationId()): Promise<MeetingReportData> {
+    if (!sessionId.trim() || !organizationId) throw new Error('Thiếu xã hoặc phiên họp báo cáo.')
     // 0. Fetch session details
     const { data: session, error: sError } = await supabase
       .from('meeting_sessions')
       .select('title, meeting_date')
       .eq('id', sessionId)
+      .eq('organization_id', organizationId)
       .single()
 
     if (sError || !session) {
@@ -63,6 +66,7 @@ export const reportService = {
       .from('meeting_participants')
       .select('member_id, chi_bo_id')
       .eq('meeting_session_id', sessionId)
+      .eq('organization_id', organizationId)
 
     if (pError || !participants) {
       throw new Error('Không thể lấy danh sách đảng viên đăng ký phiên họp.')
@@ -75,6 +79,7 @@ export const reportService = {
       .from('meeting_attendance')
       .select('member_id, status, gps_valid')
       .eq('meeting_session_id', sessionId)
+      .eq('organization_id', organizationId)
 
     if (aError || !attendance) {
       throw new Error('Không thể lấy dữ liệu điểm danh của phiên họp.')
@@ -90,6 +95,7 @@ export const reportService = {
       .from('exam_attempts')
       .select('member_id, score, status')
       .eq('meeting_session_id', sessionId)
+      .eq('organization_id', organizationId)
       .eq('status', 'submitted')
 
     if (attError || !attempts) {
@@ -107,6 +113,7 @@ export const reportService = {
       .from('chi_bos')
       .select('*')
       .eq('is_active', true)
+      .eq('organization_id', organizationId)
       .order('sort_order', { ascending: true })
 
     if (cbError || !chiBos) {
@@ -200,7 +207,8 @@ export const reportService = {
         total_questions,
         duration_seconds,
         submitted_at,
-        members (
+        members!inner (
+          organization_id,
           full_name,
           position,
           chi_bos (
@@ -209,13 +217,15 @@ export const reportService = {
         )
       `)
       .eq('meeting_session_id', sessionId)
+      .eq('organization_id', organizationId)
       .eq('status', 'submitted')
+      .eq('members.organization_id', organizationId)
       .order('score', { ascending: false })
       .order('duration_seconds', { ascending: true })
       .limit(10)
 
     if (topError) {
-      console.error('Error fetching top members:', topError.message)
+      throw new Error('Không thể lấy danh sách cá nhân xuất sắc: ' + topError.message)
     }
 
     const topMembers: TopMember[] = (topAttempts || []).map((att: any) => ({
