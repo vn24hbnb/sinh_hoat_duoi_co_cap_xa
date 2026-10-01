@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Settings,
   Palette,
@@ -21,11 +21,12 @@ import { uiSettingsService } from '../../services/uiSettingsService'
 import type { UiAsset } from '../../services/uiSettingsService'
 import { ImageUploader } from '../../components/ui/ImageUploader'
 import { useAuth } from '../../contexts/AuthContext'
+import { tenantService } from '../../services/tenantService'
 
 type TabType = 'general' | 'appearance' | 'assets'
 
 export const AdminUiSettings: React.FC = () => {
-  const { user } = useAuth()
+  const { user, organizationId } = useAuth()
   const { settings, loading: contextLoading, refreshSettings } = useUiSettings()
   
   const [activeTab, setActiveTab] = useState<TabType>('general')
@@ -54,6 +55,7 @@ export const AdminUiSettings: React.FC = () => {
   // Assets List State
   const [assets, setAssets] = useState<UiAsset[]>([])
   const [assetsLoading, setAssetsLoading] = useState(false)
+  const assetRequestSequenceRef = useRef(0)
   
   // Form submission / UI states
   const [saving, setSaving] = useState(false)
@@ -98,23 +100,40 @@ export const AdminUiSettings: React.FC = () => {
     }
   }, [settings])
 
-  const loadAssetsList = async (type: UiAsset['asset_type']) => {
+  const loadAssetsList = useCallback(async (type: UiAsset['asset_type']) => {
+    const requestId = ++assetRequestSequenceRef.current
+    const isCurrentRequest = () => requestId === assetRequestSequenceRef.current && tenantService.getOrganizationId() === organizationId
+    await Promise.resolve()
+    if (!isCurrentRequest()) return
+    if (!organizationId) {
+      setAssets([])
+      setAssetsLoading(false)
+      return
+    }
+    setAssets([])
     setAssetsLoading(true)
     try {
       const data = await uiSettingsService.getAssetsByType(type)
+      if (!isCurrentRequest()) return
       setAssets(data)
     } catch (err) {
+      if (!isCurrentRequest()) return
       console.error('Lỗi lấy danh sách ảnh:', err)
     } finally {
-      setAssetsLoading(false)
+      if (isCurrentRequest()) setAssetsLoading(false)
     }
-  }
+  }, [organizationId])
 
   useEffect(() => {
     if (activeTab === 'assets') {
-      loadAssetsList(assetSubTab)
+      const timer = window.setTimeout(() => { void loadAssetsList(assetSubTab) }, 0)
+      return () => {
+        window.clearTimeout(timer)
+        assetRequestSequenceRef.current += 1
+      }
     }
-  }, [activeTab, assetSubTab])
+    return () => { assetRequestSequenceRef.current += 1 }
+  }, [activeTab, assetSubTab, loadAssetsList])
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault()

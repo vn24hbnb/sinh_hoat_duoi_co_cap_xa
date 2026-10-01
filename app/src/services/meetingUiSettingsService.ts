@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { tenantService } from './tenantService'
 
 export interface MeetingUiSettings {
   id?: string
@@ -9,7 +10,6 @@ export interface MeetingUiSettings {
   attendance_methods: string // các hình thức cách nhau bằng dấu phẩy: e.g. 'gps' hoặc 'gps,qr,pin,photo'
   pin_code: string | null
   qr_code_token: string | null
-  device_mapping: Record<string, string> // member_id -> device_uuid để phát hiện điểm danh hộ
 }
 
 export const meetingUiSettingsService = {
@@ -17,11 +17,9 @@ export const meetingUiSettingsService = {
    * Lấy cấu hình điểm danh/giao diện của phiên họp
    */
   async getSettings(sessionId: string): Promise<MeetingUiSettings | null> {
-    const { data, error } = await supabase
-      .from('meeting_ui_settings')
-      .select('*')
-      .eq('meeting_session_id', sessionId)
-      .maybeSingle()
+    const { data, error } = await supabase.rpc('get_meeting_ui_settings', {
+      p_meeting_session_id: sessionId
+    })
 
     if (error) {
       console.error('Error fetching meeting ui settings:', error.message)
@@ -46,6 +44,7 @@ export const meetingUiSettingsService = {
         .from('meeting_ui_settings')
         .update(settings)
         .eq('id', existing.id)
+        .eq('organization_id', tenantService.requireOrganizationId())
         .select('*')
         .single()
 
@@ -56,9 +55,9 @@ export const meetingUiSettingsService = {
         .from('meeting_ui_settings')
         .insert({
           ...settings,
-          gps_radius_m: settings.gps_radius_m ?? 100,
+          organization_id: tenantService.requireOrganizationId(),
+          gps_radius_m: settings.gps_radius_m ?? 200,
           attendance_methods: settings.attendance_methods ?? 'gps',
-          device_mapping: settings.device_mapping ?? {}
         })
         .select('*')
         .single()
@@ -69,6 +68,7 @@ export const meetingUiSettingsService = {
 
     if (actorId) {
       await supabase.from('audit_logs').insert({
+        organization_id: tenantService.requireOrganizationId(),
         actor_id: actorId,
         action: 'UPDATE_MEETING_UI_SETTINGS',
         target_type: 'meeting_sessions',
@@ -83,19 +83,4 @@ export const meetingUiSettingsService = {
     return result as MeetingUiSettings
   },
 
-  /**
-   * Cập nhật bản đồ thiết bị điểm danh để phát hiện điểm danh hộ
-   */
-  async updateDeviceMapping(sessionId: string, memberId: string, deviceId: string): Promise<void> {
-    const existing = await this.getSettings(sessionId)
-    const currentMapping = existing?.device_mapping || {}
-    
-    // Cập nhật mapping mới
-    const newMapping = { ...currentMapping, [memberId]: deviceId }
-
-    await this.upsertSettings({
-      meeting_session_id: sessionId,
-      device_mapping: newMapping
-    })
-  }
 }

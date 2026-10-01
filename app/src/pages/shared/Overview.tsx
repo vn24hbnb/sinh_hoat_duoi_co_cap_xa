@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Calendar, ShieldCheck, ArrowRight, Award } from 'lucide-react'
 import { PatternBackground } from '../../components/ui/PatternBackground'
@@ -8,30 +8,17 @@ import { NewsTicker } from '../../components/layout/NewsTicker'
 import { HeroBanner } from '../../components/layout/HeroBanner'
 import { GlassCard } from '../../components/ui/GlassCard'
 import { RevolutionaryButton } from '../../components/ui/RevolutionaryButton'
+import { useAuth } from '../../contexts/AuthContext'
 
 export const Overview: React.FC = () => {
   const navigate = useNavigate()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [userName, setUserName] = useState('')
-  const [userRole, setUserRole] = useState<'member' | 'admin' | 'organizer'>('member')
-
-  useEffect(() => {
-    const session = localStorage.getItem('session_user')
-    if (session) {
-      try {
-        const user = JSON.parse(session)
-        setIsAuthenticated(true)
-        setUserName(user.name || user.username)
-        setUserRole(user.role)
-      } catch (e) {
-        localStorage.removeItem('session_user')
-      }
-    }
-  }, [])
+  const { user, logout } = useAuth()
+  const isAuthenticated = Boolean(user)
+  const userRole = user?.role || 'member'
+  const userName = user?.memberName || user?.username || ''
 
   const handleLogout = () => {
-    localStorage.removeItem('session_user')
-    setIsAuthenticated(false)
+    void logout()
     navigate('/login')
   }
 
@@ -69,7 +56,7 @@ export const Overview: React.FC = () => {
                 Giới thiệu chung
               </h2>
               <p className="text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-                Sinh hoạt chính trị dưới nghi thức chào cờ là hoạt động nề nếp, trang nghiêm được Đảng ủy Thanh tra tỉnh Sơn La tổ chức định kỳ. Hoạt động nhằm giáo dục truyền thống cách mạng, nâng cao lòng yêu nước, lòng tự hào dân tộc và ý thức trách nhiệm của mỗi cán bộ, đảng viên trong thực thi công vụ.
+                Sinh hoạt chính trị dưới nghi thức chào cờ là hoạt động nề nếp, trang nghiêm, góp phần giáo dục truyền thống cách mạng, nâng cao lòng yêu nước, lòng tự hào dân tộc và ý thức trách nhiệm của mỗi cán bộ, đảng viên.
               </p>
               <p className="text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-300 leading-relaxed">
                 Hệ thống Sinh hoạt chính trị điện tử hỗ trợ Ban tổ chức quản lý nhanh danh sách tham dự, tối ưu quy trình điểm danh tọa độ GPS và số hóa các bài thu hoạch, câu hỏi nhận thức nhanh giúp nâng cao chất lượng học tập Nghị quyết Đảng bộ.
@@ -133,7 +120,7 @@ export const Overview: React.FC = () => {
                 <span className="text-xs font-black uppercase tracking-wider">Thông điệp thi đua</span>
               </div>
               <blockquote className="border-l-2 border-gold pl-3 text-xs italic font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
-                "Xây dựng đội ngũ cán bộ, công chức Thanh tra tỉnh Sơn La vừa hồng vừa chuyên, giữ vững kỷ cương, liêm chính, hoàn thành xuất sắc nhiệm vụ được giao."
+                "Đoàn kết, gương mẫu, trách nhiệm; hoàn thành tốt nhiệm vụ chính trị được giao."
               </blockquote>
             </GlassCard>
           </div>

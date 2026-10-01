@@ -401,7 +401,7 @@ export const ExamIntro: React.FC = () => {
                 {exam ? exam.title : 'Bài kiểm tra nhận thức'}
               </h2>
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-                Đảng bộ Thanh tra tỉnh Sơn La
+                Sinh hoạt dưới nghi thức chào cờ cấp xã
               </p>
             </div>
 

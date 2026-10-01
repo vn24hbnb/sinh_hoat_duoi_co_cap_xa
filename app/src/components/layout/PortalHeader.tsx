@@ -1,5 +1,6 @@
 import React from 'react'
 import { useUiSettings } from '../../contexts/UiSettingsContext'
+import { useAuth } from '../../contexts/AuthContext'
 import presidentHoAndFlags from '../../assets/president_ho_and_flags.png'
 
 interface PortalHeaderProps {
@@ -12,8 +13,9 @@ export const PortalHeader: React.FC<PortalHeaderProps> = ({
   subtitle
 }) => {
   const { settings } = useUiSettings()
+  const { user, organizationId, organizations, selectOrganization } = useAuth()
 
-  const displayTitle = systemTitle || settings?.organization_name || 'ĐẢNG BỘ THANH TRA TỈNH SƠN LA'
+  const displayTitle = systemTitle || settings?.organization_name || 'ĐẢNG BỘ CẤP XÃ'
   const displaySubtitle = subtitle || settings?.site_name || 'SINH HOẠT CHÍNH TRỊ DƯỚI NGHI THỨC CHÀO CỜ'
   const activeBannerUrl = settings?.active_banner?.file_url
 
@@ -50,6 +52,7 @@ export const PortalHeader: React.FC<PortalHeaderProps> = ({
             {displaySubtitle}
           </h2>
           <div className="w-20 h-[2px] bg-gold mx-auto mt-2 rounded-full opacity-80"></div>
+          {user?.isGlobalAdmin && <label className="mt-2 inline-flex items-center gap-2 text-xs font-semibold"><span>Đang quản lý:</span><select aria-label="Chọn xã đang quản lý" value={organizationId || ''} onChange={e => selectOrganization(e.target.value)} className="rounded-md border border-gold/50 bg-red-dark px-2 py-1 text-white"><option value="">Chọn xã</option>{organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
         </div>
 
         {/* Right side placeholder for symmetry on desktop */}
@@ -58,4 +61,3 @@ export const PortalHeader: React.FC<PortalHeaderProps> = ({
     </header>
   )
 }
-

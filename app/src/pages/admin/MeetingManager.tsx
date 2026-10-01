@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Play, ToggleLeft, CheckCircle, RefreshCw, Users, Calendar, ArrowRight, X, BookOpen, Edit3, Clock, ListChecks, Trash2, ChevronDown, ChevronUp, ShieldAlert, MapPin, QrCode, Key, Camera, Copy, Bookmark, Check } from 'lucide-react'
 import { PatternBackground } from '../../components/ui/PatternBackground'
@@ -17,24 +17,28 @@ import { hallPresetService } from '../../services/hallPresetService'
 import type { HallPreset } from '../../services/hallPresetService'
 import type { MeetingSession } from '../../services/meetingService'
 import { useAuth } from '../../contexts/AuthContext'
+import { tenantService } from '../../services/tenantService'
 import { supabase } from '../../services/supabaseClient'
-const CHIBO7_TEMPLATE = {
+const GENERIC_MEETING_TEMPLATE = {
   is_structured: true,
-  time_str: "08h00’ - 08h30’, ngày 06/7/2026 (thứ 2)",
-  location_str: "Hội trường tầng 4; Địa chỉ số 47, đường Hoàng Quốc Việt, phường Chiềng Cơi, tỉnh Sơn La.",
-  participants_str: "Toàn thể đảng viên, công chức, người lao động cơ quan Thanh tra tỉnh (đề nghị các đồng chí mặc trang phục ngành Xuân - Hè).",
+  time_str: '',
+  location_str: '',
+  participants_str: 'Toàn thể đảng viên thuộc đơn vị',
   items: [
-    { tt: 1, content: "Ổn định tổ chức & Điểm danh (trực tuyến và trực tiếp)", moderator: "Đ/c Luyện Ngọc Nghĩa - Phó Bí thư Chi bộ 7", performer: "Đ/c Luyện Ngọc Nghĩa - Phó Bí thư Chi bộ 7" },
-    { tt: 2, content: "Tiến hành Nghi lễ chào cờ", moderator: "Đ/c Luyện Ngọc Nghĩa - Phó Bí thư Chi bộ 7", performer: "Đ/c Luyện Ngọc Nghĩa - Phó Bí thư Chi bộ 7" },
-    { tt: 3, content: "Thông tin nhanh tình hình thời sự nổi bật quốc tế, trong nước và của tỉnh", moderator: "Đ/c Luyện Ngọc Nghĩa - Phó Bí thư Chi bộ 7", performer: "Đ/c Trần Huy Hoàng - Bí thư Chi bộ 7" },
-    { tt: 4, content: "Kể một câu chuyện về Bác", moderator: "Đ/c Trần Huy Hoàng - Bí thư Chi bộ 7", performer: "Đ/c Nguyễn Ngọc Dũng - Đảng viên Chi bộ 7" },
-    { tt: 5, content: "Mời Đảng ủy Thanh tra tỉnh triển khai Hội nghị tuyên truyền, quán triệt các Văn bản", moderator: "Đ/c Nguyễn Ngọc Dũng - Đảng viên Chi bộ 7", performer: "Có Chương trình riêng" }
+    { tt: 1, content: 'Ổn định tổ chức và điểm danh', moderator: '', performer: '' },
+    { tt: 2, content: 'Tiến hành nghi lễ chào cờ', moderator: '', performer: '' },
+    { tt: 3, content: 'Triển khai nội dung sinh hoạt chính trị', moderator: '', performer: '' },
+    { tt: 4, content: 'Thảo luận và kết luận', moderator: '', performer: '' }
   ]
 }
 
 export const MeetingManager: React.FC = () => {
-  const { user, logout } = useAuth()
+  const { user, logout, organizationId } = useAuth()
   const navigate = useNavigate()
+  const dataRequestSequenceRef = useRef(0)
+  const bankRequestSequenceRef = useRef(0)
+  const loadedOrganizationIdRef = useRef<string | null>(null)
+  const [loadedOrganizationId, setLoadedOrganizationId] = useState<string | null>(null)
   
   const [meeting, setMeeting] = useState<MeetingSession | null>(null)
   const [historyMeetings, setHistoryMeetings] = useState<MeetingSession[]>([])
@@ -72,9 +76,9 @@ export const MeetingManager: React.FC = () => {
   // Cấu hình điểm danh nâng cao State
   const [isEditingAttendance, setIsEditingAttendance] = useState(false)
   const [savingAttendance, setSavingAttendance] = useState(false)
-  const [gpsLat, setGpsLat] = useState<string>('21.328400')
-  const [gpsLng, setGpsLng] = useState<string>('103.912500')
-  const [gpsRadius, setGpsRadius] = useState<number>(100)
+  const [gpsLat, setGpsLat] = useState<string>('')
+  const [gpsLng, setGpsLng] = useState<string>('')
+  const [gpsRadius, setGpsRadius] = useState<number>(200)
   const [selectedMethods, setSelectedMethods] = useState<string[]>(['gps'])
   const [pinCode, setPinCode] = useState<string>('')
   const [qrToken, setQrToken] = useState<string>('')
@@ -89,13 +93,9 @@ export const MeetingManager: React.FC = () => {
   const [mapStyle, setMapStyle] = useState<string>('google-hybrid')
   
   // Preset mẫu địa điểm phòng họp & Clipboard
-  const [hallPresets, setHallPresets] = useState<HallPreset[]>([])
+  const [hallPresets, setHallPresets] = useState<HallPreset[]>(() => hallPresetService.getPresets())
   const [selectedPresetId, setSelectedPresetId] = useState<string>('')
   const [copiedState, setCopiedState] = useState(false)
-
-  useEffect(() => {
-    setHallPresets(hallPresetService.getPresets())
-  }, [])
 
   const handleSelectHallPreset = (presetId: string) => {
     setSelectedPresetId(presetId)
@@ -110,7 +110,7 @@ export const MeetingManager: React.FC = () => {
   }
 
   const handleSaveNewHallPreset = () => {
-    const name = prompt('Nhập tên gợi nhớ cho mẫu vị trí phòng họp này (Ví dụ: Hội trường chính Tầng 4):')
+    const name = prompt('Nhập tên gợi nhớ cho địa điểm của đơn vị:')
     if (!name || !name.trim()) return
     const lat = parseFloat(gpsLat)
     const lng = parseFloat(gpsLng)
@@ -147,9 +147,9 @@ export const MeetingManager: React.FC = () => {
 
   // Form State
   const [formTitle, setFormTitle] = useState('')
-  const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0])
-  const [formTime, setFormTime] = useState('08:00')
-  const [formLocation, setFormLocation] = useState('Hội trường Tỉnh')
+  const [formDate, setFormDate] = useState('2026-10-05')
+  const [formTime, setFormTime] = useState('')
+  const [formLocation, setFormLocation] = useState('')
   const [formAgenda, setFormAgenda] = useState('')
   const [applyTemplate, setApplyTemplate] = useState(false)
 
@@ -188,16 +188,16 @@ export const MeetingManager: React.FC = () => {
   const handleToggleTemplate = (checked: boolean) => {
     setApplyTemplate(checked)
     if (checked) {
-      setFormTitle('Sinh hoạt chính trị dưới cờ tháng 7 năm 2026')
-      setFormDate('2026-07-06')
-      setFormTime('08:00')
-      setFormLocation('Hội trường tầng 4; Địa chỉ số 47, đường Hoàng Quốc Việt, phường Chiềng Cơi, tỉnh Sơn La')
-      setFormAgenda(JSON.stringify(CHIBO7_TEMPLATE, null, 2))
+      setFormTitle('Sinh hoạt chính trị dưới nghi thức chào cờ')
+      setFormDate(new Date().toISOString().split('T')[0])
+      setFormTime('')
+      setFormLocation('')
+      setFormAgenda(JSON.stringify(GENERIC_MEETING_TEMPLATE, null, 2))
     } else {
       setFormTitle('')
       setFormDate(new Date().toISOString().split('T')[0])
       setFormTime('08:00')
-      setFormLocation('Hội trường Tỉnh')
+      setFormLocation('')
       setFormAgenda('')
     }
   }
@@ -207,19 +207,25 @@ export const MeetingManager: React.FC = () => {
     navigate('/login')
   }
 
-  const loadQuestionBanks = async () => {
+  const loadQuestionBanks = useCallback(async () => {
+    const requestId = ++bankRequestSequenceRef.current
+    const isCurrentRequest = () => requestId === bankRequestSequenceRef.current && tenantService.getOrganizationId() === organizationId
     try {
       const banksList = await examService.getQuestionBanks()
+      if (!isCurrentRequest()) return
       setAvailableBanks(banksList)
     } catch (err) {
+      if (!isCurrentRequest()) return
       console.error('Lỗi tải ngân hàng câu hỏi:', err)
     }
-  }
+  }, [organizationId])
 
-  const loadExamConfig = async (sessionId: string) => {
+  const loadExamConfig = useCallback(async (sessionId: string, isCurrentRequest: () => boolean = () => true, sessionTitle?: string) => {
+    if (!isCurrentRequest()) return
     setLoadingExam(true)
     try {
       const config = await examService.getMeetingExam(sessionId)
+      if (!isCurrentRequest()) return
       setExamConfig(config)
       if (config) {
         setExamTitle(config.title)
@@ -228,40 +234,44 @@ export const MeetingManager: React.FC = () => {
         setSelectedBankIds(config.question_bank_ids || [])
       } else {
         // Giá trị mặc định
-        setExamTitle(meeting ? `${meeting.title} - Bài kiểm tra` : 'Bài kiểm tra chuyên đề')
+        setExamTitle(sessionTitle ? `${sessionTitle} - Bài kiểm tra` : 'Bài kiểm tra chuyên đề')
         setExamDuration(10)
         setExamQuestionCount(10)
         setSelectedBankIds([])
       }
     } catch (err) {
+      if (!isCurrentRequest()) return
       console.error('Lỗi tải cấu hình đề thi:', err)
     } finally {
-      setLoadingExam(false)
+      if (isCurrentRequest()) setLoadingExam(false)
     }
-  }
+  }, [])
 
-  const loadAttendanceConfig = async (sessionId: string) => {
+  const loadAttendanceConfig = useCallback(async (sessionId: string, isCurrentRequest: () => boolean = () => true) => {
+    if (!isCurrentRequest()) return
     try {
       const config = await meetingUiSettingsService.getSettings(sessionId)
+      if (!isCurrentRequest()) return
       if (config) {
-        setGpsLat(config.gps_lat ? Number(config.gps_lat).toFixed(6) : '')
-        setGpsLng(config.gps_lng ? Number(config.gps_lng).toFixed(6) : '')
-        setGpsRadius(config.gps_radius_m || 100)
+        setGpsLat(config.gps_lat != null ? Number(config.gps_lat).toFixed(6) : '')
+        setGpsLng(config.gps_lng != null ? Number(config.gps_lng).toFixed(6) : '')
+        setGpsRadius(config.gps_radius_m || 200)
         setSelectedMethods(config.attendance_methods ? config.attendance_methods.split(',') : ['gps'])
         setPinCode(config.pin_code || '')
-        setQrToken(config.qr_code_token || `qr_token_${sessionId}`)
+        setQrToken(config.qr_code_token || crypto.randomUUID())
       } else {
-        setGpsLat('21.328400')
-        setGpsLng('103.912500')
-        setGpsRadius(100)
+        setGpsLat('')
+        setGpsLng('')
+        setGpsRadius(200)
         setSelectedMethods(['gps'])
         setPinCode('')
-        setQrToken(`qr_token_${sessionId}`)
+        setQrToken(crypto.randomUUID())
       }
     } catch (err) {
+      if (!isCurrentRequest()) return
       console.error('Lỗi tải cấu hình điểm danh:', err)
     }
-  }
+  }, [])
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -314,8 +324,8 @@ export const MeetingManager: React.FC = () => {
 
   // Xử lý mở modal Bản đồ
   const handleOpenMapModal = () => {
-    setTempLat(gpsLat ? Number(gpsLat).toFixed(6) : '21.328400')
-    setTempLng(gpsLng ? Number(gpsLng).toFixed(6) : '103.912500')
+    setTempLat(gpsLat ? Number(gpsLat).toFixed(6) : '')
+    setTempLng(gpsLng ? Number(gpsLng).toFixed(6) : '')
     setSearchQuery('')
     setGoogleMapsPaste('')
     setShowMapModal(true)
@@ -325,6 +335,10 @@ export const MeetingManager: React.FC = () => {
   const handleConfirmMapCoords = () => {
     const lat = parseFloat(tempLat)
     const lng = parseFloat(tempLng)
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lng) || lng < -180 || lng > 180) {
+      setError('Hãy tìm địa điểm hoặc chọn một điểm trên bản đồ trước khi xác nhận.')
+      return
+    }
     setGpsLat(!isNaN(lat) ? lat.toFixed(6) : tempLat)
     setGpsLng(!isNaN(lng) ? lng.toFixed(6) : tempLng)
     setShowMapModal(false)
@@ -405,8 +419,9 @@ export const MeetingManager: React.FC = () => {
       const mapboxgl = (window as any).mapboxgl
       mapboxgl.accessToken = MAPBOX_TOKEN
       
-      const initialLat = tempLat ? parseFloat(tempLat) : 21.3284
-      const initialLng = tempLng ? parseFloat(tempLng) : 103.9125
+      const hasCoordinates = Boolean(tempLat && tempLng)
+      const initialLat = hasCoordinates ? parseFloat(tempLat) : 0
+      const initialLng = hasCoordinates ? parseFloat(tempLng) : 0
 
       // Clean up previous map if exists
       if (mapInstanceRef.current) {
@@ -450,9 +465,9 @@ export const MeetingManager: React.FC = () => {
         container: mapRef.current,
         style: activeStyle,
         center: [initialLng, initialLat],
-        zoom: 16.5,
+        zoom: hasCoordinates ? 16.5 : 2,
         maxZoom: 18.5, // Giới hạn mức zoom an toàn tránh bị đen màn hình
-        minZoom: 5
+        minZoom: 1
       })
 
       // Add navigation control (Zoom, Rotation)
@@ -540,10 +555,10 @@ export const MeetingManager: React.FC = () => {
         gps_radius_m: gpsRadius,
         attendance_methods: selectedMethods.join(','),
         pin_code: pinCode.trim(),
-        qr_code_token: qrToken.trim() || `qr_token_${meeting.id}`
+        qr_code_token: qrToken.trim() || crypto.randomUUID()
       }, user?.id)
 
-      await loadAttendanceConfig(meeting.id)
+      await loadAttendanceConfig(meeting.id, () => true)
       setIsEditingAttendance(false)
       setSuccess('Đã lưu cấu hình điểm danh thành công!')
     } catch (err: any) {
@@ -553,32 +568,72 @@ export const MeetingManager: React.FC = () => {
     }
   }
 
-  const loadData = async (showSpinner = true, targetMeetingId: string | null = null) => {
+  const loadData = useCallback(async (showSpinner = true, targetMeetingId: string | null = null) => {
+    const requestId = ++dataRequestSequenceRef.current
+    const isCurrentRequest = () => requestId === dataRequestSequenceRef.current && tenantService.getOrganizationId() === organizationId
+    await Promise.resolve()
+    if (!isCurrentRequest()) return
+    const organizationChanged = loadedOrganizationIdRef.current !== organizationId
     if (showSpinner) setLoading(true)
     else setRefreshing(true)
     setError('')
+    if (organizationChanged) {
+      setMeeting(null)
+      setHistoryMeetings([])
+      setParticipants([])
+      setExamConfig(null)
+      setAvailableBanks([])
+      setSelectedBankIds([])
+      setDocuments([])
+      setExamAttempts([])
+      setGpsLat('')
+      setGpsLng('')
+      setGpsRadius(200)
+      setLoadingExam(false)
+    }
+    if (!organizationId) {
+      setMeeting(null)
+      setHistoryMeetings([])
+      setParticipants([])
+      setExamConfig(null)
+      setDocuments([])
+      setExamAttempts([])
+      setGpsLat('')
+      setGpsLng('')
+      setLoading(false)
+      setRefreshing(false)
+      loadedOrganizationIdRef.current = null
+      setLoadedOrganizationId(null)
+      return
+    }
     try {
       let currentSession = null
       
       if (targetMeetingId) {
         // Tải thông tin phiên họp cụ thể được chọn điều khiển
         const list = await meetingService.getMeetingList()
+        if (!isCurrentRequest()) return
         currentSession = list.find(m => m.id === targetMeetingId) || null
       } else {
         // Mặc định tải phiên họp active
         currentSession = await meetingService.getActiveSession()
       }
+      if (!isCurrentRequest()) return
       
       setMeeting(currentSession)
       
       if (currentSession) {
         const parts = await meetingService.getParticipantsAttendance(currentSession.id)
+        if (!isCurrentRequest()) return
         setParticipants(parts)
-        await loadExamConfig(currentSession.id)
-        await loadAttendanceConfig(currentSession.id)
+        await loadExamConfig(currentSession.id, isCurrentRequest, currentSession.title)
+        if (!isCurrentRequest()) return
+        await loadAttendanceConfig(currentSession.id, isCurrentRequest)
+        if (!isCurrentRequest()) return
         
         // Tải tài liệu đính kèm phiên họp
         const docs = await meetingService.getSessionDocuments(currentSession.id)
+        if (!isCurrentRequest()) return
         setDocuments(docs)
 
         // Tải danh sách bài thi đã nộp
@@ -586,6 +641,7 @@ export const MeetingManager: React.FC = () => {
           .from('exam_attempts')
           .select('member_id, score, submitted_at')
           .eq('meeting_session_id', currentSession.id)
+        if (!isCurrentRequest()) return
         if (!attError) {
           setExamAttempts(attempts || [])
         } else {
@@ -600,32 +656,42 @@ export const MeetingManager: React.FC = () => {
 
       // Tải danh sách lịch sử cuộc họp
       const list = await meetingService.getMeetingList()
+      if (!isCurrentRequest()) return
       // Loại bỏ phiên họp đang điều khiển khỏi danh sách lịch sử hiển thị bên dưới
       const history = currentSession 
         ? list.filter(m => m.id !== currentSession.id)
         : list.filter(m => !['active', 'attendance_open', 'attendance_closed', 'exam_open', 'exam_closed'].includes(m.status))
       
       setHistoryMeetings(history)
+      loadedOrganizationIdRef.current = organizationId
+      setLoadedOrganizationId(organizationId)
     } catch (err: any) {
+      if (!isCurrentRequest()) return
       console.error(err)
       setError(err.message || 'Không thể tải thông tin quản lý phiên họp.')
+      if (organizationChanged) {
+        loadedOrganizationIdRef.current = organizationId
+        setLoadedOrganizationId(organizationId)
+      }
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      if (isCurrentRequest()) {
+        setLoading(false)
+        setRefreshing(false)
+      }
     }
-  }
+  }, [organizationId, loadExamConfig, loadAttendanceConfig])
 
   useEffect(() => {
-    loadData()
-    loadQuestionBanks()
-  }, [])
-
-  // Mỗi khi cuộc họp được chọn thay đổi tiêu đề, cập nhật tiêu đề bài kiểm tra mặc định nếu chưa có cấu hình
-  useEffect(() => {
-    if (meeting && !examConfig) {
-      setExamTitle(`${meeting.title} - Bài kiểm tra`)
+    const timer = window.setTimeout(() => {
+      void loadData()
+      void loadQuestionBanks()
+    }, 0)
+    return () => {
+      window.clearTimeout(timer)
+      dataRequestSequenceRef.current += 1
+      bankRequestSequenceRef.current += 1
     }
-  }, [meeting, examConfig])
+  }, [loadData, loadQuestionBanks])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
@@ -912,7 +978,7 @@ export const MeetingManager: React.FC = () => {
       )
       setSuccess('Thiết lập/Cập nhật đề thi trắc nghiệm thành công!')
       setIsEditingExam(false)
-      await loadExamConfig(meeting.id)
+      await loadExamConfig(meeting.id, () => true, meeting.title)
     } catch (err: any) {
       console.error(err)
       setError(err.message || 'Lỗi khi lưu cấu hình đề thi.')
@@ -1129,7 +1195,7 @@ export const MeetingManager: React.FC = () => {
 
   const isExamEditable = meeting && ['draft', 'active', 'attendance_open', 'attendance_closed'].includes(meeting.status)
 
-  if (loading) {
+  if (loading || loadedOrganizationId !== organizationId) {
     return <LoadingSpinner message="Đang tải thông tin quản lý phiên họp..." fullScreen />
   }
 
@@ -1196,7 +1262,7 @@ export const MeetingManager: React.FC = () => {
                     {meeting.title}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
-                    📍 Địa điểm: <b>{meeting.location || 'Hội trường Tỉnh'}</b> | 📝 Đảng viên tham gia: <b>{stats.total} Đ/c</b>
+                    📍 Địa điểm: <b>{meeting.location || 'Chưa cấu hình'}</b> | 📝 Đảng viên tham gia: <b>{stats.total} Đ/c</b>
                   </p>
                   {meeting.agenda && (
                     <p className="text-[11px] text-slate-400 font-medium mt-1.5 italic">
@@ -1245,7 +1311,7 @@ export const MeetingManager: React.FC = () => {
                         type="text"
                         value={agendaTime}
                         onChange={(e) => setAgendaTime(e.target.value)}
-                        placeholder="08h00 - 08h30, ngày 06/7/2026"
+                        placeholder="Cập nhật sau khi chốt giờ tổ chức"
                         className="w-full p-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-bold outline-none focus:border-red-revolution"
                       />
                     </div>
@@ -1255,7 +1321,7 @@ export const MeetingManager: React.FC = () => {
                         type="text"
                         value={agendaLocation}
                         onChange={(e) => setAgendaLocation(e.target.value)}
-                        placeholder="Hội trường tầng 4..."
+                        placeholder="Địa điểm của xã (có thể cấu hình sau)"
                         className="w-full p-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-bold outline-none focus:border-red-revolution"
                       />
                     </div>
@@ -1626,7 +1692,7 @@ export const MeetingManager: React.FC = () => {
                                   if (!isNaN(val)) setGpsLat(val.toFixed(6))
                                 }}
                                 className="w-full text-xs font-bold p-1.5 border border-slate-200 dark:border-slate-800 rounded-md focus:border-red-revolution" 
-                                placeholder="21.328400"
+                                placeholder="Nhập vĩ độ địa điểm"
                               />
                             </div>
                             <div>
@@ -1640,7 +1706,7 @@ export const MeetingManager: React.FC = () => {
                                   if (!isNaN(val)) setGpsLng(val.toFixed(6))
                                 }}
                                 className="w-full text-xs font-bold p-1.5 border border-slate-200 dark:border-slate-800 rounded-md focus:border-red-revolution" 
-                                placeholder="103.912500"
+                                placeholder="Nhập kinh độ địa điểm"
                               />
                             </div>
                           </div>
@@ -1650,9 +1716,9 @@ export const MeetingManager: React.FC = () => {
                               <input 
                                 type="number" 
                                 value={gpsRadius} 
-                                onChange={(e) => setGpsRadius(parseInt(e.target.value) || 100)}
+                                onChange={(e) => setGpsRadius(parseInt(e.target.value) || 200)}
                                 className="w-full text-xs font-bold p-1.5 border border-slate-200 dark:border-slate-800 rounded-md focus:border-red-revolution" 
-                                placeholder="100"
+                                placeholder="200"
                               />
                             </div>
                             <div className="flex gap-1.5 mt-3.5">
@@ -1748,7 +1814,7 @@ export const MeetingManager: React.FC = () => {
                       {selectedMethods.includes('gps') && (
                         <div className="col-span-2">
                           <span className="text-slate-400 block text-[9px] uppercase">Tọa độ & Cự ly:</span>
-                          <span className="text-navy dark:text-white font-bold">📍 {gpsLat || 'Mặc định'}, {gpsLng || 'Mặc định'} (Bán kính: {gpsRadius}m • Diện tích: {((Math.PI * Math.pow(gpsRadius || 100, 2)) / 10000).toFixed(4)} ha)</span>
+                          <span className="text-navy dark:text-white font-bold">📍 {gpsLat && gpsLng ? `${gpsLat}, ${gpsLng}` : 'Chưa cấu hình địa điểm'} (Bán kính: {gpsRadius}m)</span>
                         </div>
                       )}
                       {selectedMethods.includes('pin') && (
@@ -2134,7 +2200,7 @@ export const MeetingManager: React.FC = () => {
                       <tr key={item.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-red-revolution/5">
                         <td className="py-3 px-4 font-bold text-navy dark:text-white">{item.title}</td>
                         <td className="py-3 px-4 text-slate-500">{item.meeting_date || 'Không rõ'}{item.start_time && ` lúc ${formatTime(item.start_time)}`}</td>
-                        <td className="py-3 px-4 text-slate-500">{item.location || 'Hội trường Tỉnh'}</td>
+                        <td className="py-3 px-4 text-slate-500">{item.location || 'Chưa cấu hình'}</td>
                         <td className="py-3 px-4">
                           <StatusBadge 
                             status={
@@ -2277,7 +2343,7 @@ export const MeetingManager: React.FC = () => {
                   className="w-4 h-4 text-red-revolution border-slate-350 rounded focus:ring-red-revolution cursor-pointer"
                 />
                 <label htmlFor="applyTemplate" className="text-[11px] font-bold text-red-revolution dark:text-gold cursor-pointer select-none">
-                  Áp dụng Chương trình mẫu tháng 7/2026 (Chi bộ 7)
+                  Chèn chương trình sinh hoạt cơ bản
                 </label>
               </div>
 
@@ -2288,7 +2354,7 @@ export const MeetingManager: React.FC = () => {
                   required
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Ví dụ: Sinh hoạt chính trị Chào cờ Tháng 6/2026"
+                  placeholder="Sinh hoạt chính trị dưới nghi thức chào cờ"
                   className="w-full p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-bold outline-none focus:border-red-revolution"
                 />
               </div>
@@ -2305,23 +2371,21 @@ export const MeetingManager: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-500 mb-1">Giờ sinh hoạt *</label>
+                  <label className="block text-slate-500 mb-1">Giờ sinh hoạt (có thể bổ sung sau)</label>
                   <input
                     type="time"
-                    required
                     value={formTime}
                     onChange={(e) => setFormTime(e.target.value)}
                     className="w-full p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-bold outline-none focus:border-red-revolution"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-500 mb-1">Địa điểm họp *</label>
+                  <label className="block text-slate-500 mb-1">Địa điểm họp (có thể cấu hình sau)</label>
                   <input
                     type="text"
-                    required
-                    value={formLocation}
+                  value={formLocation}
                     onChange={(e) => setFormLocation(e.target.value)}
-                    placeholder="Hội trường Tỉnh"
+                    placeholder="Địa điểm của đơn vị (có thể cấu hình sau)"
                     className="w-full p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-navy/40 text-navy dark:text-white font-bold outline-none"
                   />
                 </div>
@@ -2426,7 +2490,7 @@ export const MeetingManager: React.FC = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearchLocation()}
-                    placeholder="Nhập địa điểm (Ví dụ: Thanh tra tỉnh Sơn La...)"
+                    placeholder="Nhập địa điểm của đơn vị"
                     className="flex-1 text-xs p-1.5 border border-slate-200 dark:border-slate-800 rounded-md focus:border-red-revolution"
                   />
                   <button
@@ -2500,7 +2564,7 @@ export const MeetingManager: React.FC = () => {
                   type="text"
                   value={googleMapsPaste}
                   onChange={(e) => handlePasteGoogleMapsCoords(e.target.value)}
-                  placeholder="Dán tọa độ copy từ Google Maps (Ví dụ: 21.3284, 103.9125)"
+                  placeholder="Dán tọa độ từ Google Maps (vĩ độ, kinh độ)"
                   className="w-full text-xs p-2 border border-slate-200 dark:border-slate-800 rounded-md focus:border-red-revolution font-mono text-center"
                 />
               </div>

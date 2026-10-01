@@ -40,19 +40,16 @@ export const GuideFaq: React.FC = () => {
       answer: (
         <div className="space-y-2 leading-relaxed">
           <p>
-            Mỗi đồng chí đảng viên được cấp tài khoản định danh không dấu viết thường theo quy tắc:
+            Tại màn hình đăng nhập, chọn xã, chi bộ và họ tên trong danh sách:
           </p>
           <div className="bg-slate-100 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-cream-light font-mono text-xs">
-            tên không dấu + viết tắt họ đệm + .chibo[X]
+            Xã → Chi bộ → Họ và tên → Mật khẩu
           </div>
           <p>
-            Ví dụ: Đồng chí <b>Nguyễn Trung Thành</b> thuộc <b>Chi bộ 2</b> sẽ có tên đăng nhập là <b>thanhnt.chibo2</b>.
+            Nếu có người trùng họ tên, ngày sinh sẽ được hiển thị thêm để phân biệt.
           </p>
           <p>
-            Mật khẩu mặc định ban đầu là: <span className="font-mono bg-red-revolution/10 text-red-revolution px-1.5 py-0.5 rounded font-bold">Thanhtra@123</span>.
-          </p>
-          <p className="text-red-revolution dark:text-gold font-bold">
-            ⚠️ Lưu ý: Ở lần đăng nhập đầu tiên, hệ thống sẽ tự động bắt buộc chuyển đến màn hình Đổi mật khẩu. Đồng chí phải đổi mật khẩu mới (tối thiểu 8 ký tự, khuyến khích có chữ hoa, số và ký tự đặc biệt) mới có thể tiếp tục.
+            Mật khẩu mặc định là <b>123456</b>; người dùng có thể tự đổi sau khi đăng nhập.
           </p>
         </div>
       )
@@ -287,7 +284,7 @@ export const GuideFaq: React.FC = () => {
             Hệ thống Sinh hoạt chính trị điện tử dưới nghi thức chào cờ
           </p>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
-            Nếu có sự cố phát sinh khác trong quá trình sử dụng, vui lòng báo lại với Văn phòng Đảng ủy Thanh tra Tỉnh.
+            Nếu có sự cố phát sinh khác, vui lòng liên hệ quản trị viên của xã.
           </p>
         </div>
 

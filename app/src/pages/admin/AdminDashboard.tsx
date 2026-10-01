@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, UserCheck, Award, FileQuestion, Calendar, RefreshCw, Star, Check, X, ShieldAlert, Key, Smartphone } from 'lucide-react'
+import { Users, UserCheck, Award, FileQuestion, Calendar, RefreshCw, Star, Check, X, ShieldAlert, Smartphone, Key } from 'lucide-react'
 import { PatternBackground } from '../../components/ui/PatternBackground'
 import { PortalHeader } from '../../components/layout/PortalHeader'
 import { RedNavigationBar } from '../../components/layout/RedNavigationBar'
@@ -12,12 +12,15 @@ import { meetingService } from '../../services/meetingService'
 import type { MeetingSession } from '../../services/meetingService'
 import { reportService } from '../../services/reportService'
 import { memberService } from '../../services/memberService'
+import { tenantService } from '../../services/tenantService'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../services/supabaseClient'
 
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, organizationId } = useAuth()
+  const requestSequenceRef = useRef(0)
+  const loadedOrganizationIdRef = useRef<string | null>(null)
+  const [loadedOrganizationId, setLoadedOrganizationId] = useState<string | null>(null)
 
   const [meeting, setMeeting] = useState<MeetingSession | null>(null)
   const [stats, setStats] = useState<any>({
@@ -36,8 +39,8 @@ export const AdminDashboard: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([])
-  const [sharedDevices, setSharedDevices] = useState<any[]>([])
-  const [defaultPasswordUsers, setDefaultPasswordUsers] = useState<any[]>([])
+  const sharedDevices: any[] = []
+  const defaultPasswordUsers: any[] = []
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const handleLogout = () => {
@@ -45,26 +48,46 @@ export const AdminDashboard: React.FC = () => {
     navigate('/login')
   }
 
-  const loadDashboardData = async (showSpinner = true) => {
+  const loadDashboardData = useCallback(async (showSpinner = true) => {
+    const requestId = ++requestSequenceRef.current
+    const isCurrentRequest = () => requestId === requestSequenceRef.current && tenantService.getOrganizationId() === organizationId
+    await Promise.resolve()
+    if (!isCurrentRequest()) return
+    const organizationChanged = loadedOrganizationIdRef.current !== organizationId
     if (showSpinner) setLoading(true)
     else setRefreshing(true)
     setError('')
+    if (organizationChanged) {
+      setMeeting(null)
+      setMemberCount(0)
+      setChiBoCount(0)
+      setPendingApprovals([])
+      setStats({ totalParticipants: 0, attendedCount: 0, warningGpsCount: 0, absentCount: 0, excusedCount: 0, examSubmittedCount: 0, examNotSubmittedCount: 0, averageScore: 0 })
+    }
+    if (!organizationId) {
+      setMeeting(null)
+      setMemberCount(0)
+      setChiBoCount(0)
+      setPendingApprovals([])
+      setStats({ totalParticipants: 0, attendedCount: 0, warningGpsCount: 0, absentCount: 0, excusedCount: 0, examSubmittedCount: 0, examNotSubmittedCount: 0, averageScore: 0 })
+      setLoading(false)
+      setRefreshing(false)
+      loadedOrganizationIdRef.current = null
+      setLoadedOrganizationId(null)
+      return
+    }
     try {
       const activeSession = await meetingService.getActiveSession()
+      if (!isCurrentRequest()) return
       setMeeting(activeSession)
 
-      // Tải số lượng đảng viên và chi bộ thực tế, kèm thông tin bảo mật
+      // Tải số liệu của đúng xã đang được quản lý.
       try {
-        const [fetchedChiBos, fetchedMembers, defaultUsersRes] = await Promise.all([
+        const [fetchedChiBos, fetchedMembers] = await Promise.all([
           memberService.getChiBos(),
-          memberService.getAllMembers(),
-          supabase
-            .from('app_users')
-            .select('id, username, member_id')
-            .eq('must_change_password', true)
-            .eq('role', 'member')
-            .eq('is_active', true)
+          memberService.getAllMembers()
         ])
+        if (!isCurrentRequest()) return
         const filteredMembers = fetchedMembers.filter(m => 
           m.full_name.toLowerCase() !== 'admin' &&
           !m.position?.toLowerCase().includes('admin')
@@ -72,58 +95,8 @@ export const AdminDashboard: React.FC = () => {
         setMemberCount(filteredMembers.length)
         setChiBoCount(fetchedChiBos.length)
 
-        // Phân tích đảng viên chưa đổi mật khẩu mặc định
-        const dpUsers = (defaultUsersRes.data || []).map(u => {
-          const m = filteredMembers.find(member => member.id === u.member_id)
-          return {
-            ...u,
-            fullName: m ? m.full_name : 'Đảng viên',
-            chiBoName: m?.chi_bos?.name || 'Chưa rõ'
-          }
-        }).filter(u => u.fullName !== 'Đảng viên')
-        setDefaultPasswordUsers(dpUsers)
-
-        // Phân tích thiết bị dùng chung (nếu có cuộc họp đang hoạt động)
-        let sharedDevicesList: any[] = []
-        if (activeSession) {
-          const { data: uiSettings } = await supabase
-            .from('meeting_ui_settings')
-            .select('device_mapping')
-            .eq('meeting_session_id', activeSession.id)
-            .maybeSingle()
-
-          if (uiSettings?.device_mapping) {
-            const mapping = uiSettings.device_mapping as Record<string, string>
-            const deviceGroups: Record<string, string[]> = {}
-            Object.entries(mapping).forEach(([memberId, deviceUuid]) => {
-              if (!deviceUuid) return
-              if (!deviceGroups[deviceUuid]) {
-                deviceGroups[deviceUuid] = []
-              }
-              deviceGroups[deviceUuid].push(memberId)
-            })
-
-            Object.entries(deviceGroups).forEach(([deviceUuid, memberIds]) => {
-              if (memberIds.length > 1) {
-                const membersSharing = memberIds.map(id => {
-                  const m = filteredMembers.find(member => member.id === id)
-                  return {
-                    id,
-                    name: m ? m.full_name : 'Đảng viên',
-                    chiBoName: m?.chi_bos?.name || 'Chưa rõ'
-                  }
-                })
-                sharedDevicesList.push({
-                  deviceUuid,
-                  members: membersSharing
-                })
-              }
-            })
-          }
-        }
-        setSharedDevices(sharedDevicesList)
       } catch (e) {
-        console.error('Lỗi tải số lượng đảng viên/chi bộ/bảo mật:', e)
+        console.error('Lỗi tải số lượng đảng viên/chi bộ:', e)
       }
 
       if (activeSession) {
@@ -131,11 +104,11 @@ export const AdminDashboard: React.FC = () => {
           reportService.compileMeetingReport(activeSession.id),
           meetingService.getPendingApprovals(activeSession.id)
         ])
+        if (!isCurrentRequest()) return
         setStats(report.stats)
         setPendingApprovals(pending)
       } else {
         setPendingApprovals([])
-        setSharedDevices([])
         setStats({
           totalParticipants: 0,
           attendedCount: 0,
@@ -147,14 +120,23 @@ export const AdminDashboard: React.FC = () => {
           averageScore: 0
         })
       }
+      loadedOrganizationIdRef.current = organizationId
+      setLoadedOrganizationId(organizationId)
     } catch (err: any) {
+      if (!isCurrentRequest()) return
       console.error(err)
       setError(err.message || 'Không thể tải thông tin thống kê Dashboard.')
+      if (organizationChanged) {
+        loadedOrganizationIdRef.current = organizationId
+        setLoadedOrganizationId(organizationId)
+      }
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      if (isCurrentRequest()) {
+        setLoading(false)
+        setRefreshing(false)
+      }
     }
-  }
+  }, [organizationId])
 
   const handleQuickApprove = async (memberId: string, type: 'warning' | 'excused') => {
     if (!meeting || !user) return
@@ -206,8 +188,12 @@ export const AdminDashboard: React.FC = () => {
   }
 
   useEffect(() => {
-    loadDashboardData()
-  }, [])
+    const timer = window.setTimeout(() => { void loadDashboardData() }, 0)
+    return () => {
+      window.clearTimeout(timer)
+      requestSequenceRef.current += 1
+    }
+  }, [loadDashboardData])
 
   // Tự động làm mới số liệu Dashboard & danh sách chờ duyệt mỗi 12 giây khi có phiên họp đang mở
   useEffect(() => {
@@ -218,9 +204,9 @@ export const AdminDashboard: React.FC = () => {
     }, 12000)
 
     return () => clearInterval(interval)
-  }, [meeting])
+  }, [meeting, loadDashboardData])
 
-  if (loading) {
+  if (loading || loadedOrganizationId !== organizationId) {
     return <LoadingSpinner message="Đang tải thông tin bảng điều hành..." fullScreen />
   }
 

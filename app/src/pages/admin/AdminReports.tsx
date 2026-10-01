@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileSpreadsheet, RefreshCw, Trophy, Star, Users, Calendar, UserCheck, Printer, FileText } from 'lucide-react'
 import { PatternBackground } from '../../components/ui/PatternBackground'
@@ -13,6 +13,7 @@ import type { MeetingSession } from '../../services/meetingService'
 import { reportService } from '../../services/reportService'
 import type { MeetingReportData } from '../../services/reportService'
 import { useAuth } from '../../contexts/AuthContext'
+import { tenantService } from '../../services/tenantService'
 
 interface ChartSegment {
   label: string
@@ -24,7 +25,17 @@ const DonutChart: React.FC<{ title: string; segments: ChartSegment[] }> = ({ tit
   const total = segments.reduce((sum, s) => sum + s.value, 0)
   const r = 40
   const circ = 2 * Math.PI * r
-  let accumulatedPercent = 0
+  const chartSegments = segments.reduce<Array<{ segment: ChartSegment; strokeDash: number; strokeOffset: number; accumulatedPercent: number }>>((result, segment) => {
+    if (total === 0 || segment.value === 0) return result
+    const previousPercent = result[result.length - 1]?.accumulatedPercent || 0
+    const percent = (segment.value / total) * 100
+    return [...result, {
+      segment,
+      strokeDash: (percent / 100) * circ,
+      strokeOffset: circ - (previousPercent / 100) * circ,
+      accumulatedPercent: previousPercent + percent
+    }]
+  }, [])
 
   return (
     <div className="p-4 bg-white/70 dark:bg-navy/40 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center">
@@ -32,29 +43,21 @@ const DonutChart: React.FC<{ title: string; segments: ChartSegment[] }> = ({ tit
       <div className="relative w-28 h-28">
         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
           <circle cx="50" cy="50" r={r} fill="transparent" stroke="rgba(0,0,0,0.03)" strokeWidth="10" />
-          {segments.map((seg, idx) => {
-            if (total === 0 || seg.value === 0) return null
-            const percent = (seg.value / total) * 100
-            const strokeDash = (percent / 100) * circ
-            const strokeOffset = circ - (accumulatedPercent / 100) * circ
-            accumulatedPercent += percent
-
-            return (
+          {chartSegments.map(({ segment, strokeDash, strokeOffset }, idx) => (
               <circle
                 key={idx}
                 cx="50"
                 cy="50"
                 r={r}
                 fill="transparent"
-                stroke={seg.color}
+                stroke={segment.color}
                 strokeWidth="10"
                 strokeDasharray={`${strokeDash} ${circ}`}
                 strokeDashoffset={strokeOffset}
                 strokeLinecap="round"
                 className="transition-all duration-1000 ease-in-out"
               />
-            )
-          })}
+          ))}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className="text-[9px] font-bold text-slate-400 uppercase">Tỷ lệ</span>
@@ -80,7 +83,12 @@ const DonutChart: React.FC<{ title: string; segments: ChartSegment[] }> = ({ tit
 
 export const AdminReports: React.FC = () => {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, organizations, organizationId } = useAuth()
+  const reportOrganizationName = organizations.find(org => org.id === organizationId)?.name || user?.organizationName || 'Đảng bộ cấp xã'
+  const requestSequenceRef = useRef(0)
+  const selectedMeetingIdRef = useRef('')
+  const loadedOrganizationIdRef = useRef<string | null>(null)
+  const [loadedOrganizationId, setLoadedOrganizationId] = useState<string | null>(null)
 
   const [meeting, setMeeting] = useState<MeetingSession | null>(null)
   const [report, setReport] = useState<MeetingReportData | null>(null)
@@ -114,18 +122,43 @@ export const AdminReports: React.FC = () => {
     navigate('/login')
   }
 
-  const loadReportData = async (showSpinner = true, targetSessionId?: string) => {
+  const loadReportData = useCallback(async (showSpinner = true, targetSessionId?: string) => {
+    const requestId = ++requestSequenceRef.current
+    const isCurrentRequest = () => requestId === requestSequenceRef.current && tenantService.getOrganizationId() === organizationId
+    await Promise.resolve()
+    if (!isCurrentRequest()) return
+    const organizationChanged = loadedOrganizationIdRef.current !== organizationId
     if (showSpinner) setLoading(true)
     else setRefreshing(true)
     setError('')
+    if (organizationChanged) {
+      setMeeting(null)
+      setReport(null)
+      setMeetingsList([])
+      selectedMeetingIdRef.current = ''
+      setSelectedMeetingId('')
+      setAutoRefresh(false)
+    }
+    if (!organizationId) {
+      setMeeting(null)
+      setReport(null)
+      setMeetingsList([])
+      setSelectedMeetingId('')
+      setLoading(false)
+      setRefreshing(false)
+      loadedOrganizationIdRef.current = null
+      setLoadedOrganizationId(null)
+      return
+    }
     try {
       // 1. Tải danh sách tất cả phiên họp để hiển thị trong dropdown
       const allMeetings = await meetingService.getMeetingList()
+      if (!isCurrentRequest()) return
       // Lọc bỏ các phiên họp bản nháp chưa kích hoạt
       const filtered = allMeetings.filter(m => m.status !== 'draft')
       setMeetingsList(filtered)
 
-      let selectedId = targetSessionId || selectedMeetingId
+      let selectedId = targetSessionId || selectedMeetingIdRef.current
       let currentSession = null
 
       if (filtered.length > 0) {
@@ -136,6 +169,7 @@ export const AdminReports: React.FC = () => {
         // Nếu chưa chọn hoặc không tìm thấy, mặc định lấy phiên họp đang hoạt động (active)
         if (!currentSession) {
           const activeSession = await meetingService.getActiveSession()
+          if (!isCurrentRequest()) return
           if (activeSession && filtered.some(m => m.id === activeSession.id)) {
             currentSession = activeSession
           } else {
@@ -148,25 +182,41 @@ export const AdminReports: React.FC = () => {
       setMeeting(currentSession)
 
       if (currentSession) {
+        selectedMeetingIdRef.current = currentSession.id
         setSelectedMeetingId(currentSession.id)
         const data = await reportService.compileMeetingReport(currentSession.id)
+        if (!isCurrentRequest()) return
         setReport(data)
       } else {
+        selectedMeetingIdRef.current = ''
         setReport(null)
         setSelectedMeetingId('')
       }
+      loadedOrganizationIdRef.current = organizationId
+      setLoadedOrganizationId(organizationId)
     } catch (err: any) {
+      if (!isCurrentRequest()) return
       console.error(err)
       setError(err.message || 'Không thể tải báo cáo của phiên họp.')
+      if (organizationChanged) {
+        loadedOrganizationIdRef.current = organizationId
+        setLoadedOrganizationId(organizationId)
+      }
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      if (isCurrentRequest()) {
+        setLoading(false)
+        setRefreshing(false)
+      }
     }
-  }
+  }, [organizationId])
 
   useEffect(() => {
-    loadReportData()
-  }, [])
+    const timer = window.setTimeout(() => { void loadReportData() }, 0)
+    return () => {
+      window.clearTimeout(timer)
+      requestSequenceRef.current += 1
+    }
+  }, [loadReportData])
 
   useEffect(() => {
     if (!autoRefresh || !selectedMeetingId) return
@@ -176,11 +226,12 @@ export const AdminReports: React.FC = () => {
     }, 10000)
 
     return () => clearInterval(intervalId)
-  }, [autoRefresh, selectedMeetingId])
+  }, [autoRefresh, selectedMeetingId, loadReportData])
 
   const handleSelectMeeting = (id: string) => {
+    selectedMeetingIdRef.current = id
     setSelectedMeetingId(id)
-    loadReportData(false, id)
+    void loadReportData(false, id)
   }
   const exportToWord = () => {
     if (!report) return
@@ -299,7 +350,7 @@ export const AdminReports: React.FC = () => {
     return mins > 0 ? `${mins}p ${secs}s` : `${secs}s`
   }
 
-  if (loading) {
+  if (loading || loadedOrganizationId !== organizationId) {
     return <LoadingSpinner message="Đang tải dữ liệu báo cáo..." fullScreen />
   }
 
@@ -697,12 +748,12 @@ export const AdminReports: React.FC = () => {
           <div className="flex justify-between items-start mb-6 border-b-2 border-black pb-4">
             <div className="text-center font-bold">
               <div>ĐẢNG CỘNG SẢN VIỆT NAM</div>
-              <div className="text-[10px] uppercase tracking-wide">Đảng bộ Thanh tra Tỉnh Sơn La</div>
+              <div className="text-[10px] uppercase tracking-wide">Đảng bộ {reportOrganizationName}</div>
               <div className="text-[9px] font-normal mt-1">Số: .....-BC/ĐU</div>
             </div>
             <div className="text-center font-bold">
               <div className="text-[10px] uppercase tracking-wider">ĐẢNG CỘNG SẢN VIỆT NAM QUANG VINH MUÔN NĂM</div>
-              <div className="text-[9px] font-normal mt-2">Sơn La, ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}</div>
+              <div className="text-[9px] font-normal mt-2">Ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}</div>
             </div>
           </div>
           
@@ -800,9 +851,9 @@ export const AdminReports: React.FC = () => {
           <div className="flex justify-between items-start mt-12 text-xs">
             <div className="italic">
               <b>Nơi nhận:</b><br />
-              - Đảng ủy Thanh tra Tỉnh;<br />
-              - Ban Tổ chức Đảng bộ;<br />
-              - Lưu VP Đảng ủy.<br />
+              - Đảng bộ {reportOrganizationName};<br />
+              - Ban Tổ chức;<br />
+              - Lưu hồ sơ.<br />
             </div>
             <div className="text-center font-bold w-64 mr-8">
               <div>T/M ĐẢNG ỦY</div>

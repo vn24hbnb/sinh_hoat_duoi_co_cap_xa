@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ShieldAlert, 
@@ -18,6 +18,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
 import { AlertMessage } from '../../components/ui/AlertMessage'
 import { supabase } from '../../services/supabaseClient'
 import { useAuth } from '../../contexts/AuthContext'
+import { tenantService } from '../../services/tenantService'
 
 interface AuditLog {
   id: string
@@ -38,7 +39,10 @@ const PAGE_SIZE = 15
 
 export const AdminAuditLogs: React.FC = () => {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, organizationId } = useAuth()
+  const requestSequenceRef = useRef(0)
+  const loadedOrganizationIdRef = useRef<string | null>(null)
+  const [loadedOrganizationId, setLoadedOrganizationId] = useState<string | null>(null)
 
   // State
   const [logs, setLogs] = useState<AuditLog[]>([])
@@ -56,9 +60,26 @@ export const AdminAuditLogs: React.FC = () => {
     navigate('/login')
   }
 
-  const loadAuditLogs = async () => {
+  const loadAuditLogs = useCallback(async () => {
+    const requestId = ++requestSequenceRef.current
+    const isCurrentRequest = () => requestId === requestSequenceRef.current && tenantService.getOrganizationId() === organizationId
+    await Promise.resolve()
+    if (!isCurrentRequest()) return
+    const organizationChanged = loadedOrganizationIdRef.current !== organizationId
     setLoading(true)
     setError('')
+    if (organizationChanged) {
+      setLogs([])
+      setTotalCount(0)
+    }
+    if (!organizationId) {
+      setLogs([])
+      setTotalCount(0)
+      setLoading(false)
+      loadedOrganizationIdRef.current = null
+      setLoadedOrganizationId(null)
+      return
+    }
     try {
       const start = (page - 1) * PAGE_SIZE
       const end = start + PAGE_SIZE - 1
@@ -78,6 +99,9 @@ export const AdminAuditLogs: React.FC = () => {
           )
         `, { count: 'exact' })
 
+      // Apply an explicit tenant boundary in addition to database RLS.
+      query = query.eq('organization_id', organizationId)
+
       // Apply action type filter
       if (actionFilter !== 'ALL') {
         query = query.eq('action', actionFilter)
@@ -89,20 +113,32 @@ export const AdminAuditLogs: React.FC = () => {
       const { data, error: err, count } = await query
 
       if (err) throw err
+      if (!isCurrentRequest()) return
 
       setLogs((data as any[]) || [])
       setTotalCount(count || 0)
+      loadedOrganizationIdRef.current = organizationId
+      setLoadedOrganizationId(organizationId)
     } catch (err: any) {
+      if (!isCurrentRequest()) return
       console.error(err)
       setError('Lỗi khi tải nhật ký hệ thống: ' + err.message)
+      if (organizationChanged) {
+        loadedOrganizationIdRef.current = organizationId
+        setLoadedOrganizationId(organizationId)
+      }
     } finally {
-      setLoading(false)
+      if (isCurrentRequest()) setLoading(false)
     }
-  }
+  }, [actionFilter, organizationId, page])
 
   useEffect(() => {
-    loadAuditLogs()
-  }, [page, actionFilter])
+    const timer = window.setTimeout(() => { void loadAuditLogs() }, 0)
+    return () => {
+      window.clearTimeout(timer)
+      requestSequenceRef.current += 1
+    }
+  }, [loadAuditLogs])
 
   // Client side search helper
   const filteredLogs = logs.filter(log => {
@@ -179,7 +215,7 @@ export const AdminAuditLogs: React.FC = () => {
           </span>
         )
       case 'RESET_PASSWORD':
-        return <span className="text-amber-700 dark:text-amber-400 font-bold">Đặt lại mật khẩu mặc định (Thanhtra@123)</span>
+        return <span className="text-amber-700 dark:text-amber-400 font-bold">Đặt lại mật khẩu mặc định (123456)</span>
       case 'IMPORT_QUESTIONS':
         return <span className="text-emerald-700 dark:text-emerald-400 font-bold">Nhập thành công <b>{meta.count} câu hỏi</b> {meta.method === 'file' ? 'từ file' : 'từ clipboard'}</span>
       case 'CREATE_QUESTION':
@@ -273,7 +309,7 @@ export const AdminAuditLogs: React.FC = () => {
 
         {/* Logs Table */}
         <GlassCard>
-          {loading ? (
+          {loading || loadedOrganizationId !== organizationId ? (
             <div className="py-20">
               <LoadingSpinner message="Đang tải dữ liệu nhật ký hệ thống..." />
             </div>

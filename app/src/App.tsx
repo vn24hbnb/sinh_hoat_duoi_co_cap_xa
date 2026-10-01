@@ -59,8 +59,8 @@ const PrivateRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[
 
 export const App: React.FC = () => {
   return (
-    <UiSettingsProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <UiSettingsProvider>
         <BrowserRouter>
           <React.Suspense fallback={<LoadingSpinner message="Đang tải trang..." fullScreen />}>
             <Routes>
@@ -195,8 +195,8 @@ export const App: React.FC = () => {
           </Routes>
         </React.Suspense>
       </BrowserRouter>
+      </UiSettingsProvider>
     </AuthProvider>
-    </UiSettingsProvider>
   )
 }
 

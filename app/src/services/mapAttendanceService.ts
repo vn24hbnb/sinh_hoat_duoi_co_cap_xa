@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient'
 import { meetingUiSettingsService } from './meetingUiSettingsService'
 import { calculateDistance } from '../utils/gps'
-import { DEFAULT_MEETING_LAT, DEFAULT_MEETING_LNG, MAX_ALLOWED_DISTANCE_METERS } from './attendanceService'
+import { MAX_ALLOWED_DISTANCE_METERS } from './attendanceService'
 import type {
   SessionMapData,
   AttendanceMapPoint,
@@ -34,30 +34,17 @@ export const mapAttendanceService = {
     if (!options?.forceReloadSettings && hallSettingsCache.has(trimmedSessionId)) {
       hall = hallSettingsCache.get(trimmedSessionId)!
     } else {
-      try {
-        const settings = await meetingUiSettingsService.getSettings(trimmedSessionId)
-        const lat = settings?.gps_lat ?? DEFAULT_MEETING_LAT
-        const lng = settings?.gps_lng ?? DEFAULT_MEETING_LNG
-        const radius = (settings?.gps_radius_m && settings.gps_radius_m > 0)
-          ? settings.gps_radius_m
-          : MAX_ALLOWED_DISTANCE_METERS
-
-        hall = {
-          latitude: lat,
-          longitude: lng,
-          radiusM: radius,
-          source: settings?.gps_lat ? 'meeting_settings' : 'fallback'
-        }
-        hallSettingsCache.set(trimmedSessionId, hall)
-      } catch (err: unknown) {
-        console.warn('Dùng vị trí hội trường mặc định:', err)
-        hall = {
-          latitude: DEFAULT_MEETING_LAT,
-          longitude: DEFAULT_MEETING_LNG,
-          radiusM: MAX_ALLOWED_DISTANCE_METERS,
-          source: 'fallback'
-        }
+      const settings = await meetingUiSettingsService.getSettings(trimmedSessionId)
+      if (settings?.gps_lat == null || settings?.gps_lng == null) {
+        throw new Error('Chưa cấu hình tọa độ hội trường cho phiên họp này.')
       }
+      hall = {
+        latitude: Number(settings.gps_lat),
+        longitude: Number(settings.gps_lng),
+        radiusM: settings.gps_radius_m || MAX_ALLOWED_DISTANCE_METERS,
+        source: 'meeting_settings'
+      }
+      hallSettingsCache.set(trimmedSessionId, hall)
     }
 
     // 2. Truy vấn dữ liệu meeting_attendance cô lập strictly theo meeting_session_id

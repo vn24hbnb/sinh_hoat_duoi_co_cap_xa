@@ -1,169 +1,44 @@
 import { supabase } from './supabaseClient'
-import bcrypt from 'bcryptjs'
-
 export interface UserSession {
-  id: string
-  username: string
-  role: 'member' | 'organizer' | 'admin'
-  mustChangePassword: boolean
-  memberId: string
-  memberName: string
-  position: string
-  chiBoId: string
-  chiBoName: string
+  id: string; username: string; role: 'member' | 'organizer' | 'admin'
+  mustChangePassword: boolean; memberId: string; memberName: string; position: string; chiBoId: string; chiBoName: string
+  organizationId: string | null; organizationName: string; isGlobalAdmin: boolean
 }
-
+export function loginEmail(identifier: string): string {
+  const aliases: Record<string, string> = { 'admin@': 'admin-global@admins.internal', 'admin@muongla': 'admin-muongla@admins.internal', 'admin@chienglao': 'admin-chienglao@admins.internal' }
+  const value = identifier.trim().toLowerCase()
+  if (aliases[value]) return aliases[value]
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)) throw new Error('Vui lòng chọn tên trong danh sách hoặc kiểm tra tài khoản quản trị.')
+  return `member-${value}@members.internal`
+}
 export const authService = {
-  /**
-   * Performs user login by querying the app_users custom table and matching hashes with bcryptjs
-   */
-  async login(username: string, passwordPlain: string): Promise<UserSession> {
-    const cleanUsername = username.toLowerCase().trim()
-
-    // 1. Fetch user from app_users
-    const { data: user, error: userError } = await supabase
-      .from('app_users')
-      .select('id, username, password_hash, role, must_change_password, is_active, member_id')
-      .eq('username', cleanUsername)
-      .single()
-
-    if (userError || !user) {
-      await supabase.from('audit_logs').insert({
-        actor_id: null,
-        action: 'LOGIN_FAILURE',
-        target_type: 'app_users',
-        metadata: { username: cleanUsername, reason: 'Tài khoản không tồn tại' }
-      }).then(() => {}, (err: any) => console.error('Lỗi ghi audit log:', err))
-
-      throw new Error('Tên đăng nhập không tồn tại trên hệ thống.')
-    }
-
-    if (!user.is_active) {
-      await supabase.from('audit_logs').insert({
-        actor_id: user.id,
-        action: 'LOGIN_FAILURE',
-        target_type: 'app_users',
-        target_id: user.id,
-        metadata: { username: user.username, reason: 'Tài khoản bị khóa' }
-      }).then(() => {}, (err: any) => console.error('Lỗi ghi audit log:', err))
-
-      throw new Error('Tài khoản của đồng chí đã bị tạm khóa. Vui lòng liên hệ Ban Tổ Chức.')
-    }
-
-    // 2. Compare bcrypt hash
-    const isMatch = bcrypt.compareSync(passwordPlain, user.password_hash)
-    if (!isMatch) {
-      await supabase.from('audit_logs').insert({
-        actor_id: user.id,
-        action: 'LOGIN_FAILURE',
-        target_type: 'app_users',
-        target_id: user.id,
-        metadata: { username: user.username, reason: 'Sai mật khẩu' }
-      }).then(() => {}, (err: any) => console.error('Lỗi ghi audit log:', err))
-
-      throw new Error('Mật khẩu không chính xác. Vui lòng thử lại.')
-    }
-
-    // 3. Fetch member and Chi Bo details
-    let session: UserSession
-    if (user.role === 'admin' && !user.member_id) {
-      session = {
-        id: user.id,
-        username: user.username,
-        role: 'admin',
-        mustChangePassword: false, // disabled by user request
-        memberId: '',
-        memberName: 'Quản trị viên hệ thống',
-        position: 'Cán bộ quản lý',
-        chiBoId: '',
-        chiBoName: 'Ban Quản trị'
-      }
-    } else {
-      const { data: member, error: memberError } = await supabase
-        .from('members')
-        .select('id, full_name, position, chi_bo_id, chi_bos(name)')
-        .eq('id', user.member_id)
-        .single()
-
-      if (memberError || !member) {
-        throw new Error('Không tìm thấy thông tin đảng viên liên kết với tài khoản này.')
-      }
-
-      session = {
-        id: user.id,
-        username: user.username,
-        role: user.role as 'member' | 'organizer' | 'admin',
-        mustChangePassword: false, // disabled by user request
-        memberId: member.id,
-        memberName: member.full_name,
-        position: member.position || 'Đảng viên',
-        chiBoId: member.chi_bo_id,
-        chiBoName: (member.chi_bos as any)?.name || 'Chưa phân chi bộ'
-      }
-    }
-
-    // 4. Update last login timestamp in background
-    await supabase
-      .from('app_users')
-      .update({ last_login_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-      .eq('id', user.id)
-
-    // 6. Record Audit log
-    await supabase.from('audit_logs').insert({
-      actor_id: user.id,
-      action: 'LOGIN',
-      target_type: 'app_users',
-      target_id: user.id,
-      metadata: { username: user.username, role: user.role }
-    })
-
-    return session
+  async currentProfile(): Promise<UserSession | null> {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return null
+    const { data, error } = await supabase.rpc('get_current_profile')
+    if (error) throw new Error('Không thể xác nhận quyền truy cập. Vui lòng đăng nhập lại.')
+    const p = Array.isArray(data) ? data[0] : data
+    if (!p || p.is_active === false) { await supabase.auth.signOut({ scope: 'local' }); return null }
+    return { id: p.id, username: p.username, role: p.role === 'super_admin' ? 'admin' : p.role,
+      mustChangePassword: false, memberId: p.member_id || '', memberName: p.full_name || 'Quản trị viên', position: p.position || 'Đảng viên',
+      chiBoId: p.chi_bo_id || '', chiBoName: p.chi_bo_name || 'Quản trị', organizationId: p.organization_id || null,
+      organizationName: p.organization_name || '', isGlobalAdmin: p.role === 'super_admin' || p.is_global_admin === true }
   },
-
-  /**
-   * Resets password hash and updates the must_change_password status in the database
-   */
-  async changePassword(userId: string, newPasswordPlain: string): Promise<void> {
-    // Generate fresh bcrypt hash (default salt cost 10)
-    const salt = bcrypt.genSaltSync(10)
-    const newHash = bcrypt.hashSync(newPasswordPlain, salt)
-
-    const { error } = await supabase
-      .from('app_users')
-      .update({
-        password_hash: newHash,
-        must_change_password: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId)
-
-    if (error) {
-      throw new Error(`Đổi mật khẩu thất bại: ${error.message}`)
-    }
-
-    // Record Audit log
-    await supabase.from('audit_logs').insert({
-      actor_id: userId,
-      action: 'CHANGE_PASSWORD',
-      target_type: 'app_users',
-      target_id: userId,
-      metadata: { timestamp: new Date().toISOString() }
-    })
+  async login(identifier: string, password: string): Promise<UserSession> {
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail(identifier), password })
+    if (error) throw new Error('Thông tin đăng nhập không đúng hoặc tài khoản tạm khóa. Vui lòng kiểm tra lại.')
+    const p = await this.currentProfile()
+    if (!p) throw new Error('Tài khoản chưa được cấp quyền sử dụng ứng dụng.')
+    return p
   },
-
-  /**
-   * Terminate local session
-   */
-  logout(userId?: string): void {
-    if (userId) {
-      // Background audit log record on logout
-      supabase.from('audit_logs').insert({
-        actor_id: userId,
-        action: 'LOGOUT',
-        target_type: 'app_users',
-        target_id: userId
-      }).then(() => {})
-    }
+  async changePassword(_userId: string, password: string): Promise<void> {
+    if (password.length < 6) throw new Error('Mật khẩu phải có ít nhất 6 ký tự.')
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) throw new Error('Không thể đổi mật khẩu. Vui lòng đăng nhập lại và thử lại.')
+  },
+  async logout(): Promise<void> {
+    const { error } = await supabase.auth.signOut({ scope: 'local' })
+    if (error) throw error
     localStorage.removeItem('session_user')
-  }
+  },
 }

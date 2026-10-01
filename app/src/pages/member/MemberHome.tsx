@@ -106,7 +106,7 @@ export const MemberHome: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([])
   const [selectedChiBo, setSelectedChiBo] = useState<ChiBo | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeOrgView, setActiveOrgView] = useState<'danguy' | 'chibo'>('danguy')
+  const [activeOrgView, setActiveOrgView] = useState<'danguy' | 'chibo'>('chibo')
   
   // States cho báo xin vắng
   const [showAbsenceModal, setShowAbsenceModal] = useState(false)
@@ -311,22 +311,18 @@ export const MemberHome: React.FC = () => {
    * Evaluates current user state and returns target redirect string
    */
   const getNextAction = (status: MemberSessionStatus, session: MeetingSession): 'ATTENDANCE' | 'EXAM' | 'RESULT' | 'WAITING' => {
-    if (status.excused) {
-      return 'WAITING'
-    }
-    if (!status.attended) {
-      if (session.status === 'attendance_open') {
-        return 'ATTENDANCE'
-      }
-      return 'WAITING' // Meeting is active but BTC hasn't opened attendance or closed it
+    if (!status.attended && !status.excused && session.status === 'attendance_open') {
+      return 'ATTENDANCE'
     }
 
-    if (status.attended && !status.examSubmitted) {
-      if (status.hasExam && session.status === 'exam_open') {
-        return 'EXAM'
-      }
-      return 'WAITING' // Attended but exam not opened yet
+    // Taking the exam does not depend on having a successful attendance record.
+    if (!status.examSubmitted && status.hasExam && session.status === 'exam_open') {
+      return 'EXAM'
     }
+
+    if (!status.attended) return 'WAITING'
+
+    if (status.attended && !status.examSubmitted) return 'WAITING'
 
     if (status.examSubmitted) {
       return 'RESULT'
@@ -387,34 +383,25 @@ export const MemberHome: React.FC = () => {
     return () => clearInterval(interval)
   }, [viewingDoc])
 
-  // 7 members of the Party Committee (Đảng ủy) defined by database position or name matching
+  // Chức danh được hiển thị theo dữ liệu đã nhập; không giả định trước danh sách cán bộ.
   const getDangUyMembers = (): Member[] => {
-    const dangUyNames = [
-      'Nguyễn Văn Bắc',
-      'Lê Huy Long',
-      'Lương Thị Loan',
-      'Lê Thị Thu Hằng',
-      'Đinh Kiều Hưng',
-      'Cao Xuân Hải',
-      'Phạm Văn Cường'
-    ]
-
     return members
-      .filter(m => dangUyNames.includes(m.full_name))
+      .filter(m => /đảng ủy viên|ủy viên ban chấp hành|bí thư đảng ủy|phó bí thư đảng ủy/i.test(m.position || ''))
       .sort((a, b) => {
-        const getPriority = (name: string) => {
-          if (name === 'Nguyễn Văn Bắc') return 1 // Bí thư Đảng ủy
-          if (name === 'Lê Huy Long') return 2   // Phó bí thư Đảng ủy
+        const getPriority = (position: string | null) => {
+          const value = position || ''
+          if (/bí thư đảng ủy/i.test(value) && !/phó/i.test(value)) return 1
+          if (/phó bí thư đảng ủy/i.test(value)) return 2
           return 3
         }
-        return getPriority(a.full_name) - getPriority(b.full_name)
+        return getPriority(a.position) - getPriority(b.position) || a.full_name.localeCompare(b.full_name, 'vi')
       })
   }
 
   const dangUyList = getDangUyMembers()
-  const biThu = dangUyList.find(m => m.full_name === 'Nguyễn Văn Bắc')
-  const phoBiThu = dangUyList.find(m => m.full_name === 'Lê Huy Long')
-  const uyVienList = dangUyList.filter(m => m.full_name !== 'Nguyễn Văn Bắc' && m.full_name !== 'Lê Huy Long')
+  const biThu = dangUyList.find(m => /bí thư đảng ủy/i.test(m.position || '') && !/phó/i.test(m.position || ''))
+  const phoBiThu = dangUyList.find(m => /phó bí thư đảng ủy/i.test(m.position || ''))
+  const uyVienList = dangUyList.filter(m => m.id !== biThu?.id && m.id !== phoBiThu?.id)
 
   // Get leader text for a Chi Bo (Bí thư, Phó Bí thư, Chi ủy viên)
   const getChiBoLeaders = (chiBoId: string) => {
@@ -463,21 +450,7 @@ export const MemberHome: React.FC = () => {
   }
 
   const getMemberRankWeight = (m: any): number => {
-    const dangUyNames = [
-      'Nguyễn Văn Bắc',
-      'Lê Huy Long',
-      'Lương Thị Loan',
-      'Lê Thị Thu Hằng',
-      'Đinh Kiều Hưng',
-      'Cao Xuân Hải',
-      'Phạm Văn Cường'
-    ]
-
     const weights: number[] = []
-
-    if (m.full_name === 'Nguyễn Văn Bắc') weights.push(10)
-    else if (m.full_name === 'Lê Huy Long') weights.push(20)
-    else if (dangUyNames.includes(m.full_name)) weights.push(30)
 
     if (m.position) {
       // Tách các chức danh kiêm nhiệm qua dấu phẩy, chấm phẩy, gạch dọc, gạch chéo, hoặc dấu và
@@ -753,7 +726,7 @@ export const MemberHome: React.FC = () => {
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-300 mb-6">
-                    <div>📍 Địa điểm: <b>{meeting.location || 'Hội trường Tỉnh'}</b></div>
+                    <div>📍 Địa điểm: <b>{meeting.location || 'Chưa cấu hình'}</b></div>
                     <div>📅 Ngày họp: <b>{meeting.meeting_date || 'Hôm nay'}{meeting.start_time && ` lúc ${formatTime(meeting.start_time)}`}</b></div>
                   </div>
 
@@ -1241,10 +1214,10 @@ export const MemberHome: React.FC = () => {
                 {/* Văn bản giới thiệu */}
                 <div className="md:col-span-8 lg:col-span-9 space-y-2">
                   <h3 className="text-sm md:text-base font-black text-red-deep dark:text-gold uppercase tracking-wider">
-                    Giới thiệu Đảng bộ Thanh tra Tỉnh
+                    {settings?.organization_name || 'Giới thiệu tổ chức đảng'}
                   </h3>
                   <p className="text-[11px] md:text-xs text-slate-700 dark:text-slate-350 leading-relaxed font-semibold">
-                    Đảng bộ Thanh tra Tỉnh là tổ chức cơ sở Đảng trực thuộc Đảng ủy Khối các cơ quan tỉnh, giữ vai trò hạt nhân chính trị lãnh đạo toàn diện mọi mặt công tác của cơ quan. Hiện nay, Đảng bộ có {members.length} Đảng viên sinh hoạt tại {chiBos.length < 10 ? '0' + chiBos.length : chiBos.length} Chi bộ trực thuộc, đoàn kết phấn đấu hoàn thành xuất sắc các nhiệm vụ chính trị, công tác thanh tra, giải quyết khiếu nại, tố cáo và phòng chống tham nhũng.
+                    Danh sách hiện có {members.length} đảng viên sinh hoạt tại {chiBos.length} chi bộ. Thông tin tổ chức và chức danh được cập nhật theo dữ liệu do quản trị viên của đơn vị cung cấp.
                   </p>
                 </div>
               </div>
@@ -1283,11 +1256,11 @@ export const MemberHome: React.FC = () => {
                   <span className="bg-gold/15 text-gold border border-gold/30 px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
                     Ban Chấp hành Đảng ủy
                   </span>
-                  <h3 className="text-xs md:text-sm font-black text-red-deep dark:text-gold uppercase tracking-wider mt-2.5">
-                    Ban Chấp hành Đảng bộ Thanh tra Tỉnh
+                    <h3 className="text-xs md:text-sm font-black text-red-deep dark:text-gold uppercase tracking-wider mt-2.5">
+                    Ban Chấp hành {settings?.organization_name || 'Đảng bộ cấp xã'}
                   </h3>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mt-0.5">
-                    Gồm 07 đồng chí Ủy viên Ban Chấp hành chỉ đạo toàn diện công tác Đảng
+                    {dangUyList.length > 0 ? `${dangUyList.length} đồng chí được ghi nhận theo chức danh đã cập nhật` : 'Thông tin Ban Chấp hành chưa được cập nhật'}
                   </p>
                 </div>
 
@@ -1348,7 +1321,7 @@ export const MemberHome: React.FC = () => {
               <div className="space-y-4 animate-fade-in">
                 <div className="text-center max-w-xl mx-auto mb-2">
                   <span className="bg-red-revolution/10 text-red-revolution border border-red-revolution/20 px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
-                    Đảng ủy cơ sở
+                  Tổ chức đảng cơ sở
                   </span>
                   <h3 className="text-xs md:text-sm font-black text-red-deep dark:text-gold uppercase tracking-wider mt-2.5">
                     Các Chi bộ trực thuộc Đảng bộ
@@ -1382,15 +1355,9 @@ export const MemberHome: React.FC = () => {
                           </div>
 
                           <div className="space-y-1 mt-2 text-[10px] md:text-[10.5px] font-semibold text-slate-600 dark:text-slate-400">
-                            <div className="truncate">
-                              👤 Bí thư: <span className="font-bold text-slate-800 dark:text-white">{leaders.biThu}</span>
-                            </div>
-                            <div className="truncate">
-                              👥 Phó BT: <span className="font-bold text-slate-800 dark:text-white">{leaders.phoBiThu}</span>
-                            </div>
-                            <div className="truncate">
-                              🎖️ Chi ủy: <span className="font-bold text-slate-750 dark:text-slate-300">{leaders.chiUyViens}</span>
-                            </div>
+                            <div className="truncate">👤 Bí thư: <span className="font-bold text-slate-800 dark:text-white">{leaders.biThu}</span></div>
+                            <div className="truncate">👥 Phó Bí thư: <span className="font-bold text-slate-800 dark:text-white">{leaders.phoBiThu}</span></div>
+                            <div className="truncate">🎖️ Chi ủy: <span className="font-bold text-slate-750 dark:text-slate-300">{leaders.chiUyViens}</span></div>
                           </div>
                         </div>
 

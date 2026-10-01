@@ -8,7 +8,7 @@ export const NewsTicker: React.FC<NewsTickerProps> = ({
   messages = [
     'Chào mừng các đồng chí đến với buổi Sinh hoạt chính trị dưới nghi thức chào cờ.',
     'Đảng Cộng sản Việt Nam quang vinh muôn năm! 🇻🇳',
-    'Nêu cao tinh thần trách nhiệm, kỷ cương, gương mẫu của người cán bộ Thanh tra.',
+    'Nêu cao tinh thần trách nhiệm, kỷ cương, gương mẫu của mỗi cán bộ, đảng viên.',
     'Học tập và làm theo tư tưởng, đạo đức, phong cách Hồ Chí Minh.'
   ]
 }) => {

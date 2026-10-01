@@ -1,6 +1,6 @@
 import React from 'react'
+import { Flag } from 'lucide-react'
 import { useUiSettings } from '../../contexts/UiSettingsContext'
-import governmentInspectorateLogo from '../../assets/government_inspectorate_logo.png'
 import bronzeDrum from '../../assets/bronze_drum.png'
 
 interface HeroBannerProps {
@@ -14,7 +14,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 }) => {
   const { settings } = useUiSettings()
 
-  const displayTitle = title || settings?.organization_name || 'ĐẢNG BỘ THANH TRA TỈNH SƠN LA'
+  const displayTitle = title || settings?.organization_name || 'ĐẢNG BỘ CẤP XÃ'
   const displaySlogan = slogan || settings?.main_slogan || 'ĐOÀN KẾT - KỶ CƯƠNG - GƯƠNG MẪU - TRÁCH NHIỆM'
   const activeBannerUrl = settings?.active_banner?.file_url
 
@@ -44,13 +44,11 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
       {/* Content wrapper with fade-in slide-up animation */}
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center gap-3 animate-slide-up">
-        {/* Government Inspectorate Logo */}
+        {/* Biểu trưng trung tính; đơn vị có thể thay bằng biểu trưng riêng trong phần giao diện. */}
         <div className="w-18 h-18 md:w-20 md:h-20 rounded-full bg-white/10 border border-gold/40 flex items-center justify-center shadow-glow overflow-hidden p-1.5 backdrop-blur-sm">
-          <img
-            src={governmentInspectorateLogo}
-            alt="Logo Thanh tra Chính phủ"
-            className="w-full h-full object-contain"
-          />
+          {settings?.active_logo?.file_url
+            ? <img src={settings.active_logo.file_url} alt="Biểu trưng đơn vị" className="w-full h-full object-contain" />
+            : <Flag aria-label="Cờ Tổ quốc" className="h-9 w-9 text-gold" />}
         </div>
 
         <h2 className="text-sm md:text-lg font-black tracking-widest text-gold drop-shadow-md uppercase mt-2">
@@ -77,4 +75,3 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 }
 
 export default HeroBanner
-

@@ -21,13 +21,8 @@ export const ChangePassword: React.FC = () => {
     e.preventDefault()
     setError('')
 
-    if (newPassword.length < 8) {
-      setError('Mật khẩu mới phải có tối thiểu 8 ký tự.')
-      return
-    }
-
-    if (newPassword === 'Thanhtra@123') {
-      setError('Mật khẩu mới không được trùng với mật khẩu mặc định.')
+    if (newPassword.length < 6) {
+      setError('Mật khẩu mới phải có tối thiểu 6 ký tự.')
       return
     }
 
@@ -65,7 +60,7 @@ export const ChangePassword: React.FC = () => {
               Đổi mật khẩu mới
             </h2>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-              Đồng chí đang sử dụng mật khẩu mặc định. Vui lòng cập nhật để bảo mật tài khoản.
+              Đổi mật khẩu là tùy chọn. Mật khẩu mới cần có ít nhất 6 ký tự.
             </p>
           </div>
 

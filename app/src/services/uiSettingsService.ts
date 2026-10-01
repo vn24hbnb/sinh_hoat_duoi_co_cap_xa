@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { tenantService } from './tenantService'
 
 export interface UiSettings {
   id: string
@@ -57,6 +58,7 @@ export const uiSettingsService = {
         active_banner:ui_settings_banner_fk(file_url),
         active_logo:ui_settings_logo_fk(file_url)
       `)
+      .eq('organization_id', tenantService.requireOrganizationId())
       .eq('is_active', true)
       .limit(1)
       .maybeSingle()
@@ -89,7 +91,7 @@ export const uiSettingsService = {
     return {
       id: '',
       site_name: 'Sinh hoạt chính trị dưới nghi thức chào cờ',
-      organization_name: 'ĐẢNG BỘ THANH TRA TỈNH SƠN LA',
+      organization_name: 'ĐẢNG BỘ CẤP XÃ',
       login_title: 'ĐĂNG NHẬP CUỘC HỌP',
       home_title: 'Sinh hoạt chính trị dưới nghi thức chào cờ',
       welcome_message: 'Chào mừng các đồng chí tham dự phiên sinh hoạt',
@@ -138,6 +140,7 @@ export const uiSettingsService = {
     const { data: existing } = await supabase
       .from('ui_settings')
       .select('id')
+      .eq('organization_id', tenantService.requireOrganizationId())
       .eq('is_active', true)
       .limit(1)
       .maybeSingle()
@@ -189,7 +192,7 @@ export const uiSettingsService = {
     } else {
       let { data, error } = await supabase
         .from('ui_settings')
-        .insert({ ...cleanSettings, is_active: true })
+        .insert({ ...cleanSettings, organization_id: tenantService.requireOrganizationId(), is_active: true })
         .select('*')
         .single()
       
@@ -198,7 +201,7 @@ export const uiSettingsService = {
           const { home_background_opacity, login_background_opacity, ...fallbackSettings } = cleanSettings
           const { data: retryData, error: retryError } = await supabase
             .from('ui_settings')
-            .insert({ ...fallbackSettings, is_active: true })
+            .insert({ ...fallbackSettings, organization_id: tenantService.requireOrganizationId(), is_active: true })
             .select('*')
             .single()
           
@@ -227,6 +230,7 @@ export const uiSettingsService = {
 
     // Log audit log
     await supabase.from('audit_logs').insert({
+      organization_id: tenantService.requireOrganizationId(),
       actor_id: actorId,
       action: 'UPDATE_UI_SETTINGS',
       target_type: 'ui_settings',
@@ -265,8 +269,9 @@ export const uiSettingsService = {
     }
 
     // 3. Upload to Supabase Storage bucket 'ui-assets'
-    const fileName = `${assetType}_${Date.now()}.${fileExt}`
-    const filePath = `uploads/${fileName}`
+    const organizationId = tenantService.requireOrganizationId()
+    const fileName = `${assetType}_${Date.now()}_${crypto.randomUUID()}.${fileExt}`
+    const filePath = `${organizationId}/uploads/${fileName}`
 
     const { error: uploadError } = await supabase.storage
       .from('ui-assets')
@@ -291,6 +296,7 @@ export const uiSettingsService = {
     const { data: asset, error: dbError } = await supabase
       .from('ui_assets')
       .insert({
+        organization_id: organizationId,
         asset_name: file.name,
         asset_type: assetType,
         file_url: fileUrl,
@@ -313,6 +319,7 @@ export const uiSettingsService = {
 
     // 6. Log audit log
     await supabase.from('audit_logs').insert({
+      organization_id: organizationId,
       actor_id: actorId,
       action: 'UPLOAD_UI_ASSET',
       target_type: 'ui_assets',
@@ -330,6 +337,7 @@ export const uiSettingsService = {
     const { data, error } = await supabase
       .from('ui_assets')
       .select('*')
+      .eq('organization_id', tenantService.requireOrganizationId())
       .eq('asset_type', assetType)
       .order('created_at', { ascending: false })
 
@@ -353,6 +361,7 @@ export const uiSettingsService = {
     const { error: resetError } = await supabase
       .from('ui_assets')
       .update({ is_active: false })
+      .eq('organization_id', tenantService.requireOrganizationId())
       .eq('asset_type', assetType)
 
     if (resetError) {
@@ -363,6 +372,7 @@ export const uiSettingsService = {
     const { error: setActiveError } = await supabase
       .from('ui_assets')
       .update({ is_active: true })
+      .eq('organization_id', tenantService.requireOrganizationId())
       .eq('id', assetId)
 
     if (setActiveError) {
@@ -385,6 +395,7 @@ export const uiSettingsService = {
 
     // 4. Log audit log
     await supabase.from('audit_logs').insert({
+      organization_id: tenantService.requireOrganizationId(),
       actor_id: actorId,
       action: 'ACTIVATE_UI_ASSET',
       target_type: 'ui_assets',
@@ -415,9 +426,10 @@ export const uiSettingsService = {
 
     // 2. Delete metadata from ui_assets in DB
     const { error: dbError } = await supabase
-      .from('ui_assets')
-      .delete()
-      .eq('id', assetId)
+        .from('ui_assets')
+        .delete()
+        .eq('organization_id', tenantService.requireOrganizationId())
+        .eq('id', assetId)
 
     if (dbError) {
       throw new Error(`Lỗi xóa metadata ảnh trong DB: ${dbError.message}`)
@@ -425,6 +437,7 @@ export const uiSettingsService = {
 
     // 3. Log audit log
     await supabase.from('audit_logs').insert({
+      organization_id: tenantService.requireOrganizationId(),
       actor_id: actorId,
       action: 'DELETE_UI_ASSET',
       target_type: 'ui_assets',

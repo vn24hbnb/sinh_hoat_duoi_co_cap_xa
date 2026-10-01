@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { PatternBackground } from '../../components/ui/PatternBackground'
 import { PortalHeader } from '../../components/layout/PortalHeader'
 import { RedNavigationBar } from '../../components/layout/RedNavigationBar'
@@ -7,6 +7,7 @@ import { RevolutionaryButton } from '../../components/ui/RevolutionaryButton'
 import { AlertMessage } from '../../components/ui/AlertMessage'
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
 import { examService } from '../../services/examService'
+import { tenantService } from '../../services/tenantService'
 import { supabase } from '../../services/supabaseClient'
 import { useAuth } from '../../contexts/AuthContext'
 import { BookOpen, Plus, Trash2, Upload, Clipboard, FileText, CheckCircle, X, ChevronRight, HelpCircle } from 'lucide-react'
@@ -44,7 +45,11 @@ interface ParsedQuestion {
 }
 
 export const QuestionManager: React.FC = () => {
-  const { user } = useAuth()
+  const { user, organizationId } = useAuth()
+  const bankRequestSequenceRef = useRef(0)
+  const questionRequestSequenceRef = useRef(0)
+  const loadedOrganizationIdRef = useRef<string | null>(null)
+  const [loadedOrganizationId, setLoadedOrganizationId] = useState<string | null>(null)
   const [banks, setBanks] = useState<QuestionBank[]>([])
   const [selectedBank, setSelectedBank] = useState<QuestionBank | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
@@ -77,46 +82,84 @@ export const QuestionManager: React.FC = () => {
   const [previewQuestions, setPreviewQuestions] = useState<ParsedQuestion[]>([])
   const [fileName, setFileName] = useState('')
 
-  const loadBanks = async (selectFirst = false) => {
+  const loadBanks = useCallback(async (selectFirst = false) => {
+    const requestId = ++bankRequestSequenceRef.current
+    const isCurrentRequest = () => requestId === bankRequestSequenceRef.current && tenantService.getOrganizationId() === organizationId
+    await Promise.resolve()
+    if (!isCurrentRequest()) return
+    const organizationChanged = loadedOrganizationIdRef.current !== organizationId
+    if (organizationChanged) {
+      setBanks([])
+      setSelectedBank(null)
+      setQuestions([])
+      setLoadingQuestions(false)
+    }
+    setLoading(true)
+    if (!organizationId) {
+      loadedOrganizationIdRef.current = null
+      setLoadedOrganizationId(null)
+      setLoading(false)
+      return
+    }
     try {
       const data = await examService.getQuestionBanks()
+      if (!isCurrentRequest()) return
       setBanks(data)
-      if (selectFirst && data.length > 0 && !selectedBank) {
-        setSelectedBank(data[0])
+      if (selectFirst) {
+        setSelectedBank(data[0] || null)
       }
+      loadedOrganizationIdRef.current = organizationId
+      setLoadedOrganizationId(organizationId)
     } catch (err: any) {
+      if (!isCurrentRequest()) return
       setError('Không thể tải danh sách bộ đề: ' + err.message)
+      if (organizationChanged) {
+        loadedOrganizationIdRef.current = organizationId
+        setLoadedOrganizationId(organizationId)
+      }
     } finally {
-      setLoading(false)
+      if (isCurrentRequest()) setLoading(false)
     }
-  }
+  }, [organizationId])
 
-  const loadQuestions = async (bankId: string) => {
+  const loadQuestions = useCallback(async (bankId: string) => {
+    const requestId = ++questionRequestSequenceRef.current
+    const isCurrentRequest = () => requestId === questionRequestSequenceRef.current && tenantService.getOrganizationId() === organizationId
     setLoadingQuestions(true)
     try {
       const data = await examService.getQuestions(bankId)
+      if (!isCurrentRequest()) return
       setQuestions(data)
     } catch (err: any) {
+      if (!isCurrentRequest()) return
       setError('Không thể tải danh sách câu hỏi: ' + err.message)
     } finally {
-      setLoadingQuestions(false)
+      if (isCurrentRequest()) setLoadingQuestions(false)
     }
-  }
+  }, [organizationId])
 
   useEffect(() => {
-    loadBanks(true)
-  }, [])
+    const timer = window.setTimeout(() => { void loadBanks(true) }, 0)
+    return () => {
+      window.clearTimeout(timer)
+      bankRequestSequenceRef.current += 1
+      questionRequestSequenceRef.current += 1
+    }
+  }, [loadBanks])
 
   useEffect(() => {
-    if (selectedBank) {
-      loadQuestions(selectedBank.id)
-      setActiveTab('list')
-      setPreviewQuestions([])
-      setFileName('')
-    } else {
-      setQuestions([])
-    }
-  }, [selectedBank])
+    const timer = window.setTimeout(() => {
+      if (selectedBank) {
+        void loadQuestions(selectedBank.id)
+        setActiveTab('list')
+        setPreviewQuestions([])
+        setFileName('')
+      } else {
+        setQuestions([])
+      }
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [selectedBank, loadQuestions])
 
   const handleCreateBank = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -139,6 +182,7 @@ export const QuestionManager: React.FC = () => {
       // Ghi audit log
       if (user) {
         await supabase.from('audit_logs').insert({
+          organization_id: tenantService.requireOrganizationId(),
           actor_id: user.id,
           action: 'CREATE_QUESTION_BANK',
           target_type: 'question_banks',
@@ -177,6 +221,7 @@ export const QuestionManager: React.FC = () => {
       // Ghi audit log
       if (user) {
         await supabase.from('audit_logs').insert({
+          organization_id: tenantService.requireOrganizationId(),
           actor_id: user.id,
           action: 'DELETE_QUESTION_BANK',
           target_type: 'question_banks',
@@ -217,6 +262,7 @@ export const QuestionManager: React.FC = () => {
       // Ghi audit log
       if (user) {
         await supabase.from('audit_logs').insert({
+          organization_id: tenantService.requireOrganizationId(),
           actor_id: user.id,
           action: 'CREATE_QUESTION',
           target_type: 'questions',
@@ -261,6 +307,7 @@ export const QuestionManager: React.FC = () => {
       // Ghi audit log
       if (user) {
         await supabase.from('audit_logs').insert({
+          organization_id: tenantService.requireOrganizationId(),
           actor_id: user.id,
           action: 'IMPORT_QUESTIONS',
           target_type: 'question_banks',
@@ -577,6 +624,7 @@ export const QuestionManager: React.FC = () => {
       // Ghi audit log
       if (user) {
         await supabase.from('audit_logs').insert({
+          organization_id: tenantService.requireOrganizationId(),
           actor_id: user.id,
           action: 'IMPORT_QUESTIONS',
           target_type: 'question_banks',
@@ -610,6 +658,7 @@ export const QuestionManager: React.FC = () => {
       // Ghi audit log
       if (user) {
         await supabase.from('audit_logs').insert({
+          organization_id: tenantService.requireOrganizationId(),
           actor_id: user.id,
           action: 'DELETE_QUESTION',
           target_type: 'questions',
@@ -627,7 +676,7 @@ export const QuestionManager: React.FC = () => {
     }
   }
 
-  if (loading) {
+  if (loading || loadedOrganizationId !== organizationId) {
     return <LoadingSpinner message="Đang tải dữ liệu Ngân hàng câu hỏi..." fullScreen />
   }
 

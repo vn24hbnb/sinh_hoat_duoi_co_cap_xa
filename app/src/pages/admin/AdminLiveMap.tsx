@@ -14,6 +14,7 @@ import { mapAttendanceService } from '../../services/mapAttendanceService'
 import type { SessionMapData } from '../../types/mapAttendance'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../services/supabaseClient'
+import { tenantService } from '../../services/tenantService'
 
 interface ChiBo {
   id: string
@@ -25,7 +26,7 @@ interface MapboxMapInstance {
   addControl: (control: unknown, position?: string) => void
   on: (event: string, callback: () => void) => void
   flyTo: (options: { center: [number, number]; zoom?: number; speed?: number }) => void
-  jumpTo: (options: { center: [number, number] }) => void
+  jumpTo: (options: { center: [number, number]; zoom?: number }) => void
 }
 
 interface MapboxMarkerInstance {
@@ -75,7 +76,7 @@ const createGeoJSONCircle = (center: [number, number], radiusInMeters: number, p
 
 export const AdminLiveMap: React.FC = () => {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, organizationId } = useAuth()
 
   // State quản lý phiên họp & lọc
   const [meetings, setMeetings] = useState<MeetingSession[]>([])
@@ -84,6 +85,7 @@ export const AdminLiveMap: React.FC = () => {
 
   // Model dữ liệu bản đồ hợp đồng duy nhất từ mapAttendanceService
   const [mapData, setMapData] = useState<SessionMapData | null>(null)
+  const [loadedOrganizationId, setLoadedOrganizationId] = useState<string | null>(null)
 
   // Bộ lọc UI
   const [selectedChiBoId, setSelectedChiBoId] = useState<string>('all')
@@ -106,43 +108,84 @@ export const AdminLiveMap: React.FC = () => {
   const markersRef = useRef<MapboxMarkerInstance[]>([])
 
   const activeAbortControllerRef = useRef<AbortController | null>(null)
+  const initializationSequenceRef = useRef(0)
   const requestSequenceRef = useRef<number>(0)
   const isFetchingRef = useRef<boolean>(false)
   const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // 1. Tải danh sách Chi bộ & Phiên họp khi mount
+  // 1. Tải lại danh sách Chi bộ & Phiên họp mỗi khi admin@ đổi xã.
   useEffect(() => {
+    const requestId = ++initializationSequenceRef.current
+    const requestOrganizationId = organizationId
+    let cancelled = false
+    const isCurrentRequest = () => !cancelled && requestId === initializationSequenceRef.current && tenantService.getOrganizationId() === requestOrganizationId
+
+    activeAbortControllerRef.current?.abort()
+    activeAbortControllerRef.current = null
+    requestSequenceRef.current += 1
+    isFetchingRef.current = false
     const initData = async () => {
-      setInitialLoading(true)
+      await Promise.resolve()
+      if (!isCurrentRequest()) return
+      setLoadedOrganizationId(null)
+      setMeetings([])
+      setSelectedMeetingId('')
+      setChiBos([])
+      setMapData(null)
+      setSelectedChiBoId('all')
+      setSelectedLocationStatus('all')
+      setSearchMemberQuery('')
+      setIsDynamicMode(false)
+      setLoadError('')
+      setInitialLoading(Boolean(requestOrganizationId))
+      if (!requestOrganizationId) {
+        setInitialLoading(false)
+        return
+      }
       try {
         const { data: cbData } = await supabase.from('chi_bos').select('id, name').order('name')
+        if (!isCurrentRequest()) return
         if (cbData) setChiBos(cbData)
 
         const allSessions = await meetingService.getMeetingList()
+        if (!isCurrentRequest()) return
         setMeetings(allSessions)
 
         const active = allSessions.find((s: MeetingSession) => s.status === 'attendance_open' || s.status === 'active') || allSessions[0]
-        if (active) {
-          setSelectedMeetingId(active.id)
-        }
+        setSelectedMeetingId(active?.id || '')
+        setLoadedOrganizationId(requestOrganizationId)
       } catch (err: unknown) {
+        if (!isCurrentRequest()) return
         const message = err instanceof Error ? err.message : String(err)
         setLoadError('Lỗi tải dữ liệu phiên họp: ' + message)
       } finally {
-        setInitialLoading(false)
+        if (isCurrentRequest()) setInitialLoading(false)
       }
     }
 
-    initData()
-  }, [])
+    void initData()
+    return () => {
+      cancelled = true
+      initializationSequenceRef.current += 1
+      activeAbortControllerRef.current?.abort()
+      requestSequenceRef.current += 1
+      isFetchingRef.current = false
+    }
+  }, [organizationId])
 
   // 2. Hàm điều phối tải dữ liệu trung tâm qua mapAttendanceService
   const loadSessionMapData = useCallback(async (
     targetMeetingId: string,
     mode: 'initial' | 'manual' | 'background'
   ) => {
-    if (!targetMeetingId) return
+    if (!targetMeetingId || loadedOrganizationId !== organizationId || tenantService.getOrganizationId() !== organizationId) return
     if (mode === 'background' && isFetchingRef.current) return
+
+    // Reserve a sequence before yielding so a later request invalidates this one.
+    const currentSeq = ++requestSequenceRef.current
+    isFetchingRef.current = true
+    await Promise.resolve()
+    if (currentSeq !== requestSequenceRef.current || tenantService.getOrganizationId() !== organizationId) return
 
     // Hủy request cũ đang chạy nếu có
     if (activeAbortControllerRef.current) {
@@ -150,9 +193,6 @@ export const AdminLiveMap: React.FC = () => {
     }
     const abortController = new AbortController()
     activeAbortControllerRef.current = abortController
-
-    const currentSeq = ++requestSequenceRef.current
-    isFetchingRef.current = true
 
     if (mode === 'initial') {
       setInitialLoading(true)
@@ -174,7 +214,7 @@ export const AdminLiveMap: React.FC = () => {
     } catch (err: unknown) {
       if (abortController.signal.aborted || currentSeq !== requestSequenceRef.current) return
       const message = err instanceof Error ? err.message : String(err)
-      setLoadError('Không thể tải dữ liệu vị trí của phiên họp. Vui lòng thử lại.')
+      setLoadError(message || 'Không thể tải dữ liệu vị trí của phiên họp. Vui lòng thử lại.')
       console.error('Lỗi tải dữ liệu bản đồ:', message)
     } finally {
       if (currentSeq === requestSequenceRef.current) {
@@ -183,22 +223,16 @@ export const AdminLiveMap: React.FC = () => {
         if (mode === 'manual') setRefreshing(false)
       }
     }
-  }, [])
+  }, [loadedOrganizationId, organizationId])
 
   // 3. Tải lại khi thay đổi phiên họp
   useEffect(() => {
-    let isMounted = true
-    if (selectedMeetingId) {
-      Promise.resolve().then(() => {
-        if (isMounted) {
-          loadSessionMapData(selectedMeetingId, 'initial')
-        }
-      })
+    if (loadedOrganizationId !== organizationId) return
+    if (selectedMeetingId && meetings.some(meeting => meeting.id === selectedMeetingId)) {
+      const timer = window.setTimeout(() => { void loadSessionMapData(selectedMeetingId, 'initial') }, 0)
+      return () => window.clearTimeout(timer)
     }
-    return () => {
-      isMounted = false
-    }
-  }, [selectedMeetingId, loadSessionMapData])
+  }, [selectedMeetingId, meetings, organizationId, loadedOrganizationId, loadSessionMapData])
 
   // 4. Polling đệ quy an toàn bằng setTimeout & Page Visibility API
   useEffect(() => {
@@ -274,7 +308,7 @@ export const AdminLiveMap: React.FC = () => {
     markersRef.current.forEach(m => m.remove())
     markersRef.current = []
 
-    if (!mapData) return
+    if (!mapData?.hall) return
 
     const hall = mapData.hall
     const mapboxGlobal = mapboxgl as {
@@ -523,8 +557,9 @@ export const AdminLiveMap: React.FC = () => {
       }
       mapboxgl.accessToken = MAPBOX_TOKEN
 
-      const hallLat = mapData?.hall?.latitude ?? 21.328400
-      const hallLng = mapData?.hall?.longitude ?? 103.912500
+      const hallLat = mapData?.hall?.latitude ?? 0
+      const hallLng = mapData?.hall?.longitude ?? 0
+      const hasVenue = Boolean(mapData?.hall)
 
       if (mapInstanceRef.current) {
         try {
@@ -567,9 +602,9 @@ export const AdminLiveMap: React.FC = () => {
         container: mapContainerRef.current,
         style: activeStyle,
         center: [hallLng, hallLat],
-        zoom: 15.0, // Zoom rộng hơn bao quát trọn vẹn toàn bộ vòng tròn bán kính điểm danh
+        zoom: hasVenue ? 15.0 : 2,
         maxZoom: 18.5,
-        minZoom: 5
+        minZoom: hasVenue ? 5 : 1
       })
 
       map.addControl(new mapboxgl.NavigationControl(), 'top-right')
@@ -613,6 +648,15 @@ export const AdminLiveMap: React.FC = () => {
     const mapboxglObj = (window as unknown as Record<string, unknown>).mapboxgl
     if (mapInstanceRef.current && mapboxglObj) {
       renderMapMarkers(mapInstanceRef.current, mapboxglObj)
+      if (mapData?.hall) {
+        mapInstanceRef.current.flyTo({
+          center: [mapData.hall.longitude, mapData.hall.latitude],
+          zoom: 15,
+          speed: 1.2
+        })
+      } else {
+        mapInstanceRef.current.jumpTo({ center: [0, 0], zoom: 2 })
+      }
     }
   }, [filteredPoints, mapData, renderMapMarkers])
 
@@ -640,7 +684,7 @@ export const AdminLiveMap: React.FC = () => {
     navigate('/login')
   }
 
-  if (initialLoading) {
+  if (initialLoading || loadedOrganizationId !== organizationId) {
     return <LoadingSpinner message="Đang tải bản đồ giám sát điểm danh..." fullScreen />
   }
 
@@ -653,12 +697,7 @@ export const AdminLiveMap: React.FC = () => {
     unknown: 0
   }
 
-  const hall = mapData?.hall || {
-    latitude: 21.328400,
-    longitude: 103.912500,
-    radiusM: 100,
-    source: 'fallback'
-  }
+  const hall = mapData?.hall ?? null
 
   return (
     <PatternBackground>
@@ -744,7 +783,7 @@ export const AdminLiveMap: React.FC = () => {
                 onChange={(e) => setSelectedChiBoId(e.target.value)}
                 className="w-full text-xs font-bold p-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 focus:border-red-revolution"
               >
-                <option value="all">-- Tất cả 08 Chi bộ --</option>
+                <option value="all">-- Tất cả {chiBos.length} chi bộ --</option>
                 {chiBos.map((cb) => (
                   <option key={cb.id} value={cb.id}>{cb.name}</option>
                 ))}
@@ -801,9 +840,13 @@ export const AdminLiveMap: React.FC = () => {
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 ml-2">
                   • Tổng điểm danh: <b>{summary.totalAttendance}</b>
                 </span>
-                <span className="text-[10px] text-slate-400 ml-1">
-                  (Bán kính: <b>{hall.radiusM}m</b> • Diện tích: <b className="text-red-revolution dark:text-gold">{((Math.PI * Math.pow(hall.radiusM, 2)) / 10000).toFixed(4)} ha</b>)
-                </span>
+                {hall ? (
+                  <span className="text-[10px] text-slate-400 ml-1">
+                    (Bán kính: <b>{hall.radiusM}m</b> • Diện tích: <b className="text-red-revolution dark:text-gold">{((Math.PI * Math.pow(hall.radiusM, 2)) / 10000).toFixed(4)} ha</b>)
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-amber-600 ml-1">Chưa cấu hình vị trí điểm danh cho phiên này</span>
+                )}
               </div>
 
               {/* Nút chuyển chế độ bản đồ: Google Maps Mới Nhất vs Mapbox */}

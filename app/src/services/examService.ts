@@ -1,3 +1,4 @@
+import { tenantService } from './tenantService'
 import { supabase } from './supabaseClient'
 
 export interface MeetingExam {
@@ -43,6 +44,7 @@ export const examService = {
     const { data, error } = await supabase
       .from('meeting_exams')
       .select('*')
+      .eq('organization_id', tenantService.requireOrganizationId())
       .eq('meeting_session_id', meetingSessionId)
       .eq('status', 'open')
       .maybeSingle()
@@ -55,401 +57,31 @@ export const examService = {
     return data as MeetingExam | null
   },
 
-  /**
-   * Get an existing in-progress attempt or create a new one with randomized fixed questions
-   */
-  async getOrCreateAttempt(
-    examId: string,
-    memberId: string,
-    meetingSessionId: string
-  ): Promise<{ attempt: ExamAttempt; questions: ExamQuestion[]; timeLeftSeconds: number }> {
-    // 0. Fetch exam configuration to verify
-    const { data: exam, error: examError } = await supabase
-      .from('meeting_exams')
-      .select('*')
-      .eq('id', examId)
-      .single()
-
-    if (examError || !exam) {
-      throw new Error('Không tìm thấy thông tin bài kiểm tra.')
-    }
-
-    if (exam.status !== 'open') {
-      throw new Error('Bài kiểm tra hiện tại chưa được mở hoặc đã đóng.')
-    }
-
-    // 1. Check for existing attempt
-    const { data: existingAttempt, error: attemptError } = await supabase
-      .from('exam_attempts')
-      .select('*')
-      .eq('meeting_exam_id', examId)
-      .eq('member_id', memberId)
-      .maybeSingle()
-
-    if (attemptError) {
-      console.error('Error checking existing attempt:', attemptError.message)
-    }
-
-    if (existingAttempt) {
-      // Case A: Attempt is already submitted
-      if (existingAttempt.status === 'submitted') {
-        if (!existingAttempt.allow_retake) {
-          throw new Error('Đồng chí đã hoàn thành bài kiểm tra này và không được làm lại.')
-        }
-        // If allow_retake is true, we will archive/cancel the old one or reset it.
-        // For simplicity and database constraint UNIQUE, we will update the existing attempt
-        // to reset its state, allowing the user to redo it.
-        await this.resetAttemptForRetake(existingAttempt.id)
-        return this.getOrCreateAttempt(examId, memberId, meetingSessionId)
-      }
-
-      // Case B: Attempt in progress ('started')
-      const startedAt = new Date(existingAttempt.started_at).getTime()
-      const now = Date.now()
-      const elapsedSeconds = Math.floor((now - startedAt) / 1000)
-      const durationSeconds = existingAttempt.duration_seconds || exam.duration_seconds
-
-      // If time has expired, auto-submit the attempt
-      if (elapsedSeconds >= durationSeconds) {
-        await this.submitAttempt(existingAttempt.id)
-        throw new Error('Đã hết thời gian làm bài. Hệ thống đã tự động thu bài của đồng chí.')
-      }
-
-      // Fetch questions already stored in exam_attempt_answers
-      const { data: savedAnswers, error: answersError } = await supabase
-        .from('exam_attempt_answers')
-        .select('id, question_id, selected_option, question_snapshot')
-        .eq('exam_attempt_id', existingAttempt.id)
-        .order('created_at', { ascending: true })
-
-      if (answersError || !savedAnswers || savedAnswers.length === 0) {
-        // If answers are missing, recreate questions
-        console.warn('Saved answers not found, reconstructing...')
-        const questions = await this.generateAndSaveQuestions(existingAttempt.id, examId, exam.questions_per_user)
-        return {
-          attempt: existingAttempt as ExamAttempt,
-          questions,
-          timeLeftSeconds: durationSeconds - elapsedSeconds
-        }
-      }
-
-      const questions: ExamQuestion[] = savedAnswers.map((ans: any) => {
-        const snap = ans.question_snapshot
-        return {
-          id: ans.question_id,
-          content: snap?.content || 'Câu hỏi',
-          optionA: snap?.option_a || '',
-          optionB: snap?.option_b || '',
-          optionC: snap?.option_c || '',
-          optionD: snap?.option_d || '',
-          selectedOption: ans.selected_option
-        }
-      })
-
-      return {
-        attempt: existingAttempt as ExamAttempt,
-        questions,
-        timeLeftSeconds: durationSeconds - elapsedSeconds
-      }
-    }
-
-    // 2. Create new attempt
-    const { data: newAttempt, error: createError } = await supabase
-      .from('exam_attempts')
-      .insert({
-        meeting_exam_id: examId,
-        meeting_session_id: meetingSessionId,
-        member_id: memberId,
-        status: 'started',
-        duration_seconds: exam.duration_seconds,
-        total_questions: exam.questions_per_user
-      })
-      .select('*')
-      .single()
-
-    if (createError || !newAttempt) {
-      console.error('Error creating attempt:', createError?.message)
-      throw new Error(`Không thể bắt đầu làm bài thi: ${createError?.message}`)
-    }
-
-    // 3. Generate questions and save empty answers
-    const questions = await this.generateAndSaveQuestions(newAttempt.id, examId, exam.questions_per_user)
-
-    return {
-      attempt: newAttempt as ExamAttempt,
-      questions,
-      timeLeftSeconds: exam.duration_seconds
-    }
+  // The server owns identity, question selection, deadline and grading.
+  async getOrCreateAttempt(examId: string, _memberId: string, _meetingSessionId: string): Promise<{ attempt: ExamAttempt; questions: ExamQuestion[]; timeLeftSeconds: number }> {
+    const { data, error } = await supabase.rpc('exam_start', { p_exam_id: examId })
+    if (error) throw new Error(error.message)
+    if (!data?.attempt || !Array.isArray(data.questions)) throw new Error('Dữ liệu bài thi không hợp lệ.')
+    return data
   },
 
-  /**
-   * Helper to reset an attempt to 'started' for a retake (if authorized)
-   */
-  async resetAttemptForRetake(attemptId: string): Promise<void> {
-    // Delete old answers
-    await supabase
-      .from('exam_attempt_answers')
-      .delete()
-      .eq('exam_attempt_id', attemptId)
-
-    // Update attempt
-    const { error } = await supabase
-      .from('exam_attempts')
-      .update({
-        status: 'started',
-        started_at: new Date().toISOString(),
-        submitted_at: null,
-        score: null,
-        correct_count: null,
-        duration_seconds: 600, // default reset duration
-        allow_retake: false // consume the retake privilege
-      })
-      .eq('id', attemptId)
-
-    if (error) {
-      console.error('Error resetting attempt:', error.message)
-      throw new Error('Không thể khởi tạo lại bài thi.')
-    }
-  },
-
-  /**
-   * Helper to fetch questions from bank, shuffle them, and insert empty answer templates
-   */
-  async generateAndSaveQuestions(
-    attemptId: string,
-    examId: string,
-    count: number
-  ): Promise<ExamQuestion[]> {
-    // 1. Get question banks linked to the exam
-    const { data: banks, error: banksError } = await supabase
-      .from('meeting_exam_banks')
-      .select('question_bank_id')
-      .eq('meeting_exam_id', examId)
-
-    if (banksError || !banks || banks.length === 0) {
-      throw new Error('Bài thi hiện chưa được gán ngân hàng câu hỏi nào.')
-    }
-
-    const bankIds = banks.map(b => b.question_bank_id)
-
-    // 2. Fetch active questions from these banks
-    const { data: questionsList, error: qError } = await supabase
-      .from('questions')
-      .select('*')
-      .in('question_bank_id', bankIds)
-      .eq('is_active', true)
-
-    if (qError || !questionsList || questionsList.length === 0) {
-      throw new Error('Không có câu hỏi nào hoạt động trong ngân hàng câu hỏi.')
-    }
-
-    // 3. Shuffle and pick N questions
-    const shuffled = [...questionsList].sort(() => 0.5 - Math.random())
-    const selected = shuffled.slice(0, Math.min(count, shuffled.length))
-
-    // 4. Save into exam_attempt_answers and map to ExamQuestion type
-    const insertPayload = selected.map((q) => ({
-      exam_attempt_id: attemptId,
-      question_id: q.id,
-      selected_option: null,
-      correct_option: q.correct_option, // save correct option snapshot
-      question_snapshot: {
-        content: q.content,
-        option_a: q.option_a,
-        option_b: q.option_b,
-        option_c: q.option_c,
-        option_d: q.option_d
-      }
-    }))
-
-    const { error: insertError } = await supabase
-      .from('exam_attempt_answers')
-      .insert(insertPayload)
-
-    if (insertError) {
-      throw new Error(`Không thể khởi tạo bộ đề thi: ${insertError.message}`)
-    }
-
-    return selected.map((q) => ({
-      id: q.id,
-      content: q.content,
-      optionA: q.option_a,
-      optionB: q.option_b,
-      optionC: q.option_c,
-      optionD: q.option_d,
-      selectedOption: null
-    }))
-  },
-
-  /**
-   * Save member's selected answer for a specific question during the exam
-   */
   async saveAnswer(attemptId: string, questionId: string, selectedOption: string): Promise<void> {
-    const { error } = await supabase
-      .from('exam_attempt_answers')
-      .update({ selected_option: selectedOption })
-      .eq('exam_attempt_id', attemptId)
-      .eq('question_id', questionId)
-
-    if (error) {
-      console.error('Error saving answer:', error.message)
-      throw new Error('Không thể lưu câu trả lời. Vui lòng kiểm tra lại kết nối mạng.')
-    }
+    const { error } = await supabase.rpc('exam_save_answer', {
+      p_attempt_id: attemptId, p_question_id: questionId, p_selected_option: selectedOption
+    })
+    if (error) throw new Error(error.message)
   },
 
-  /**
-   * Submit and automatically grade the exam attempt
-   */
   async submitAttempt(attemptId: string): Promise<ExamAttempt> {
-    // 1. Get attempt info
-    const { data: attempt, error: attemptError } = await supabase
-      .from('exam_attempts')
-      .select('*')
-      .eq('id', attemptId)
-      .single()
-
-    if (attemptError || !attempt) {
-      throw new Error('Không tìm thấy thông tin bài thi tương ứng.')
-    }
-
-    if (attempt.status === 'submitted') {
-      return attempt as ExamAttempt
-    }
-
-    // 2. Fetch all student answers
-    const { data: answers, error: answersError } = await supabase
-      .from('exam_attempt_answers')
-      .select('*')
-      .eq('exam_attempt_id', attemptId)
-
-    if (answersError || !answers) {
-      throw new Error('Không thể tải các đáp án đã làm.')
-    }
-
-    // 3. Score and flag correctness
-    let correctCount = 0
-    const totalQuestions = answers.length
-
-    for (const ans of answers) {
-      const isCorrect = ans.selected_option === ans.correct_option
-      if (isCorrect) {
-        correctCount++
-      }
-
-      // Update correct flag in database for this answer
-      await supabase
-        .from('exam_attempt_answers')
-        .update({ is_correct: isCorrect })
-        .eq('id', ans.id)
-    }
-
-    // Calculate score (based on score_scale, usually 10)
-    const { data: exam } = await supabase
-      .from('meeting_exams')
-      .select('score_scale, duration_seconds')
-      .eq('id', attempt.meeting_exam_id)
-      .single()
-
-    const scoreScale = exam?.score_scale || 10
-    const maxDuration = exam?.duration_seconds || 600
-    const score = totalQuestions > 0 ? Number(((correctCount / totalQuestions) * scoreScale).toFixed(2)) : 0
-
-    // Compute active duration seconds
-    const startedTime = new Date(attempt.started_at).getTime()
-    const nowTime = Date.now()
-    const elapsedSeconds = Math.max(0, Math.floor((nowTime - startedTime) / 1000))
-    const finalDuration = Math.min(elapsedSeconds, maxDuration)
-
-    // 4. Update attempt state
-    const { data: updatedAttempt, error: updateError } = await supabase
-      .from('exam_attempts')
-      .update({
-        status: 'submitted',
-        submitted_at: new Date().toISOString(),
-        score,
-        correct_count: correctCount,
-        total_questions: totalQuestions,
-        duration_seconds: finalDuration
-      })
-      .eq('id', attemptId)
-      .select('*')
-      .single()
-
-    if (updateError || !updatedAttempt) {
-      throw new Error(`Thu bài thất bại: ${updateError?.message}`)
-    }
-
-    // 5. Add audit log
-    await supabase.from('audit_logs').insert({
-      actor_id: attempt.member_id,
-      action: 'SUBMIT_EXAM',
-      target_type: 'exam_attempts',
-      target_id: attemptId,
-      metadata: { score, correctCount, totalQuestions, durationSeconds: finalDuration }
-    })
-
-    return updatedAttempt as ExamAttempt
+    const { data, error } = await supabase.rpc('exam_submit', { p_attempt_id: attemptId })
+    if (error) throw new Error(error.message)
+    return data as ExamAttempt
   },
 
-  /**
-   * Fetch complete test results for a specific attempt (scores + detailed questions and correction)
-   */
   async getAttemptResult(attemptId: string) {
-    const { data: attempt, error: aError } = await supabase
-      .from('exam_attempts')
-      .select(`
-        *,
-        meeting_exams (
-          title,
-          duration_seconds,
-          score_scale
-        )
-      `)
-      .eq('id', attemptId)
-      .single()
-
-    if (aError || !attempt) {
-      throw new Error('Không tìm thấy thông tin bài làm này.')
-    }
-
-    const { data: answers, error: ansError } = await supabase
-      .from('exam_attempt_answers')
-      .select('*')
-      .eq('exam_attempt_id', attemptId)
-      .order('created_at', { ascending: true })
-
-    if (ansError) {
-      throw new Error('Không thể lấy chi tiết bài làm.')
-    }
-
-    const detailAnswers = answers.map((ans: any) => {
-      const snap = ans.question_snapshot
-      return {
-        id: ans.question_id,
-        content: snap?.content || '',
-        optionA: snap?.option_a || '',
-        optionB: snap?.option_b || '',
-        optionC: snap?.option_c || '',
-        optionD: snap?.option_d || '',
-        selectedOption: ans.selected_option,
-        correctOption: ans.correct_option,
-        isCorrect: ans.is_correct
-      }
-    })
-
-    return {
-      attempt: {
-        id: attempt.id,
-        title: attempt.meeting_exams?.title || 'Bài kiểm tra',
-        score: Number(attempt.score),
-        correctCount: attempt.correct_count,
-        totalQuestions: attempt.total_questions,
-        durationSeconds: attempt.duration_seconds,
-        submittedAt: attempt.submitted_at,
-        meetingSessionId: attempt.meeting_session_id
-      },
-      answers: detailAnswers
-    }
+    const { data, error } = await supabase.rpc('exam_result', { p_attempt_id: attemptId })
+    if (error) throw new Error(error.message)
+    return data
   },
 
   /**
@@ -459,6 +91,7 @@ export const examService = {
     const { data, error } = await supabase
       .from('question_banks')
       .select('*')
+      .eq('organization_id', tenantService.requireOrganizationId())
       .eq('is_active', true)
       .order('created_at', { ascending: false })
 
@@ -475,7 +108,7 @@ export const examService = {
   async createQuestionBank(name: string, description: string): Promise<any> {
     const { data, error } = await supabase
       .from('question_banks')
-      .insert({ name, description, is_active: true })
+      .insert({ name, description, is_active: true, organization_id: tenantService.requireOrganizationId() })
       .select('*')
       .single()
 
@@ -494,6 +127,7 @@ export const examService = {
       .from('questions')
       .select('*')
       .eq('question_bank_id', bankId)
+      .eq('organization_id', tenantService.requireOrganizationId())
       .eq('is_active', true)
       .order('created_at', { ascending: true })
 
@@ -520,6 +154,7 @@ export const examService = {
     const { data, error } = await supabase
       .from('questions')
       .insert({
+        organization_id: tenantService.requireOrganizationId(),
         question_bank_id: bankId,
         content,
         option_a: optionA,
@@ -575,6 +210,7 @@ export const examService = {
       if (!['A', 'B', 'C', 'D'].includes(correct)) continue
       
       questionsToInsert.push({
+        organization_id: tenantService.requireOrganizationId(),
         question_bank_id: bankId,
         content,
         option_a: optionA,
@@ -616,6 +252,7 @@ export const examService = {
         meeting_exam_banks(question_bank_id)
       `)
       .eq('meeting_session_id', sessionId)
+      .eq('organization_id', tenantService.requireOrganizationId())
       .maybeSingle()
 
     if (error) {
@@ -648,6 +285,7 @@ export const examService = {
       .from('meeting_exams')
       .select('id')
       .eq('meeting_session_id', sessionId)
+      .eq('organization_id', tenantService.requireOrganizationId())
       .maybeSingle()
 
     let examId = ''
@@ -662,6 +300,7 @@ export const examService = {
           updated_at: new Date().toISOString()
         })
         .eq('id', existingExam.id)
+        .eq('organization_id', tenantService.requireOrganizationId())
         .select('*')
         .single()
 
@@ -672,6 +311,7 @@ export const examService = {
       const { data, error } = await supabase
         .from('meeting_exams')
         .insert({
+          organization_id: tenantService.requireOrganizationId(),
           meeting_session_id: sessionId,
           title,
           duration_seconds: durationSeconds,
@@ -691,10 +331,12 @@ export const examService = {
       .from('meeting_exam_banks')
       .delete()
       .eq('meeting_exam_id', examId)
+      .eq('organization_id', tenantService.requireOrganizationId())
 
     // 3. Create new bank associations
     if (bankIds && bankIds.length > 0) {
       const assocPayload = bankIds.map(bankId => ({
+        organization_id: tenantService.requireOrganizationId(),
         meeting_exam_id: examId,
         question_bank_id: bankId
       }))
@@ -711,4 +353,3 @@ export const examService = {
     return { id: examId, title, durationSeconds, questionsPerUser, bankIds }
   }
 }
-

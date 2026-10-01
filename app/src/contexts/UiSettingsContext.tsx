@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { uiSettingsService } from '../services/uiSettingsService'
 import type { UiSettingsWithAssets } from '../services/uiSettingsService'
+import { useAuth } from './AuthContext'
 
 interface UiSettingsContextType {
   settings: UiSettingsWithAssets | null
@@ -35,6 +36,7 @@ function darkenColor(hex: string, percent: number): string {
 export const UiSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<UiSettingsWithAssets | null>(null)
   const [loading, setLoading] = useState(true)
+  const { organizationId } = useAuth()
 
   const applyThemeAndStyles = (ui: UiSettingsWithAssets) => {
     const root = document.documentElement
@@ -81,21 +83,25 @@ export const UiSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }
 
-  const loadSettings = async () => {
-    try {
-      const data = await uiSettingsService.getActiveSettings()
+  useEffect(() => {
+    let cancelled = false
+    setSettings(null)
+    if (!organizationId) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    void uiSettingsService.getActiveSettings().then(data => {
+      if (cancelled) return
       setSettings(data)
       applyThemeAndStyles(data)
-    } catch (error) {
+    }).catch(error => {
       console.error('Error loading UI settings context:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadSettings()
-  }, [])
+    }).finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [organizationId])
 
   useEffect(() => {
     if (!settings) return

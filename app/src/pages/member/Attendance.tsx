@@ -13,7 +13,7 @@ import { useGps } from '../../hooks/useGps'
 import { meetingService } from '../../services/meetingService'
 import type { MeetingSession } from '../../services/meetingService'
 import { calculateDistance, calculateEffectiveDistance } from '../../utils/gps'
-import { attendanceService, DEFAULT_MEETING_LAT, DEFAULT_MEETING_LNG, MAX_ALLOWED_DISTANCE_METERS } from '../../services/attendanceService'
+import { attendanceService, MAX_ALLOWED_DISTANCE_METERS } from '../../services/attendanceService'
 import { meetingUiSettingsService } from '../../services/meetingUiSettingsService'
 
 export const Attendance: React.FC = () => {
@@ -75,28 +75,18 @@ export const Attendance: React.FC = () => {
   const [photoPreview, setPhotoPreview] = useState<string>('')
   const [photoUploading, setPhotoUploading] = useState(false)
 
-  // Device fingerprint (Định danh thiết bị lưu localStorage)
-  const [deviceUuid] = useState<string>(() => {
-    let uuid = localStorage.getItem('device_uuid')
-    if (!uuid) {
-      uuid = 'dev_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now().toString(36)
-      localStorage.setItem('device_uuid', uuid)
-    }
-    return uuid
-  })
-
   const [distance, setDistance] = useState<number | null>(null)
   const [isWithinRadius, setIsWithinRadius] = useState<boolean>(false)
 
-  const targetLat = uiSettings?.gps_lat ?? DEFAULT_MEETING_LAT
-  const targetLng = uiSettings?.gps_lng ?? DEFAULT_MEETING_LNG
+  const targetLat = uiSettings?.gps_lat ?? null
+  const targetLng = uiSettings?.gps_lng ?? null
   const allowedRadius = (uiSettings?.gps_radius_m && uiSettings.gps_radius_m > 0) 
     ? uiSettings.gps_radius_m 
     : MAX_ALLOWED_DISTANCE_METERS
 
   // Khởi tạo Google Maps Vệ tinh thu nhỏ kèm đường thẳng nối vị trí Đảng viên đến Hội trường
   useEffect(() => {
-    if (!gpsCompleted || !gpsCoords || !miniMapRef.current) return
+    if (!gpsCompleted || !gpsCoords || !miniMapRef.current || targetLat === null || targetLng === null) return
 
     const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''
 
@@ -294,6 +284,7 @@ export const Attendance: React.FC = () => {
 
   // Nút điểm danh chỉ hoạt động khi hoàn thành tất cả các bước được yêu cầu
   const isSubmitDisabled = 
+    (methods.includes('gps') && (targetLat === null || targetLng === null)) ||
     (methods.includes('gps') && !gpsCompleted && !gpsError) || // GPS đang tải
     (pinRequired && !pinCompleted) || 
     (qrRequired && !qrCompleted) || 
@@ -301,7 +292,7 @@ export const Attendance: React.FC = () => {
     loading || gpsLoading || photoUploading
 
   useEffect(() => {
-    if (gpsCoords) {
+    if (gpsCoords && targetLat !== null && targetLng !== null) {
       const rawDist = calculateDistance(gpsCoords.latitude, gpsCoords.longitude, targetLat, targetLng)
       const { effectiveDistanceM } = calculateEffectiveDistance(rawDist, gpsCoords.accuracy)
       setDistance(effectiveDistanceM)
@@ -336,10 +327,8 @@ export const Attendance: React.FC = () => {
           // Kiểm tra xem có qr_token trong url không (tự động điền nếu quét từ QR hội trường)
           const urlQrToken = searchParams.get('qr_token')
           if (urlQrToken && reqMethods.includes('qr')) {
-            if (urlQrToken === settings.qr_code_token) {
-              setQrInput(urlQrToken)
-              setQrCompleted(true)
-            }
+            setQrInput(urlQrToken)
+            setQrCompleted(true)
           }
         }
       } catch (err) {
@@ -435,29 +424,15 @@ export const Attendance: React.FC = () => {
     }
   }
 
-  // So khớp mã PIN nhập vào với mã PIN cấu hình
+  // Client confirms that a code was entered; the server checks its secret value.
   useEffect(() => {
-    if (pinRequired && uiSettings?.pin_code) {
-      if (pinInput.trim() === uiSettings.pin_code.trim()) {
-        setPinCompleted(true)
-      } else {
-        setPinCompleted(false)
-      }
-    }
-  }, [pinInput, pinRequired, uiSettings])
+    setPinCompleted(!pinRequired || pinInput.trim().length > 0)
+  }, [pinInput, pinRequired])
 
-  // So khớp mã QR Token nhập vào
+  // The QR token is validated by the database RPC, never shipped as readable config.
   useEffect(() => {
-    if (qrRequired && uiSettings?.qr_code_token) {
-      const cleanInput = qrInput.trim()
-      const cleanToken = uiSettings.qr_code_token.trim()
-      if (cleanInput === cleanToken || cleanInput.includes(`qr_token=${cleanToken}`)) {
-        setQrCompleted(true)
-      } else {
-        setQrCompleted(false)
-      }
-    }
-  }, [qrInput, qrRequired, uiSettings])
+    setQrCompleted(!qrRequired || qrInput.trim().length > 0)
+  }, [qrInput, qrRequired])
 
   // Xử lý khi chọn ảnh selfie
   const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -541,8 +516,9 @@ export const Attendance: React.FC = () => {
         accuracy: gpsCoords?.accuracy,
         method: methodRecorded,
         markedBy: user.id,
-        deviceUuid, // Gửi uuid thiết bị để phát hiện điểm danh hộ
-        photoUrl: uploadedSelfieUrl || undefined
+        photoUrl: uploadedSelfieUrl || undefined,
+        pinCode: pinInput,
+        qrToken: qrInput
       })
 
       setSuccess(true)
@@ -585,7 +561,7 @@ export const Attendance: React.FC = () => {
               Xác nhận điểm danh
             </h2>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-              Đảng bộ Thanh tra tỉnh Sơn La
+              Sinh hoạt dưới nghi thức chào cờ cấp xã
             </p>
           </div>
 
@@ -594,7 +570,7 @@ export const Attendance: React.FC = () => {
               <h4 className="font-bold text-red-deep dark:text-gold uppercase mb-1">Phiên họp:</h4>
               <p className="opacity-95 text-navy dark:text-white font-bold">{meeting.title}</p>
               <div className="mt-2 text-[11px] font-semibold text-slate-500">
-                📍 Địa điểm: <b>{meeting.location || 'Hội trường Tỉnh'}</b>
+                📍 Địa điểm: <b>{meeting.location || 'Chưa cấu hình'}</b>
               </div>
             </div>
           )}
