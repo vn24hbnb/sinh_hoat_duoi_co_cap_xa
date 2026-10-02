@@ -8,7 +8,7 @@ Supabase project `tdgiunafijgyxlqfdwgv` dùng RPC `attendance_mark`. Đã đọc
 - RPC cũ ném lỗi khi GPS được cấu hình mà tọa độ thiếu/không hợp lệ, hoặc chưa có vị trí hội trường.
 - Báo cáo và danh sách phiên họp đã tính `status=warning` vào **đã điểm danh**, không phải vắng mặt. Ban quản trị có danh sách cảnh báo cùng chức năng duyệt/đánh vắng.
 
-## Bản sửa đã áp dụng Supabase; đang triển khai frontend
+## Bản sửa đã triển khai Supabase và Vercel Production
 
 - GPS không bắt buộc và không làm nút điểm danh chờ. Có thể nhấn ngay khi cấu hình phiên họp đã tải xong.
 - Không tự hỏi quyền định vị khi người dùng chưa cấp; có nút lấy vị trí tùy chọn. Nếu đã cấp quyền, có thể lấy GPS nền nhưng không chặn nút.
@@ -51,3 +51,11 @@ Supabase project `tdgiunafijgyxlqfdwgv` dùng RPC `attendance_mark`. Đã đọc
 5. Nếu cần hoàn tác, khôi phục **riêng hàm attendance_mark** từ định nghĩa trước thay đổi (`20260930232217_two_commune_secure_backend.sql`) và frontend trước bản sửa. Không xóa bản ghi điểm danh đã tạo, không chạy toàn bộ migration cũ.
 
 Các thay đổi quản lý chi bộ được triển khai cùng bản này. Không tạo điểm danh thử trong dữ liệu production.
+
+## Cập nhật triển khai — 02/10/2026, 08:24 giờ Việt Nam
+
+- Commit chức năng `c2ed4bd16a505d4c7b622f2ea82ade24baa89f56` đã đẩy lên GitHub nhánh `codex/ui-refresh-hai-xa` và `main`, không force push.
+- GitHub/Vercel xác nhận Preview và Production đều `success`; Production deployment ID `6799059322`, đúng project thuộc `vn24hbnb-9719s-projects`.
+- [Bản Production đã xác minh](https://sinh-hoat-duoi-co-cap-ewb53lne7-vn24hbnb-9719s-projects.vercel.app).
+- Trạng thái triển khai không chứng minh đã kiểm thử tài khoản thật, GPS trên điện thoại hoặc tải đồng thời. Các bước kiểm chứng thực tế ở mục trên vẫn cần thực hiện.
+- Không đưa `files/`, `files.zip` hoặc danh sách cá nhân mới lên GitHub trong đợt này.
