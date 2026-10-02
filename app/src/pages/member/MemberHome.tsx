@@ -643,7 +643,7 @@ export const MemberHome: React.FC = () => {
                           let badgeColor = 'bg-slate-100 text-slate-450 border-slate-200 dark:bg-slate-800 dark:text-slate-455'
                           let badgeText = 'Không rõ'
 
-                          if (hist.attendanceStatus === 'present') {
+                          if (hist.attendanceStatus === 'present' || hist.attendanceStatus === 'warning') {
                             if (hist.examScore !== null) {
                               if (hist.examScore >= 5.0) {
                                 badgeColor = 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-350 border-emerald-250'
@@ -656,9 +656,6 @@ export const MemberHome: React.FC = () => {
                               badgeColor = 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-350 border-emerald-200'
                               badgeText = 'Có mặt'
                             }
-                          } else if (hist.attendanceStatus === 'warning') {
-                            badgeColor = 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-350 border-amber-250'
-                            badgeText = 'Cảnh báo'
                           } else if (hist.attendanceStatus === 'excused') {
                             badgeColor = 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-750 dark:text-yellow-350 border-yellow-250'
                             badgeText = 'Vắng phép'
@@ -804,18 +801,14 @@ export const MemberHome: React.FC = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                         {/* Item 1: Attendance */}
                         <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-navy/30 rounded-xl border border-slate-100 dark:border-slate-800">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${memberStatus.attended ? (memberStatus.attendanceStatus === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600') : memberStatus.excused ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-100 text-muted'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${memberStatus.attended ? 'bg-emerald-100 text-emerald-600' : memberStatus.excused ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-100 text-muted'}`}>
                             <UserCheck size={18} />
                           </div>
                           <div>
                             <div className="text-xs font-bold normal-case">1. Điểm danh</div>
                             <div className="text-xs font-semibold text-muted">
                               {memberStatus.attended ? (
-                                memberStatus.attendanceStatus === 'warning' ? (
-                                  <span className="text-amber-600 dark:text-amber-400 font-bold">Có cảnh báo</span>
-                                ) : (
-                                  'Đã điểm danh'
-                                )
+                                'Đã điểm danh'
                               ) : memberStatus.excused ? (
                                 'Vắng có lý do'
                               ) : (
@@ -852,18 +845,6 @@ export const MemberHome: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* GPS Warning Callout Banner */}
-                      {memberStatus.attended && memberStatus.attendanceStatus === 'warning' && (
-                        <div className="bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 p-3 rounded-xl border border-amber-200/60 text-xs font-semibold flex items-start gap-2.5">
-                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping mt-1 shrink-0" />
-                          <div>
-                            <div className="font-bold text-amber-900 dark:text-amber-400 mb-0.5">⚠️ Điểm danh không định vị / Cảnh báo vị trí</div>
-                            <p className="text-xs text-muted dark:text-muted leading-relaxed font-medium">
-                              Hệ thống ghi nhận sự hiện diện của đồng chí với lý do: <b>{memberStatus.attendanceWarningReason || 'Vị trí không chính xác'}</b>. Trạng thái điểm danh đang được gửi tới Ban tổ chức để phê duyệt chính thức.
-                            </p>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
 

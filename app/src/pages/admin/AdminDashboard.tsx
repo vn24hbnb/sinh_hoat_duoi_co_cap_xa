@@ -331,7 +331,7 @@ export const AdminDashboard: React.FC = () => {
                             </td>
                             <td className="py-2.5 px-3 text-xs text-muted dark:text-slate-355 max-w-xs truncate" title={appr.reason}>
                               {appr.status === 'warning' ? (
-                                <span>Cự ly: <b>{appr.gpsDistanceM ? Math.round(appr.gpsDistanceM) : '?'}m</b> ({appr.reason.replace(/^Vượt quá bán kính cho phép:.*?\.\s*/, '')})</span>
+                                <span>{appr.gpsDistanceM == null ? 'Chưa xác định được vị trí' : <>Cự ly: <b>{Math.round(appr.gpsDistanceM)}m</b></>} · {appr.reason.replace(/^Vượt quá bán kính cho phép:.*?\.\s*/, '')}</span>
                               ) : (
                                 <span>Lý do: <b>{appr.reason.replace(/^\[Yêu cầu\]\s*/, '')}</b></span>
                               )}

@@ -7,6 +7,7 @@ import { PatternBackground } from '../../components/ui/PatternBackground'
 import { PortalHeader } from '../../components/layout/PortalHeader'
 import { RedNavigationBar } from '../../components/layout/RedNavigationBar'
 import { GlassCard } from '../../components/ui/GlassCard'
+import { BranchManager } from '../../components/ui/BranchManager'
 
 type Branch = { id: string; name: string }
 type Member = { id: string; full_name: string; date_of_birth: string | null; chi_bo_id: string; is_active: boolean }
@@ -281,7 +282,11 @@ export default function MemberManager() {
           <select required value={form.chi_bo_id} onChange={e=>setForm({...form,chi_bo_id:e.target.value})} className={inputClass}><option value="">Chọn chi bộ</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select>
           <button disabled={busy} className="rounded-xl bg-red-revolution px-4 py-2 font-bold text-white disabled:opacity-50">Thêm</button>
         </form>
-        <form onSubmit={addBranch} className="flex flex-wrap gap-3 border-t pt-3"><input placeholder="Tên chi bộ mới" value={branchName} onChange={e=>setBranchName(e.target.value)} className={inputClass+' md:max-w-sm'}/><button disabled={busy||!branchName.trim()} className="rounded-xl border border-red-revolution px-4 py-2 font-bold text-red-revolution disabled:opacity-50">Thêm chi bộ</button></form>
+      </GlassCard>
+      <GlassCard className="space-y-3 p-5">
+        <h2 className="font-bold text-red-deep dark:text-gold">Quản lý chi bộ của xã đang chọn</h2>
+        <form onSubmit={addBranch} className="flex flex-wrap gap-3"><input required maxLength={200} aria-label="Tên chi bộ mới" placeholder="Tên chi bộ mới" value={branchName} onChange={e=>setBranchName(e.target.value)} className={inputClass+' md:max-w-sm'}/><button disabled={busy||!branchName.trim()} className="rounded-xl border border-red-revolution px-4 py-2 font-bold text-red-revolution disabled:opacity-50">Thêm chi bộ</button></form>
+        <BranchManager key={organizationId} organizationId={organizationId} branches={branches} members={members} disabled={busy} onChanged={load}/>
       </GlassCard>
       <GlassCard className="space-y-3 p-5">
         <h2 className="flex items-center gap-2 font-bold text-red-deep dark:text-gold"><FileSpreadsheet size={18}/>Nhập danh sách từ Excel</h2>

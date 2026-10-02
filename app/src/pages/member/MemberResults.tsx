@@ -354,7 +354,7 @@ export const MemberResults: React.FC = () => {
                     let badgeColor = 'bg-slate-100 text-slate-450 border-slate-200 dark:bg-slate-800 dark:text-slate-455'
                     let badgeText = 'Không rõ'
 
-                    if (hist.attendanceStatus === 'present') {
+                    if (hist.attendanceStatus === 'present' || hist.attendanceStatus === 'warning') {
                       if (hist.examScore !== null) {
                         if (hist.examScore >= 5.0) {
                           badgeColor = 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-350 border-emerald-250'
@@ -367,9 +367,6 @@ export const MemberResults: React.FC = () => {
                         badgeColor = 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-350 border-emerald-200'
                         badgeText = 'Có mặt'
                       }
-                    } else if (hist.attendanceStatus === 'warning') {
-                      badgeColor = 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-350 border-amber-250'
-                      badgeText = 'Cảnh báo'
                     } else if (hist.attendanceStatus === 'excused') {
                       badgeColor = 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-750 dark:text-yellow-350 border-yellow-250'
                       badgeText = 'Vắng phép'
@@ -423,14 +420,9 @@ export const MemberResults: React.FC = () => {
                         </td>
                         <td className="py-3 px-3 text-muted">{hist.meetingDate}</td>
                         <td className="py-3 px-3 text-center">
-                          {hist.attendanceStatus === 'present' && (
+                          {(hist.attendanceStatus === 'present' || hist.attendanceStatus === 'warning') && (
                             <span className="inline-flex bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-bold border border-emerald-150">
                               ✓ Có mặt
-                            </span>
-                          )}
-                          {hist.attendanceStatus === 'warning' && (
-                            <span className="inline-flex bg-yellow-50 text-yellow-750 px-2 py-0.5 rounded-full text-xs font-bold border border-yellow-250" title={hist.excuseReason || 'Cảnh báo định vị'}>
-                              ⚠️ Cảnh báo vị trí
                             </span>
                           )}
                           {hist.attendanceStatus === 'excused' && (

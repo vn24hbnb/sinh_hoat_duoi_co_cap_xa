@@ -1920,7 +1920,7 @@ export const MeetingManager: React.FC = () => {
                                       {p.status === 'warning' && (
                                         <div className="flex flex-col items-center gap-1">
                                           <span className="inline-flex bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-100">
-                                            ⚠️ Cảnh báo
+                                            ✓ Đã điểm danh · cần kiểm tra
                                           </span>
                                           <div className="flex items-center gap-1 mt-0.5">
                                             <button

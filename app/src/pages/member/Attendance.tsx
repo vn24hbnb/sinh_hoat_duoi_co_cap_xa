@@ -17,15 +17,17 @@ import type { MeetingSession } from '../../services/meetingService'
 import { calculateDistance, calculateEffectiveDistance } from '../../utils/gps'
 import { attendanceService, MAX_ALLOWED_DISTANCE_METERS } from '../../services/attendanceService'
 import { meetingUiSettingsService } from '../../services/meetingUiSettingsService'
+import { canConfirmAttendance, attendanceMethod } from '../../utils/attendanceFlow'
 
 export const Attendance: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user, logout } = useAuth()
-  const { error: gpsError, loading: gpsLoading, getLocation } = useGps()
+  const { loading: gpsLoading, getLocation } = useGps()
   
   const [meeting, setMeeting] = useState<MeetingSession | null>(null)
   const [uiSettings, setUiSettings] = useState<any>(null)
+  const [settingsReady, setSettingsReady] = useState(false)
   
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -84,14 +86,8 @@ export const Attendance: React.FC = () => {
     ? uiSettings.gps_radius_m 
     : MAX_ALLOWED_DISTANCE_METERS
 
-  // Nút điểm danh chỉ hoạt động khi hoàn thành tất cả các bước được yêu cầu
-  const isSubmitDisabled = 
-    (methods.includes('gps') && (targetLat === null || targetLng === null)) ||
-    (methods.includes('gps') && !gpsCompleted && !gpsError) || // GPS đang tải
-    (pinRequired && !pinCompleted) || 
-    (qrRequired && !qrCompleted) || 
-    (photoRequired && !photoFile) ||
-    loading || gpsLoading || photoUploading
+  const isSubmitDisabled = !canConfirmAttendance({ ready: settingsReady && meeting?.status === 'attendance_open', loading, photoUploading,
+    pinRequired, pinCompleted, qrRequired, qrCompleted, photoRequired, hasPhoto: !!photoFile })
 
   useEffect(() => {
     if (gpsCoords && targetLat !== null && targetLng !== null) {
@@ -108,6 +104,7 @@ export const Attendance: React.FC = () => {
   // Tải thông tin phiên họp và cấu hình điểm danh nâng cao
   useEffect(() => {
     async function initAttendance() {
+      setSettingsReady(false)
       try {
         const session = await meetingService.getActiveSession()
         if (!session || session.status !== 'attendance_open') {
@@ -133,6 +130,7 @@ export const Attendance: React.FC = () => {
             setQrCompleted(true)
           }
         }
+        setSettingsReady(true)
       } catch (err) {
         setError('Không thể tải thông tin cấu hình điểm danh.')
       }
@@ -141,16 +139,16 @@ export const Attendance: React.FC = () => {
     initAttendance()
   }, [navigate, searchParams])
 
-  // Lấy tọa độ GPS tự động khi truy cập trang (nếu yêu cầu GPS)
+  // Only reuse an already-granted permission. Otherwise location is opt-in and non-blocking.
   useEffect(() => {
-    if (methods.includes('gps') && !gpsCompleted) {
+    if (methods.includes('gps') && !gpsCompleted && permissionState === 'granted' && !success) {
       // Nếu có yêu cầu quét mã QR và chưa quét thành công, ta KHÔNG tự động định vị ngay mà đợi quét xong QR
       if (methods.includes('qr') && !qrCompleted) {
         return
       }
       autoGetLocation()
     }
-  }, [methods, qrCompleted, gpsCompleted])
+  }, [methods, qrCompleted, gpsCompleted, permissionState, success])
 
   // Khởi tạo và giải phóng Camera QR Scanner
   useEffect(() => {
@@ -217,12 +215,11 @@ export const Attendance: React.FC = () => {
       if (coords) {
         setGpsCoords({ latitude: coords.latitude, longitude: coords.longitude, accuracy: coords.accuracy })
         setGpsCompleted(true)
-        setError('')
         setWarning('')
       }
     } catch (err: any) {
       console.warn('Auto GPS failed:', err.message)
-      setWarning('Thiết bị di động chưa bật định vị GPS hoặc quyền định vị bị từ chối. Đồng chí vui lòng bật GPS và cho phép trình duyệt chia sẻ vị trí để điểm danh.')
+      // GPS failure is advisory for management; it must not block the member.
     }
   }
 
@@ -258,7 +255,7 @@ export const Attendance: React.FC = () => {
   }
 
   const handleAttendanceClick = async () => {
-    if (!user || !meeting) return
+    if (!user || !meeting || isSubmitDisabled || success) return
 
     setLoading(true)
     setError('')
@@ -305,9 +302,7 @@ export const Attendance: React.FC = () => {
 
     try {
       // Xác định phương thức chính được ghi nhận trong DB
-      let methodRecorded: 'gps' | 'qr' | 'pin' = 'gps'
-      if (methods.includes('qr')) methodRecorded = 'qr'
-      else if (methods.includes('pin')) methodRecorded = 'pin'
+      const methodRecorded = attendanceMethod(methods, !!gpsCoords)
 
       // 2. Gọi attendanceService ghi nhận điểm danh
       await attendanceService.markAttendance({
@@ -383,21 +378,10 @@ export const Attendance: React.FC = () => {
           {success ? (
             <div className="space-y-4 animate-fade-in">
               <AlertMessage
-                type={isWithinRadius ? "success" : "warning"}
-                title={isWithinRadius ? "ĐIỂM DANH THÀNH CÔNG" : "ĐIỂM DANH CÓ CẢNH BÁO"}
-                message={isWithinRadius 
-                  ? "Sự hiện diện của đồng chí đã được ghi nhận trên hệ thống. Đồng chí có thể tiếp tục tiến trình sinh hoạt chính trị."
-                  : `Đồng chí đã điểm danh ngoài phạm vi phòng họp (Cự ly thực tế: ${distance !== null ? Math.round(distance) : ''}m, giới hạn: ${allowedRadius}m). Hệ thống đã ghi nhận cảnh báo vị trí gửi tới Ban tổ chức.`
-                }
+                type="success"
+                title="ĐIỂM DANH THÀNH CÔNG"
+                message="Sự hiện diện của đồng chí đã được ghi nhận trên hệ thống. Đồng chí có thể tiếp tục tiến trình sinh hoạt chính trị."
               />
-              {gpsCoords && (
-                <div className={isWithinRadius 
-                  ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 p-4 rounded-xl border border-emerald-200 text-xs font-semibold"
-                  : "bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 p-4 rounded-xl border border-amber-200 text-xs font-semibold"
-                }>
-                  📍 Tọa độ xác thực: <b>{gpsCoords.latitude.toFixed(6)}, {gpsCoords.longitude.toFixed(6)}</b>
-                </div>
-              )}
               <div className="pt-2">
                 <RevolutionaryButton onClick={() => navigate('/member')} fullWidth>
                   Quay lại trang chính <ArrowRight size={18} />
@@ -407,7 +391,7 @@ export const Attendance: React.FC = () => {
           ) : (
             <div className="space-y-5">
               <p className="text-xs md:text-sm text-muted dark:text-muted leading-relaxed font-semibold">
-                Đồng chí vui lòng hoàn thành đầy đủ các hình thức xác thực điểm danh được yêu cầu dưới đây:
+                GPS không bắt buộc. Đồng chí có thể nhấn Xác nhận điểm danh ngay, kể cả khi không bật định vị hoặc hệ thống đang lấy vị trí. QR, PIN và ảnh minh chứng vẫn cần hoàn thành nếu phiên họp có yêu cầu.
               </p>
 
               {/* BƯỚC QUÉT MÃ QR CODE */}
@@ -485,7 +469,7 @@ export const Attendance: React.FC = () => {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs font-bold normal-case flex items-center gap-1.5">
                       <MapPin size={16} className={gpsCompleted ? 'text-emerald-500' : 'text-muted'} />
-                      Bước {gpsStep}: Định vị phòng họp (GPS)
+                      Bước {gpsStep}: Vị trí GPS (không bắt buộc)
                     </span>
                     {gpsCompleted ? (
                       <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-0.5">
@@ -500,7 +484,7 @@ export const Attendance: React.FC = () => {
                           onClick={autoGetLocation}
                           className="text-xs text-red-revolution underline font-bold hover:text-red-dark cursor-pointer"
                         >
-                          Thử lại
+                          Lấy vị trí (tùy chọn)
                         </button>
                       )
                     )}
@@ -551,29 +535,21 @@ export const Attendance: React.FC = () => {
                         <SatelliteMap style={miniMapStyle} className="h-full w-full" hall={{ latitude: targetLat, longitude: targetLng, radiusM: allowedRadius, source: 'meeting_settings' }} userPosition={gpsCoords} />
                       </div>
 
-                      {/* Thẻ khoảng cách thực tế và Trạng thái hợp lệ */}
-                      <div className={`p-3.5 rounded-xl border text-xs flex justify-between items-center transition-all ${
-                        isWithinRadius 
-                          ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-800 dark:text-emerald-300 shadow-sm'
-                          : 'bg-rose-500/5 border-rose-500/20 text-rose-800 dark:text-rose-300 shadow-sm'
-                      }`}>
+                      {/* Location is informational; only management receives the verification warning. */}
+                      <div className="p-3.5 rounded-xl border border-slate-200 text-xs flex justify-between items-center bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
                         <div className="space-y-0.5">
                           <p className="font-bold flex items-center gap-1">
-                            📍 Khoảng cách thực tế: <span className="text-sm font-bold">{distance !== null ? Math.round(distance) : '...'}m</span>
+                            📍 Khoảng cách tham khảo: <span className="text-sm font-bold">{distance !== null ? `${Math.round(distance)}m` : 'Chưa xác định'}</span>
                           </p>
                           <p className="text-xs opacity-80 font-semibold">
                             {isWithinRadius 
-                              ? `Hợp lệ (Trong bán kính quy định <= ${allowedRadius}m)` 
-                              : `Cảnh báo (Vượt quá bán kính cho phép ${allowedRadius}m)`
+                              ? `Trong bán kính ${allowedRadius}m. Vị trí không phải điều kiện chặn điểm danh.`
+                              : 'Vị trí chỉ để Ban tổ chức đối chiếu; đồng chí vẫn được điểm danh.'
                             }
                           </p>
                         </div>
-                        <span className={`text-xs font-bold normal-case px-2.5 py-1 rounded-lg border shadow-sm ${
-                          isWithinRadius 
-                            ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 border-emerald-250 dark:border-emerald-900/50' 
-                            : 'bg-rose-100 dark:bg-rose-950/40 text-rose-600 border-rose-250 dark:border-rose-900/50'
-                        }`}>
-                          {isWithinRadius ? 'Hợp lệ' : 'Ngoài vùng'}
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200">
+                          Tùy chọn
                         </span>
                       </div>
                       
@@ -584,7 +560,7 @@ export const Attendance: React.FC = () => {
                   ) : (
                     <div className="space-y-3">
                       <p className="text-xs font-medium text-muted leading-relaxed">
-                        Hệ thống tự động phát hiện định vị. Nếu đợi lâu, đồng chí vui lòng nhấp nút <b>"Thử lại"</b> và đồng ý chia sẻ vị trí.
+                        Đồng chí vẫn có thể điểm danh khi chưa có vị trí. Nếu muốn cung cấp GPS để Ban tổ chức đối chiếu, nhấn <b>"Lấy vị trí (tùy chọn)"</b>.
                       </p>
                       
                       {/* Hướng dẫn khắc phục khi bị từ chối quyền định vị */}
@@ -713,7 +689,7 @@ export const Attendance: React.FC = () => {
               <div className="pt-4">
                 <RevolutionaryButton
                   onClick={handleAttendanceClick}
-                  loading={loading || gpsLoading || photoUploading}
+                  loading={loading || photoUploading}
                   disabled={isSubmitDisabled}
                   fullWidth
                 >

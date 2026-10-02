@@ -11,14 +11,14 @@ const datasets={
   meeting_attendance:[{id:'attendance-a',meeting_session_id:'session-a',organization_id:'a',member_id:'member-a',status:'present',gps_valid:true,gps_lat:21,gps_lng:104},{id:'attendance-b',meeting_session_id:'session-b',organization_id:'b',member_id:'member-b',status:'warning',gps_valid:false,gps_lat:22,gps_lng:105}],
   exam_attempts:[{meeting_session_id:'session-a',organization_id:'a',member_id:'member-a',status:'submitted',score:7,duration_seconds:70,members:{organization_id:'a',full_name:'Cá nhân A',chi_bos:{name:'Chi bộ cùng tên'}}},{meeting_session_id:'session-b',organization_id:'b',member_id:'member-b',status:'submitted',score:9,duration_seconds:50,members:{organization_id:'b',full_name:'Cá nhân B',chi_bos:{name:'Chi bộ cùng tên'}}}],
 }
-async function setup(){
+async function setup(data=datasets){
   let active='a'
   const queries=[]
   const client={from(table){
     const filters=[];let single=false,limit=Infinity
     const q={select(){return q},eq(field,value){filters.push([field,value]);return q},order(){return q},limit(value){limit=value;return q},single(){single=true;return q},then(resolve,reject){
       queries.push({table,filters:[...filters]})
-      const rows=datasets[table].filter(row=>filters.every(([field,value])=>field.split('.').reduce((obj,key)=>obj?.[key],row)===value)).slice(0,limit)
+      const rows=data[table].filter(row=>filters.every(([field,value])=>field.split('.').reduce((obj,key)=>obj?.[key],row)===value)).slice(0,limit)
       return Promise.resolve({data:single?(rows[0]||null):rows,error:single&&!rows.length?{message:'not found'}:null}).then(resolve,reject)
     }};return q
   }}
@@ -43,6 +43,12 @@ test('a session belonging to another commune is rejected before compiling',async
   const {reportService,queries}=await setup()
   await assert.rejects(reportService.compileMeetingReport('session-b','a'),/Không tìm thấy/)
   assert.equal(queries.length,1)
+})
+test('missing GPS warning still counts as attended, not absent, in commune reports',async()=>{
+  const {reportService}=await setup({...datasets,meeting_attendance:datasets.meeting_attendance.map(row=>row.organization_id==='b'?{...row,gps_lat:null,gps_lng:null,warning_reason:'Không có tọa độ GPS'}:row)})
+  const report=await reportService.compileMeetingReport('session-b','b')
+  assert.equal(report.stats.attendedCount,1);assert.equal(report.stats.warningGpsCount,1);assert.equal(report.stats.absentCount,0)
+  assert.equal(report.chiBoReports[0].totalAttended,1)
 })
 test('organization is captured once even if the selector changes during an in-flight report',async()=>{
   const {reportService,choose,queries}=await setup()

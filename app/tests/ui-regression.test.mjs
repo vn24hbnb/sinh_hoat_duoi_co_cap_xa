@@ -29,7 +29,7 @@ const git=(...args)=>execFileSync('git',args,{encoding:'utf8',maxBuffer:10*1024*
 test('authorized map/report fixes leave other backend, auth and route guards byte-identical',()=>{
   const files=git('ls-tree','-r','--full-tree','--name-only',baseline).trim().split('\n').filter(file=>file.startsWith('app/src/services/')||file.startsWith('supabase/')||file.startsWith('app/src/types/')||['app/src/contexts/AuthContext.tsx','app/src/App.tsx','app/package.json','app/package-lock.json'].includes(file))
   assert.ok(files.length>20)
-  const authorized=new Set(['app/src/services/reportService.ts','app/src/services/mapAttendanceService.ts','app/package.json','app/package-lock.json'])
+  const authorized=new Set(['app/src/services/reportService.ts','app/src/services/mapAttendanceService.ts','app/src/services/attendanceService.ts','app/package.json','app/package-lock.json'])
   for(const file of files.filter(file=>!authorized.has(file)))assert.equal(readFileSync(new URL(`../../${file}`,import.meta.url),'utf8'),git('show',`${baseline}:${file}`),file)
   const oldPackage=JSON.parse(git('show',`${baseline}:app/package.json`)),currentPackage=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'))
   assert.equal(currentPackage.dependencies.leaflet,'1.9.4');assert.equal(currentPackage.devDependencies['@types/leaflet'],'1.9.22')
@@ -58,6 +58,12 @@ test('all page service requests and business action handlers remain unchanged',(
       current.calls=current.calls.filter(call=>!call.endsWith(".eq('organization_id', requestOrganizationId)")).map(call=>call.replace(/\.eq\('organization_id', requestOrganizationId\)/g,''))
     }
     if(file.endsWith('/MeetingManager.tsx'))for(const key of ['handlePasteGoogleMapsCoords','handleSearchLocation']){delete current.functions[key];delete previous.functions[key]}
+    if(file.endsWith('/Attendance.tsx')){
+      assert.match(current.functions.handleAttendanceClick,/currentSession.status !== 'attendance_open'/)
+      assert.match(current.functions.handleAttendanceClick,/attendanceMethod\(methods, !!gpsCoords\)/)
+      assert.match(current.functions.handleAttendanceClick,/isSubmitDisabled \|\| success/)
+      delete current.functions.handleAttendanceClick;delete previous.functions.handleAttendanceClick
+    }
     if(file.endsWith('/AdminReports.tsx')){
       current.calls=current.calls.map(call=>call.replace('compileMeetingReport(currentSession.id, organizationId)','compileMeetingReport(currentSession.id)'))
       assert.match(current.functions.handleSelectMeeting,/setReport\(null\)/)

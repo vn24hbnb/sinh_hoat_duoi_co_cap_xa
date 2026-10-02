@@ -2,6 +2,12 @@ import { supabase } from './supabaseClient'
 import { tenantService } from './tenantService'
 
 export const MAX_ALLOWED_DISTANCE_METERS = 200
+export interface AttendanceResult {
+  id: string
+  status: 'present' | 'warning'
+  gps_valid: boolean | null
+  warning_reason: string | null
+}
 
 export interface AttendanceRecord {
   meetingSessionId: string
@@ -28,14 +34,15 @@ export const attendanceService = {
     return path
   },
 
-  async markAttendance(record: AttendanceRecord): Promise<void> {
-    const { error } = await supabase.rpc('attendance_mark', {
+  async markAttendance(record: AttendanceRecord): Promise<AttendanceResult> {
+    const hasCoordinates = Number.isFinite(record.latitude) && Number.isFinite(record.longitude)
+    const { data, error } = await supabase.rpc('attendance_mark', {
       p_meeting_session_id: record.meetingSessionId,
       p_lat: record.latitude ?? null,
       p_lng: record.longitude ?? null,
       p_accuracy: record.accuracy ?? null,
       p_absence_reason: null,
-      p_method: record.method || 'gps',
+      p_method: record.method || (hasCoordinates ? 'gps' : 'button'),
       p_pin_code: record.pinCode?.trim() || null,
       p_qr_token: record.qrToken?.trim() || null,
       p_evidence_path: record.photoUrl || null
@@ -44,6 +51,9 @@ export const attendanceService = {
       if (record.photoUrl) await supabase.storage.from('attendance-evidence').remove([record.photoUrl])
       throw new Error(error.message)
     }
+    const result = Array.isArray(data) ? (data.length === 1 ? data[0] : null) : data
+    if (!result?.id || !['present', 'warning'].includes(result.status)) throw new Error('Máy chủ chưa xác nhận kết quả điểm danh. Vui lòng kiểm tra lại trước khi thử tiếp.')
+    return result as AttendanceResult
   },
 
   async requestExcusedAbsence(meetingSessionId: string, _memberId: string, reason: string, _markedBy: string): Promise<void> {
