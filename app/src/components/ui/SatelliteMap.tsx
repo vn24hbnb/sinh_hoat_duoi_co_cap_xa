@@ -27,6 +27,8 @@ export function SatelliteMap({ position, hall, points = EMPTY_POINTS, focus, use
   const overlaysRef = useRef<L.LayerGroup | null>(null)
   const pickRef = useRef(onPick)
   const [tileError, setTileError] = useState(false)
+  const [showLabels, setShowLabels] = useState(true)
+  const [labelError, setLabelError] = useState(false)
   useEffect(() => { pickRef.current = onPick }, [onPick])
 
   useEffect(() => {
@@ -34,6 +36,10 @@ export function SatelliteMap({ position, hall, points = EMPTY_POINTS, focus, use
     const map = L.map(containerRef.current, { zoomControl: true, maxZoom: 19 }).setView([16, 106], 5)
     mapRef.current = map
     overlaysRef.current = L.layerGroup().addTo(map)
+    // Above imagery/roads, below interactive markers; never intercept map clicks.
+    const labelsPane = map.createPane('satelliteLabels')
+    labelsPane.style.zIndex = '450'
+    labelsPane.style.pointerEvents = 'none'
     map.on('click', (event: L.LeafletMouseEvent) => pickRef.current?.({ latitude: event.latlng.lat, longitude: event.latlng.lng }))
     const observer = new ResizeObserver(() => map.invalidateSize())
     observer.observe(containerRef.current)
@@ -51,6 +57,25 @@ export function SatelliteMap({ position, hall, points = EMPTY_POINTS, focus, use
     layer.addTo(map)
     return () => { layer.off(); layer.remove() }
   }, [style])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || style !== 'satellite' || !showLabels) return
+    const failed = new Set<string>()
+    const referenceLayers = ['World_Transportation', 'World_Boundaries_and_Places'].map(name =>
+      L.tileLayer(`https://services.arcgisonline.com/ArcGIS/rest/services/Reference/${name}/MapServer/tile/{z}/{y}/{x}`, {
+        maxZoom: 19,
+        pane: 'satelliteLabels',
+        attribution: 'Labels © Esri, HERE, Garmin, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, GIS User Community',
+      }))
+    referenceLayers.forEach(layer => {
+      layer.on('tileerror', (event: L.TileErrorEvent) => { failed.add((event.tile as HTMLImageElement).src); setLabelError(true) })
+      layer.on('tileload', (event: L.TileEvent) => { failed.delete((event.tile as HTMLImageElement).src); if (!failed.size) setLabelError(false) })
+      layer.on('load', () => { if (!failed.size) setLabelError(false) })
+      layer.addTo(map)
+    })
+    return () => { referenceLayers.forEach(layer => { layer.off(); layer.remove() }) }
+  }, [style, showLabels])
 
   useEffect(() => {
     const map = mapRef.current, layers = overlaysRef.current
@@ -89,10 +114,12 @@ export function SatelliteMap({ position, hall, points = EMPTY_POINTS, focus, use
   const googlePosition = valid(position) ? position : valid(hall) ? hall : null
   return <div ref={rootRef} className={`relative isolate rounded-xl overflow-hidden border border-slate-200 ${className}`}>
     <div ref={containerRef} className="h-full w-full" aria-label="Bản đồ vị trí" />
-    <div className="absolute top-2 right-2 z-[500] flex gap-2">
+    <div className="absolute top-2 right-2 left-12 z-[500] flex flex-wrap justify-end gap-2 pointer-events-none [&>*]:pointer-events-auto">
+      {style === 'satellite' && <button type="button" aria-pressed={showLabels} className="bg-white text-slate-900 rounded-lg px-3 py-2 text-xs font-bold shadow" onClick={() => setShowLabels(value => !value)}>{showLabels ? 'Ẩn tên đường' : 'Hiện tên đường'}</button>}
       {googlePosition && <a href={`https://www.google.com/maps/search/?api=1&query=${googlePosition.latitude},${googlePosition.longitude}`} target="_blank" rel="noopener noreferrer" className="bg-white text-slate-900 rounded-lg px-3 py-2 text-xs font-bold shadow">Mở Google Maps</a>}
       <button type="button" className="bg-white text-slate-900 rounded-lg px-3 py-2 text-xs font-bold shadow" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void rootRef.current?.requestFullscreen?.().catch(() => {}) }}>Toàn màn hình</button>
     </div>
     {tileError && <div role="status" className="absolute bottom-7 inset-x-2 z-[500] bg-white text-red-800 p-2 rounded-lg text-xs">Không tải được một số ảnh nền. Kiểm tra mạng hoặc chuyển sang Đường phố; dữ liệu điểm danh vẫn giữ nguyên.</div>}
+    {!tileError && style === 'satellite' && showLabels && labelError && <div role="status" className="absolute bottom-7 inset-x-2 z-[500] bg-white text-red-800 p-2 rounded-lg text-xs">Một số tên đường/địa danh chưa tải được. Có thể chuyển sang Đường phố hoặc mở Google Maps để đối chiếu địa chỉ.</div>}
   </div>
 }

@@ -68,3 +68,12 @@ Trước ngày sử dụng:
 5. Nghiệm thu rồi triển khai Production. Nếu có lỗi, quay lại deployment trước; không cần rollback DB vì không có thay đổi DB.
 
 Không đưa files.zip, thư mục tài liệu nguồn files/, danh sách đảng viên, khóa truy cập hoặc mật khẩu vào commit.
+# Bổ sung ngày 02/10/2026: vệ tinh có tên đường và địa danh
+
+- Sửa `app/src/components/ui/SatelliteMap.tsx`: chồng hai lớp Esri `World_Transportation` và `World_Boundaries_and_Places` lên ảnh vệ tinh, mặc định bật.
+- Có nút **Ẩn tên đường / Hiện tên đường**; lớp nhãn không bắt sự kiện chuột, nằm dưới marker và không đổi tọa độ, GPS, bán kính hay dữ liệu nghiệp vụ.
+- Kiểm tra trình duyệt tại `http://127.0.0.1:4173/tests/ui-preview.html`: 24 tile nhãn tải thành công, thấy tên đường Lê Lợi, Chu Văn Thịnh và Thành phố Sơn La. Khi ẩn, nhãn được gỡ, ảnh và vòng bán kính vẫn còn; bật lại hoạt động, không có lỗi console.
+- `npm run build` thành công; 21/21 kiểm thử đạt; kiểm tra lint không có lỗi mới. Cảnh báo kích thước bundle có sẵn vẫn còn.
+- Chỉ sửa local, chưa push/deploy. Sau triển khai, mặc định tên đường sẽ xuất hiện ở cả chọn hội trường, bản đồ giám sát và bản đồ điểm danh.
+- Đây là tên đường/địa danh tham khảo, **không bảo đảm địa chỉ số nhà hoặc tên hành chính mới đầy đủ**. Hai dịch vụ nhãn hiện công bố ở trạng thái mature support, không còn cập nhật; giữ chức năng tìm địa điểm và mở Google Maps để đối chiếu. Không thêm geocoding tự động cho vị trí cá nhân.
+- Nguồn dịch vụ: [Địa danh](https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer), [Đường giao thông](https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer).
