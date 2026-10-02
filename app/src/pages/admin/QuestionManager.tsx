@@ -603,6 +603,9 @@ export const QuestionManager: React.FC = () => {
     setSuccess('')
     try {
       const payload = previewQuestions.map(q => ({
+        // `questions.organization_id` is required and enforces tenant isolation in RLS.
+        // The other import paths already populate this field; keep file imports consistent.
+        organization_id: tenantService.requireOrganizationId(),
         question_bank_id: selectedBank.id,
         content: q.content,
         option_a: q.optionA,
