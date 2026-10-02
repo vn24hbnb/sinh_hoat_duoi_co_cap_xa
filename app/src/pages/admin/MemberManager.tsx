@@ -10,9 +10,21 @@ import { GlassCard } from '../../components/ui/GlassCard'
 import { BranchManager } from '../../components/ui/BranchManager'
 
 type Branch = { id: string; name: string }
-type Member = { id: string; full_name: string; date_of_birth: string | null; chi_bo_id: string; is_active: boolean }
+type Member = { id: string; full_name: string; date_of_birth: string | null; chi_bo_id: string; position: string | null; is_active: boolean }
 type PersonRow = { full_name: string; date_of_birth: string; source_date_of_birth: string; identity_problem: boolean; identity_confirmed: boolean; chi_bo_id: string; branch_name: string; branch_source: 'sheet'|'default'|'unresolved'; worksheet: string; row_number: number }
-type EditForm = Member
+type EditForm = Omit<Member, 'position'> & { position: string }
+const MEMBER_POSITIONS = [
+  'Đảng viên',
+  'Bí thư Đảng ủy',
+  'Phó Bí thư Đảng ủy',
+  'Đảng ủy viên',
+  'Bí thư chi bộ',
+  'Phó Bí thư chi bộ',
+  'Chi ủy viên',
+  'Chủ nhiệm Ủy ban kiểm tra',
+  'Trưởng ban',
+  'Phó Trưởng ban',
+] as const
 const inputClass = 'w-full rounded-xl border border-slate-200 bg-white/80 p-3 text-sm dark:border-slate-700 dark:bg-slate-900'
 
 function parseDate(value: unknown): string {
@@ -47,7 +59,7 @@ const sameMember = (a: Pick<PersonRow,'full_name'|'date_of_birth'|'chi_bo_id'>, 
 async function fetchOrganizationMembers(organizationId:string) {
   const [branches,members]=await Promise.all([
     supabase.from('chi_bos').select('id,name').eq('organization_id',organizationId).order('sort_order'),
-    supabase.from('members').select('id,full_name,date_of_birth,chi_bo_id,is_active').eq('organization_id',organizationId).order('full_name')
+    supabase.from('members').select('id,full_name,date_of_birth,chi_bo_id,position,is_active').eq('organization_id',organizationId).order('full_name')
   ])
   if(branches.error)throw branches.error
   if(members.error)throw members.error
@@ -62,7 +74,7 @@ export default function MemberManager() {
   const loadRequest=useRef(0)
   const [branch,setBranch]=useState('')
   const [search,setSearch]=useState('')
-  const [form,setForm]=useState({full_name:'',date_of_birth:'',chi_bo_id:''})
+  const [form,setForm]=useState({full_name:'',date_of_birth:'',chi_bo_id:'',position:'Đảng viên'})
   const [editing,setEditing]=useState<EditForm|null>(null)
   const [importRows,setImportRows]=useState<PersonRow[]>([])
   const [fileName,setFileName]=useState('')
@@ -126,14 +138,14 @@ export default function MemberManager() {
     e.preventDefault();setError('');setMessage('')
     if(!form.full_name.trim()||!form.chi_bo_id)return
     setBusy(true)
-    try {await invoke('create',form);setForm({full_name:'',date_of_birth:'',chi_bo_id:form.chi_bo_id});setMessage('Đã thêm đảng viên và tạo tài khoản đăng nhập. Mật khẩu mặc định: 123456.');await load()}
+    try {await invoke('create',form);setForm({full_name:'',date_of_birth:'',chi_bo_id:form.chi_bo_id,position:'Đảng viên'});setMessage('Đã thêm đảng viên và tạo tài khoản đăng nhập. Mật khẩu mặc định: 123456.');await load()}
     catch(e){setError(e instanceof Error?e.message:'Chưa thêm được đảng viên.')}
     finally{setBusy(false)}
   }
   async function saveEdit(e:React.FormEvent) {
     e.preventDefault();if(!editing)return
     setBusy(true);setError('')
-    try {await invoke('update',{member_id:editing.id,full_name:editing.full_name,date_of_birth:editing.date_of_birth,chi_bo_id:editing.chi_bo_id});setEditing(null);setMessage('Đã cập nhật thông tin đảng viên.');await load()}
+    try {await invoke('update',{member_id:editing.id,full_name:editing.full_name,date_of_birth:editing.date_of_birth,chi_bo_id:editing.chi_bo_id,position:editing.position});setEditing(null);setMessage('Đã cập nhật thông tin đảng viên và chức vụ.');await load()}
     catch(e){setError(e instanceof Error?e.message:'Chưa cập nhật được.')}
     finally{setBusy(false)}
   }
@@ -276,10 +288,11 @@ export default function MemberManager() {
       {error&&<p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800">{error}</p>}
       <GlassCard className="space-y-3 p-5">
         <h2 className="flex items-center gap-2 font-bold text-red-deep dark:text-gold"><UserPlus size={18}/>Thêm đảng viên</h2>
-        <form onSubmit={saveNew} className="grid gap-3 md:grid-cols-4">
+        <form onSubmit={saveNew} className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           <input required placeholder="Họ và tên" value={form.full_name} onChange={e=>setForm({...form,full_name:e.target.value})} className={inputClass}/>
           <input type="date" aria-label="Ngày sinh (không bắt buộc)" value={form.date_of_birth} onChange={e=>setForm({...form,date_of_birth:e.target.value})} className={inputClass}/>
           <select required value={form.chi_bo_id} onChange={e=>setForm({...form,chi_bo_id:e.target.value})} className={inputClass}><option value="">Chọn chi bộ</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select>
+          <select aria-label="Chức vụ" value={form.position} onChange={e=>setForm({...form,position:e.target.value})} className={inputClass}>{MEMBER_POSITIONS.map(position=><option key={position} value={position}>{position}</option>)}</select>
           <button disabled={busy} className="rounded-xl bg-red-revolution px-4 py-2 font-bold text-white disabled:opacity-50">Thêm</button>
         </form>
       </GlassCard>
@@ -304,9 +317,9 @@ export default function MemberManager() {
           <div className="relative min-w-[220px] flex-1"><Search size={17} className="absolute left-3 top-3.5 text-muted"/><input placeholder="Tìm theo họ tên" value={search} onChange={e=>setSearch(e.target.value)} className={inputClass+' pl-10'}/></div>
           <span className="self-center text-sm">{filtered.length} đảng viên</span>
         </div>
-        <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th className="p-2">Họ tên</th><th>Ngày sinh</th><th>Chi bộ</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
-          {filtered.map(m=><tr key={m.id} className="border-t"><td className="p-2">{m.full_name}</td><td>{m.date_of_birth||'—'}</td><td>{branches.find(b=>b.id===m.chi_bo_id)?.name||'—'}</td><td>{m.is_active?'Đang hoạt động':'Đã khóa'}</td><td className="space-x-2 whitespace-nowrap">
-            <button aria-label={`Sửa ${m.full_name}`} onClick={()=>setEditing({...m})} className="text-blue-700 underline"><Pencil size={15} className="inline"/> Sửa</button>
+        <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th className="p-2">Họ tên</th><th>Ngày sinh</th><th>Chi bộ</th><th>Chức vụ</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+          {filtered.map(m=><tr key={m.id} className="border-t"><td className="p-2">{m.full_name}</td><td>{m.date_of_birth||'—'}</td><td>{branches.find(b=>b.id===m.chi_bo_id)?.name||'—'}</td><td>{m.position||'Đảng viên'}</td><td>{m.is_active?'Đang hoạt động':'Đã khóa'}</td><td className="space-x-2 whitespace-nowrap">
+            <button aria-label={`Sửa ${m.full_name}`} onClick={()=>setEditing({...m,position:m.position||'Đảng viên'})} className="text-blue-700 underline"><Pencil size={15} className="inline"/> Sửa</button>
             <button disabled={busy} onClick={()=>void toggle(m)} className="text-red-700 underline">{m.is_active?'Khóa':'Mở lại'}</button>
             <button disabled={busy} onClick={()=>void resetPassword(m)} className="text-slate-700 underline"><RefreshCw size={14} className="inline"/> Mật khẩu</button>
           </td></tr>)}
@@ -314,6 +327,6 @@ export default function MemberManager() {
       </GlassCard>
       <p className="text-xs text-muted">Tài khoản mới dùng mật khẩu mặc định 123456. Đảng viên có thể tự đổi mật khẩu sau khi đăng nhập.</p>
     </main>
-    {editing&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><GlassCard className="w-full max-w-md space-y-4 bg-white p-5 dark:bg-slate-900"><h2 className="font-bold">Sửa thông tin đảng viên</h2><form onSubmit={saveEdit} className="space-y-3"><label className="block text-sm">Họ và tên<input required value={editing.full_name} onChange={e=>setEditing({...editing,full_name:e.target.value})} className={inputClass}/></label><label className="block text-sm">Ngày sinh<input type="date" value={editing.date_of_birth||''} onChange={e=>setEditing({...editing,date_of_birth:e.target.value})} className={inputClass}/></label><label className="block text-sm">Chi bộ<select value={editing.chi_bo_id} onChange={e=>setEditing({...editing,chi_bo_id:e.target.value})} className={inputClass}>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><div className="flex justify-end gap-3"><button type="button" onClick={()=>setEditing(null)} className="rounded-lg border px-4 py-2">Hủy</button><button disabled={busy} className="rounded-lg bg-red-revolution px-4 py-2 font-bold text-white">Lưu thay đổi</button></div></form></GlassCard></div>}
+    {editing&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><GlassCard className="w-full max-w-lg space-y-4 bg-white p-5 dark:bg-slate-900"><h2 className="font-bold">Sửa thông tin đảng viên</h2><form onSubmit={saveEdit} className="space-y-3"><label className="block text-sm">Họ và tên<input required value={editing.full_name} onChange={e=>setEditing({...editing,full_name:e.target.value})} className={inputClass}/></label><label className="block text-sm">Ngày sinh<input type="date" value={editing.date_of_birth||''} onChange={e=>setEditing({...editing,date_of_birth:e.target.value})} className={inputClass}/></label><label className="block text-sm">Chi bộ<select value={editing.chi_bo_id} onChange={e=>setEditing({...editing,chi_bo_id:e.target.value})} className={inputClass}>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><label className="block text-sm">Chức vụ<select value={editing.position} onChange={e=>setEditing({...editing,position:e.target.value})} className={inputClass}>{MEMBER_POSITIONS.map(position=><option key={position} value={position}>{position}</option>)}</select></label><div className="flex justify-end gap-3"><button type="button" onClick={()=>setEditing(null)} className="rounded-lg border px-4 py-2">Hủy</button><button disabled={busy} className="rounded-lg bg-red-revolution px-4 py-2 font-bold text-white">Lưu thay đổi</button></div></form></GlassCard></div>}
   </PatternBackground>
 }

@@ -2,6 +2,20 @@ import { createClient } from 'npm:@supabase/supabase-js@2.107.0'
 
 const cors={ 'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS' }
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,'Content-Type':'application/json'}})
+const memberPositions = [
+ 'Đảng viên',
+ 'Bí thư Đảng ủy',
+ 'Phó Bí thư Đảng ủy',
+ 'Đảng ủy viên',
+ 'Bí thư chi bộ',
+ 'Phó Bí thư chi bộ',
+ 'Chi ủy viên',
+ 'Chủ nhiệm Ủy ban kiểm tra',
+ 'Trưởng ban',
+ 'Phó Trưởng ban',
+] as const
+type MemberPosition = typeof memberPositions[number]
+const isMemberPosition=(value:unknown):value is MemberPosition=>typeof value==='string'&&(memberPositions as readonly string[]).includes(value)
 Deno.serve(async req=>{
  if(req.method==='OPTIONS')return new Response('ok',{headers:cors})
  if(req.method!=='POST')return reply({error:'Method not allowed'},405)
@@ -28,7 +42,7 @@ if(actor.role!=='super_admin'&&organizationId!==actor.organization_id)return rep
   const parsed=new Date(`${value}T00:00:00.000Z`)
   return !Number.isNaN(parsed.valueOf())&&parsed.toISOString().slice(0,10)===value
  }
-const createAccount=async(fullName:string,dob:string,branch:string,recordAudit=true)=>{
+const createAccount=async(fullName:string,dob:string,branch:string,recordAudit=true,position:MemberPosition='Đảng viên')=>{
   fullName=fullName.trim().replace(/\s+/g,' ').normalize('NFC')
   const pendingEmail=`pending-${crypto.randomUUID()}@members.internal`
   const {data:created,error:createError}=await admin.auth.admin.createUser({email:pendingEmail,password:'123456',email_confirm:true})
@@ -36,7 +50,7 @@ const createAccount=async(fullName:string,dob:string,branch:string,recordAudit=t
   const id=created.user.id
   const {error:emailError}=await admin.auth.admin.updateUserById(id,{email:`member-${id}@members.internal`,email_confirm:true})
   if(emailError){await admin.auth.admin.deleteUser(id);throw new Error('Không hoàn tất được tên đăng nhập.')}
-  const {error:memberError}=await admin.from('members').insert({id,organization_id:organizationId,chi_bo_id:branch,full_name:fullName,date_of_birth:dob||null,is_active:true})
+  const {error:memberError}=await admin.from('members').insert({id,organization_id:organizationId,chi_bo_id:branch,full_name:fullName,date_of_birth:dob||null,position,is_active:true})
   if(memberError){await admin.auth.admin.deleteUser(id);throw new Error(memberError.code==='23505'?'Đảng viên có tên và ngày sinh này đã có trong chi bộ.':'Không lưu được thông tin đảng viên.')}
   const {error:userError}=await admin.from('app_users').insert({id,organization_id:organizationId,member_id:id,username:`member-${id.slice(0,8)}`,role:'member',is_active:true,must_change_password:false})
   if(userError){await admin.from('members').delete().eq('id',id);await admin.auth.admin.deleteUser(id);throw new Error('Không hoàn tất được tài khoản; thao tác đã được hoàn tác.')}
@@ -71,14 +85,15 @@ const createAccount=async(fullName:string,dob:string,branch:string,recordAudit=t
   await audit('IMPORT_MEMBERS','chi_bos',branch,{created:createdIds.length,skipped:inputRows.length-pending.length})
   return reply({created:createdIds.length,skipped:inputRows.length-pending.length})
  }
- if(action==='create'){
+if(action==='create'){
   const fullName=typeof input.full_name==='string'?input.full_name.trim().replace(/\s+/g,' ').normalize('NFC'):''
   const dob=typeof input.date_of_birth==='string'?input.date_of_birth:''
   const branch=typeof input.chi_bo_id==='string'?input.chi_bo_id:''
-  if(!fullName||fullName.length>200||(dob&&!isValidDate(dob))||!branch)return reply({error:'Cần nhập họ tên và chi bộ; ngày sinh nếu có phải hợp lệ.'},400)
+  const position=input.position===undefined?'Đảng viên':input.position
+  if(!fullName||fullName.length>200||(dob&&!isValidDate(dob))||!branch||!isMemberPosition(position))return reply({error:'Cần nhập họ tên và chi bộ; chức vụ hoặc ngày sinh chưa hợp lệ.'},400)
   const {data:chiBo}=await admin.from('chi_bos').select('id').eq('id',branch).eq('organization_id',organizationId).eq('is_active',true).maybeSingle()
   if(!chiBo)return reply({error:'Chi bộ không thuộc xã đang quản lý.'},400)
-  try{const id=await createAccount(fullName,dob,branch);return reply({id})}catch(error){return reply({error:error instanceof Error?error.message:'Không tạo được đảng viên.'},400)}
+  try{const id=await createAccount(fullName,dob,branch,true,position);return reply({id})}catch(error){return reply({error:error instanceof Error?error.message:'Không tạo được đảng viên.'},400)}
  }
  if(action==='activate'||action==='deactivate'){
   const memberId=typeof input.member_id==='string'?input.member_id:''
@@ -97,11 +112,14 @@ const createAccount=async(fullName:string,dob:string,branch:string,recordAudit=t
   const fullName=typeof input.full_name==='string'?input.full_name.trim().replace(/\s+/g,' ').normalize('NFC'):''
   const dob=typeof input.date_of_birth==='string'?input.date_of_birth:''
   const branch=typeof input.chi_bo_id==='string'?input.chi_bo_id:''
+  const position=input.position
   const {data:chiBo}=await admin.from('chi_bos').select('id').eq('id',branch).eq('organization_id',organizationId).maybeSingle()
-  if(!memberId||!fullName||(dob&&!isValidDate(dob))||!chiBo)return reply({error:'Thông tin cập nhật chưa hợp lệ.'},400)
-  const {error}=await admin.from('members').update({full_name:fullName,date_of_birth:dob||null,chi_bo_id:branch,updated_at:new Date().toISOString()}).eq('id',memberId).eq('organization_id',organizationId)
+  if(!memberId||!fullName||(dob&&!isValidDate(dob))||!chiBo||(position!==undefined&&!isMemberPosition(position)))return reply({error:'Thông tin cập nhật chưa hợp lệ.'},400)
+  const updates:Record<string,unknown>={full_name:fullName,date_of_birth:dob||null,chi_bo_id:branch,updated_at:new Date().toISOString()}
+  if(position!==undefined)updates.position=position
+  const {error}=await admin.from('members').update(updates).eq('id',memberId).eq('organization_id',organizationId)
   if(error)return reply({error:'Không cập nhật được đảng viên.'},400)
-  await audit('UPDATE_MEMBER','members',memberId)
+  await audit('UPDATE_MEMBER','members',memberId,position===undefined?{}:{position})
   return reply({ok:true})
  }
  if(action==='reset_password'){
