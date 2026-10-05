@@ -4,7 +4,8 @@ import {readFileSync} from 'node:fs'
 import {execFileSync} from 'node:child_process'
 import ts from 'typescript'
 import {loadService} from './load-service.mjs'
-const baseline='10398f3b9b03bb019ec4c1b0558d6ef9d5154150'
+// Freeze against the approved production source immediately before this synchronization fix.
+const baseline='6be43c705e813d58e116a6196132f178cf438bd2'
 const {parseAgenda,updateAgendaItem}=await loadService('../src/utils/agenda.ts',{})
 
 test('agenda changes preserve root and item extension fields',()=>{
@@ -29,11 +30,10 @@ const git=(...args)=>execFileSync('git',args,{encoding:'utf8',maxBuffer:10*1024*
 test('authorized map/report fixes leave other backend, auth and route guards byte-identical',()=>{
   const files=git('ls-tree','-r','--full-tree','--name-only',baseline).trim().split('\n').filter(file=>file.startsWith('app/src/services/')||file.startsWith('supabase/')||file.startsWith('app/src/types/')||['app/src/contexts/AuthContext.tsx','app/src/App.tsx','app/package.json','app/package-lock.json'].includes(file))
   assert.ok(files.length>20)
-  const authorized=new Set(['app/src/services/reportService.ts','app/src/services/mapAttendanceService.ts','app/src/services/attendanceService.ts','app/package.json','app/package-lock.json'])
+  const authorized=new Set(['app/src/services/reportService.ts'])
   for(const file of files.filter(file=>!authorized.has(file)))assert.equal(readFileSync(new URL(`../../${file}`,import.meta.url),'utf8'),git('show',`${baseline}:${file}`),file)
   const oldPackage=JSON.parse(git('show',`${baseline}:app/package.json`)),currentPackage=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'))
   assert.equal(currentPackage.dependencies.leaflet,'1.9.4');assert.equal(currentPackage.devDependencies['@types/leaflet'],'1.9.22')
-  delete currentPackage.dependencies.leaflet;delete currentPackage.devDependencies['@types/leaflet']
   assert.deepEqual(currentPackage,oldPackage)
 })
 function businessNodes(source,file){
@@ -52,24 +52,36 @@ test('all page service requests and business action handlers remain unchanged',(
   let count=0
   for(const file of files){
     const previous=businessNodes(git('show',`${baseline}:${file}`),file),current=businessNodes(readFileSync(new URL(`../../${file}`,import.meta.url),'utf8'),file)
-    // Only explicitly requested map-display handlers and scoped report/map reads may differ.
-    if(file.endsWith('/AdminLiveMap.tsx')){
-      delete current.functions.handleFlyToMember;delete previous.functions.handleFlyToMember
-      current.calls=current.calls.filter(call=>!call.endsWith(".eq('organization_id', requestOrganizationId)")).map(call=>call.replace(/\.eq\('organization_id', requestOrganizationId\)/g,''))
-    }
-    if(file.endsWith('/MeetingManager.tsx'))for(const key of ['handlePasteGoogleMapsCoords','handleSearchLocation']){delete current.functions[key];delete previous.functions[key]}
+    // Only explicitly requested report refreshes may differ from current production.
     if(file.endsWith('/Attendance.tsx')){
       assert.match(current.functions.handleAttendanceClick,/currentSession.status !== 'attendance_open'/)
       assert.match(current.functions.handleAttendanceClick,/attendanceMethod\(methods, !!gpsCoords\)/)
       assert.match(current.functions.handleAttendanceClick,/isSubmitDisabled \|\| success/)
-      delete current.functions.handleAttendanceClick;delete previous.functions.handleAttendanceClick
     }
     if(file.endsWith('/AdminReports.tsx')){
-      current.calls=current.calls.map(call=>call.replace('compileMeetingReport(currentSession.id, organizationId)','compileMeetingReport(currentSession.id)'))
+      assert.equal(current.calls.filter(call=>call==='tenantService.getOrganizationId()').length,3)
+      current.calls=current.calls.filter(call=>call!=='tenantService.getOrganizationId()')
+      previous.calls=previous.calls.filter(call=>call!=='tenantService.getOrganizationId()')
+      assert.ok(current.calls.includes('reportService.compileMeetingReport(sessionId, organizationId)'))
+      assert.ok(current.calls.includes('reportService.downloadExcel(fresh)'))
+      current.calls=current.calls.filter(call=>!['reportService.compileMeetingReport(sessionId, organizationId)','reportService.downloadExcel(fresh)'].includes(call))
+      previous.calls=previous.calls.filter(call=>call!=='reportService.downloadExcel(report)')
       assert.match(current.functions.handleSelectMeeting,/setReport\(null\)/)
       assert.match(current.functions.handleSelectMeeting,/setMeeting\(null\)/)
       assert.match(current.functions.handleSelectMeeting,/loadReportData\(true, id\)/)
-      delete current.functions.handleSelectMeeting;delete previous.functions.handleSelectMeeting
+    }
+    if(file.endsWith('/AdminDashboard.tsx')){
+      assert.equal(current.calls.filter(call=>call==='tenantService.getOrganizationId()').length,3)
+      current.calls=current.calls.filter(call=>call!=='tenantService.getOrganizationId()')
+      previous.calls=previous.calls.filter(call=>call!=='tenantService.getOrganizationId()')
+      for(const call of current.calls.filter(call=>call.startsWith('reportService.compileMeetingReport(')))assert.match(call,/, organizationId\)$/)
+      current.calls=current.calls.map(call=>call.replace(/compileMeetingReport\((activeSession|meeting).id, organizationId\)/g,'compileMeetingReport($1.id)'))
+      // Approval writes stay unchanged; only their report-refresh read is explicitly scoped.
+      for(const key of ['handleQuickApprove','handleQuickReject']){
+        const writes=value=>value.match(/await meetingService\.[^;]+;/g)
+        assert.deepEqual(writes(current.functions[key]),writes(previous.functions[key]))
+        delete current.functions[key];delete previous.functions[key]
+      }
     }
     assert.deepEqual(current,previous,file)
     count+=current.calls.length

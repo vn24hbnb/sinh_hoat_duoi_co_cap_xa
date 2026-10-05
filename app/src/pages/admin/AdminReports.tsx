@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { flushSync } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { FileSpreadsheet, RefreshCw, Trophy, Star, Users, Calendar, UserCheck, Printer, FileText } from 'lucide-react'
 import { PatternBackground } from '../../components/ui/PatternBackground'
@@ -14,6 +15,7 @@ import { reportService } from '../../services/reportService'
 import type { MeetingReportData } from '../../services/reportService'
 import { useAuth } from '../../contexts/AuthContext'
 import { tenantService } from '../../services/tenantService'
+import { useReportAutoRefresh } from '../../hooks/useReportAutoRefresh'
 
 interface ChartSegment {
   label: string
@@ -98,7 +100,8 @@ export const AdminReports: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
-  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [exporting, setExporting] = useState(false)
 
   const getGuongMauChiBos = () => {
     if (!report || !report.chiBoReports || report.chiBoReports.length === 0) {
@@ -137,7 +140,7 @@ export const AdminReports: React.FC = () => {
       setMeetingsList([])
       selectedMeetingIdRef.current = ''
       setSelectedMeetingId('')
-      setAutoRefresh(false)
+      setAutoRefresh(true)
     }
     if (!organizationId) {
       setMeeting(null)
@@ -218,15 +221,7 @@ export const AdminReports: React.FC = () => {
     }
   }, [loadReportData])
 
-  useEffect(() => {
-    if (!autoRefresh || !selectedMeetingId) return
-
-    const intervalId = setInterval(() => {
-      loadReportData(false, selectedMeetingId)
-    }, 10000)
-
-    return () => clearInterval(intervalId)
-  }, [autoRefresh, selectedMeetingId, loadReportData])
+  useReportAutoRefresh(autoRefresh, organizationId, selectedMeetingId, () => loadReportData(false, selectedMeetingId))
 
   const handleSelectMeeting = (id: string) => {
     selectedMeetingIdRef.current = id
@@ -235,8 +230,7 @@ export const AdminReports: React.FC = () => {
     setMeeting(null)
     void loadReportData(true, id)
   }
-  const exportToWord = () => {
-    if (!report) return
+  const exportToWord = (exportReport: MeetingReportData) => {
 
     // Lấy nội dung HTML của bản in báo cáo
     const contentHtml = document.getElementById('print-section')?.innerHTML || ''
@@ -337,12 +331,36 @@ export const AdminReports: React.FC = () => {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    const cleanTitle = report.title.replace(/[^a-zA-Z0-9À-ỹ\s-_]/g, '').replace(/\s+/g, '_')
+    const cleanTitle = exportReport.title.replace(/[^a-zA-Z0-9À-ỹ\s-_]/g, '').replace(/\s+/g, '_')
     link.download = `Bao_Cao_SHCT_${cleanTitle}.doc`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
+  }
+
+  // Always refresh before exporting; Word/PDF read the same freshly rendered snapshot.
+  const exportReport = async (format: 'excel' | 'word' | 'pdf') => {
+    if (!organizationId || !selectedMeetingId || exporting) return
+    const sessionId = selectedMeetingId
+    setExporting(true)
+    setError('')
+    try {
+      const fresh = await reportService.compileMeetingReport(sessionId, organizationId)
+      if (tenantService.getOrganizationId() !== organizationId || selectedMeetingIdRef.current !== sessionId) return
+      // Invalidate older polling requests so they cannot overwrite this newer snapshot.
+      requestSequenceRef.current += 1
+      flushSync(() => { setReport(fresh); setLoading(false); setRefreshing(false) })
+      if (format === 'excel') reportService.downloadExcel(fresh)
+      else if (format === 'word') exportToWord(fresh)
+      else window.print()
+    } catch (err: any) {
+      if (tenantService.getOrganizationId() === organizationId && selectedMeetingIdRef.current === sessionId) {
+        setError(err.message || 'Không thể cập nhật số liệu để xuất báo cáo.')
+      }
+    } finally {
+      setExporting(false)
+    }
   }
 
   const formatDuration = (seconds: number) => {
@@ -381,6 +399,9 @@ export const AdminReports: React.FC = () => {
             <p className="text-xs font-semibold text-muted dark:text-muted mt-0.5">
               {meeting ? `Hồ sơ báo cáo kết quả của: "${meeting.title}"` : 'Tổng hợp kết quả xếp hạng thi đua và vinh danh'}
             </p>
+            {report && <p className="text-xs text-muted mt-1" role="status">
+              Số liệu cập nhật lúc: {new Date(report.generatedAt).toLocaleString('vi-VN')}
+            </p>}
           </div>
           
           {/* Dropdown chọn xem lại hồ sơ phiên họp cũ */}
@@ -428,7 +449,8 @@ export const AdminReports: React.FC = () => {
             {report && (
               <>
                 <RevolutionaryButton 
-                  onClick={() => reportService.downloadExcel(report)}
+                  onClick={() => void exportReport('excel')}
+                  disabled={exporting}
                   variant="gold"
                   className="flex items-center gap-1.5 shadow-sm text-xs font-bold normal-case"
                 >
@@ -436,7 +458,8 @@ export const AdminReports: React.FC = () => {
                 </RevolutionaryButton>
                 
                 <RevolutionaryButton 
-                  onClick={exportToWord}
+                  onClick={() => void exportReport('word')}
+                  disabled={exporting}
                   variant="secondary"
                   className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 text-xs font-bold normal-case"
                 >
@@ -444,7 +467,8 @@ export const AdminReports: React.FC = () => {
                 </RevolutionaryButton>
                 
                 <RevolutionaryButton 
-                  onClick={() => window.print()}
+                  onClick={() => void exportReport('pdf')}
+                  disabled={exporting}
                   variant="secondary"
                   className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 text-xs font-bold normal-case"
                 >
@@ -764,6 +788,7 @@ export const AdminReports: React.FC = () => {
             <h1 className="text-base font-bold normal-case">BÁO CÁO KẾT QUẢ</h1>
             <h2 className="text-sm font-bold normal-case mt-1">SINH HOẠT CHÍNH TRỊ DƯỚI NGHI THỨC CHÀO CỜ</h2>
             <div className="italic mt-2">Phiên họp: "{report.title}" (Ngày {report.meetingDate})</div>
+            <div className="italic mt-1">Số liệu cập nhật lúc: {new Date(report.generatedAt).toLocaleString('vi-VN')}</div>
           </div>
           
           {/* Nội dung báo cáo */}

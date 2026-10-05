@@ -14,6 +14,7 @@ import { reportService } from '../../services/reportService'
 import { memberService } from '../../services/memberService'
 import { tenantService } from '../../services/tenantService'
 import { useAuth } from '../../contexts/AuthContext'
+import { useReportAutoRefresh } from '../../hooks/useReportAutoRefresh'
 
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate()
@@ -42,6 +43,7 @@ export const AdminDashboard: React.FC = () => {
   const sharedDevices: any[] = []
   const defaultPasswordUsers: any[] = []
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
 
   const handleLogout = () => {
     logout()
@@ -58,6 +60,7 @@ export const AdminDashboard: React.FC = () => {
     else setRefreshing(true)
     setError('')
     if (organizationChanged) {
+      setUpdatedAt(null)
       setMeeting(null)
       setMemberCount(0)
       setChiBoCount(0)
@@ -101,13 +104,15 @@ export const AdminDashboard: React.FC = () => {
 
       if (activeSession) {
         const [report, pending] = await Promise.all([
-          reportService.compileMeetingReport(activeSession.id),
+          reportService.compileMeetingReport(activeSession.id, organizationId),
           meetingService.getPendingApprovals(activeSession.id)
         ])
         if (!isCurrentRequest()) return
         setStats(report.stats)
+        setUpdatedAt(report.generatedAt)
         setPendingApprovals(pending)
       } else {
+        setUpdatedAt(null)
         setPendingApprovals([])
         setStats({
           totalParticipants: 0,
@@ -139,7 +144,7 @@ export const AdminDashboard: React.FC = () => {
   }, [organizationId])
 
   const handleQuickApprove = async (memberId: string, type: 'warning' | 'excused') => {
-    if (!meeting || !user) return
+    if (!meeting || !user || !organizationId) return
     setActionLoading(memberId)
     setError('')
     try {
@@ -150,10 +155,12 @@ export const AdminDashboard: React.FC = () => {
       }
       
       const [report, pending] = await Promise.all([
-        reportService.compileMeetingReport(meeting.id),
+        reportService.compileMeetingReport(meeting.id, organizationId),
         meetingService.getPendingApprovals(meeting.id)
       ])
+      if (tenantService.getOrganizationId() !== organizationId) return
       setStats(report.stats)
+      setUpdatedAt(report.generatedAt)
       setPendingApprovals(pending)
     } catch (err: any) {
       console.error(err)
@@ -164,7 +171,7 @@ export const AdminDashboard: React.FC = () => {
   }
 
   const handleQuickReject = async (memberId: string) => {
-    if (!meeting || !user) return
+    if (!meeting || !user || !organizationId) return
     const confirmReject = window.confirm('Đồng chí có chắc chắn muốn Từ chối và đánh Vắng mặt không phép đối với trường hợp này?')
     if (!confirmReject) return
     
@@ -174,10 +181,12 @@ export const AdminDashboard: React.FC = () => {
       await meetingService.evaluateAttendance(meeting.id, memberId, 'absent', user.id)
       
       const [report, pending] = await Promise.all([
-        reportService.compileMeetingReport(meeting.id),
+        reportService.compileMeetingReport(meeting.id, organizationId),
         meetingService.getPendingApprovals(meeting.id)
       ])
+      if (tenantService.getOrganizationId() !== organizationId) return
       setStats(report.stats)
+      setUpdatedAt(report.generatedAt)
       setPendingApprovals(pending)
     } catch (err: any) {
       console.error(err)
@@ -195,16 +204,7 @@ export const AdminDashboard: React.FC = () => {
     }
   }, [loadDashboardData])
 
-  // Tự động làm mới số liệu Dashboard & danh sách chờ duyệt mỗi 12 giây khi có phiên họp đang mở
-  useEffect(() => {
-    if (!meeting) return
-
-    const interval = setInterval(() => {
-      loadDashboardData(false)
-    }, 12000)
-
-    return () => clearInterval(interval)
-  }, [meeting, loadDashboardData])
+  useReportAutoRefresh(true, organizationId, meeting?.id, () => loadDashboardData(false))
 
   if (loading || loadedOrganizationId !== organizationId) {
     return <LoadingSpinner message="Đang tải thông tin bảng điều hành..." fullScreen />
@@ -232,6 +232,9 @@ export const AdminDashboard: React.FC = () => {
             <p className="text-xs font-semibold text-muted dark:text-muted mt-0.5">
               {meeting ? `Theo dõi tiến độ thực tế phiên họp: "${meeting.title}"` : 'Giám sát tiến độ các phiên sinh hoạt chính trị'}
             </p>
+            {updatedAt && <p className="text-xs text-muted mt-1" role="status">
+              Số liệu cập nhật lúc: {new Date(updatedAt).toLocaleString('vi-VN')} · Tự làm mới mỗi 10 giây
+            </p>}
           </div>
           
           <button

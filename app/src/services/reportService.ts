@@ -27,6 +27,7 @@ export interface TopMember {
 
 export interface MeetingReportData {
   sessionId: string
+  generatedAt: string
   title: string
   meetingDate: string
   stats: {
@@ -49,211 +50,96 @@ export const reportService = {
    */
   async compileMeetingReport(sessionId: string, organizationId = tenantService.requireOrganizationId()): Promise<MeetingReportData> {
     if (!sessionId.trim() || !organizationId) throw new Error('Thiếu xã hoặc phiên họp báo cáo.')
-    // 0. Fetch session details
-    const { data: session, error: sError } = await supabase
-      .from('meeting_sessions')
-      .select('title, meeting_date')
-      .eq('id', sessionId)
-      .eq('organization_id', organizationId)
-      .single()
-
-    if (sError || !session) {
+    // All counters and rankings come from one database statement at one point in time.
+    const { data: snapshot, error } = await supabase.rpc('meeting_report_snapshot', {
+      p_meeting_session_id: sessionId,
+      p_organization_id: organizationId
+    })
+    if (error) throw new Error(error.message || 'Không thể lấy dữ liệu báo cáo.')
+    if (!snapshot || snapshot.session?.id !== sessionId || snapshot.session?.organization_id !== organizationId) {
       throw new Error('Không tìm thấy thông tin phiên họp.')
     }
-
-    // 1. Fetch meeting_participants
-    const { data: participants, error: pError } = await supabase
-      .from('meeting_participants')
-      .select('member_id, chi_bo_id')
-      .eq('meeting_session_id', sessionId)
-      .eq('organization_id', organizationId)
-
-    if (pError || !participants) {
-      throw new Error('Không thể lấy danh sách đảng viên đăng ký phiên họp.')
+    if (!snapshot.generatedAt || !Number.isFinite(Date.parse(snapshot.generatedAt)) ||
+      !['participants', 'attendance', 'attempts', 'chiBos'].every(key => Array.isArray(snapshot[key]))) {
+      throw new Error('Dữ liệu báo cáo không đầy đủ. Vui lòng làm mới.')
     }
 
+    const session = snapshot.session
+    const participants: Array<{ member_id: string; chi_bo_id: string }> =
+      Array.from(new Map<string, { member_id: string; chi_bo_id: string }>(
+        snapshot.participants.map((p: any) => [p.member_id, p])).values())
+    const participantIds = new Set(participants.map(p => p.member_id))
+    const attendance: Array<{ member_id: string; status: string; gps_valid: boolean | null }> =
+      Array.from(new Map<string, { member_id: string; status: string; gps_valid: boolean | null }>(
+        snapshot.attendance.filter((a: any) => participantIds.has(a.member_id))
+          .map((a: any) => [a.member_id, a])).values())
+    // A completed person is counted once, even if historical duplicate attempts exist.
+    const latestByMember = new Map<string, any>()
+    for (const attempt of snapshot.attempts) {
+      if (attempt.members?.organization_id && attempt.members.organization_id !== organizationId) {
+        throw new Error('Dữ liệu kết quả thi không thuộc xã đang chọn.')
+      }
+      if (attempt.status !== 'submitted') continue
+      const previous = latestByMember.get(attempt.member_id)
+      if (!previous || String(attempt.submitted_at || '').localeCompare(String(previous.submitted_at || '')) > 0 ||
+        (attempt.submitted_at === previous.submitted_at && String(attempt.id || '') > String(previous.id || ''))) {
+        latestByMember.set(attempt.member_id, attempt)
+      }
+    }
+    const attempts: any[] = Array.from(latestByMember.values())
     const totalParticipants = participants.length
-
-    // 2. Fetch meeting_attendance
-    const { data: attendance, error: aError } = await supabase
-      .from('meeting_attendance')
-      .select('member_id, status, gps_valid')
-      .eq('meeting_session_id', sessionId)
-      .eq('organization_id', organizationId)
-
-    if (aError || !attendance) {
-      throw new Error('Không thể lấy dữ liệu điểm danh của phiên họp.')
-    }
-
     const attendedCount = attendance.filter(a => ['present', 'warning', 'manual'].includes(a.status)).length
     const excusedCount = attendance.filter(a => a.status === 'excused').length
     const warningGpsCount = attendance.filter(a => a.status === 'warning' || a.gps_valid === false).length
     const absentCount = Math.max(0, totalParticipants - attendedCount - excusedCount)
-
-    // 3. Fetch exam_attempts
-    const { data: attempts, error: attError } = await supabase
-      .from('exam_attempts')
-      .select('member_id, score, status')
-      .eq('meeting_session_id', sessionId)
-      .eq('organization_id', organizationId)
-      .eq('status', 'submitted')
-
-    if (attError || !attempts) {
-      throw new Error('Không thể lấy dữ liệu kết quả thi của phiên họp.')
-    }
-
     const examSubmittedCount = attempts.length
     const examNotSubmittedCount = Math.max(0, totalParticipants - examSubmittedCount)
-    
-    const sumScores = attempts.reduce((acc, curr) => acc + Number(curr.score || 0), 0)
+    const sumScores = attempts.reduce((sum, a) => sum + Number(a.score || 0), 0)
+    // Preserve the existing whole-roster average (including those not yet submitted).
     const averageScore = totalParticipants > 0 ? Number((sumScores / totalParticipants).toFixed(2)) : 0
 
-    // 4. Fetch all Chi Bos
-    const { data: chiBos, error: cbError } = await supabase
-      .from('chi_bos')
-      .select('*')
-      .eq('is_active', true)
-      .eq('organization_id', organizationId)
-      .order('sort_order', { ascending: true })
-
-    if (cbError || !chiBos) {
-      throw new Error('Không thể lấy danh sách chi bộ.')
-    }
-
-    // 5. Fetch members and their scores grouped by Chi Bo
-    // We can map this in-memory for accuracy
     const chiBoMap = new Map<string, ChiBoReport>()
-    
-    // Group participants and attendance by Chi Bo
-    chiBos.forEach(cb => {
-      chiBoMap.set(cb.id, {
-        id: cb.id,
-        name: cb.name,
-        secretaryName: cb.secretary_name || 'Chưa cập nhật',
-        totalRequired: 0,
-        totalAttended: 0,
-        totalExcused: 0,
-        attendanceRate: 0,
-        avgScore: 0
-      })
-    })
-
-    // Count participants per Chi Bo
-    participants.forEach(p => {
-      const report = chiBoMap.get(p.chi_bo_id)
-      if (report) {
-        report.totalRequired++
-      }
-    })
-
-    // Count attended and excused per Chi Bo
-    const attendeeMemberIds = new Set(attendance.filter(a => ['present', 'warning', 'manual'].includes(a.status)).map(a => a.member_id))
-    const excusedMemberIds = new Set(attendance.filter(a => a.status === 'excused').map(a => a.member_id))
-    participants.forEach(p => {
-      if (attendeeMemberIds.has(p.member_id)) {
-        const report = chiBoMap.get(p.chi_bo_id)
-        if (report) {
-          report.totalAttended++
-        }
-      } else if (excusedMemberIds.has(p.member_id)) {
-        const report = chiBoMap.get(p.chi_bo_id)
-        if (report) {
-          report.totalExcused++
-        }
-      }
-    })
-
-    // Count average score per Chi Bo
-    const memberScoresMap = new Map(attempts.map(att => [att.member_id, Number(att.score || 0)]))
-    const chiBoScoresSum = new Map<string, number>()
-    const chiBoExamCount = new Map<string, number>()
-
-    participants.forEach(p => {
-      const score = memberScoresMap.get(p.member_id)
-      if (score !== undefined) {
-        chiBoScoresSum.set(p.chi_bo_id, (chiBoScoresSum.get(p.chi_bo_id) || 0) + score)
-        chiBoExamCount.set(p.chi_bo_id, (chiBoExamCount.get(p.chi_bo_id) || 0) + 1)
-      }
-    })
-
-    // Finalize Chi Bo reports
-    const chiBoReportsList: ChiBoReport[] = Array.from(chiBoMap.values()).map(report => {
-      const totalScore = chiBoScoresSum.get(report.id) || 0
-      
-      return {
-        ...report,
-        attendanceRate: report.totalRequired > 0 ? Number(((report.totalAttended / report.totalRequired) * 100).toFixed(1)) : 0,
-        avgScore: report.totalRequired > 0 ? Number((totalScore / report.totalRequired).toFixed(2)) : 0
-      }
-    })
-
-    // Sort Chi Bo rankings: Primary by Attendance Rate (desc), Secondary by average score (desc)
-    chiBoReportsList.sort((a, b) => {
-      if (b.attendanceRate !== a.attendanceRate) {
-        return b.attendanceRate - a.attendanceRate
-      }
-      return b.avgScore - a.avgScore
-    })
-
-    // 6. Fetch Top 10 individuals
-    // Score descending, duration_seconds ascending (lower time first)
-    const { data: topAttempts, error: topError } = await supabase
-      .from('exam_attempts')
-      .select(`
-        id,
-        member_id,
-        score,
-        correct_count,
-        total_questions,
-        duration_seconds,
-        submitted_at,
-        members!inner (
-          organization_id,
-          full_name,
-          position,
-          chi_bos (
-            name
-          )
-        )
-      `)
-      .eq('meeting_session_id', sessionId)
-      .eq('organization_id', organizationId)
-      .eq('status', 'submitted')
-      .eq('members.organization_id', organizationId)
-      .order('score', { ascending: false })
-      .order('duration_seconds', { ascending: true })
-      .limit(10)
-
-    if (topError) {
-      throw new Error('Không thể lấy danh sách cá nhân xuất sắc: ' + topError.message)
-    }
-
-    const topMembers: TopMember[] = (topAttempts || []).map((att: any) => ({
-      memberId: att.member_id,
-      fullName: att.members?.full_name || 'Không rõ',
-      position: att.members?.position || 'Đảng viên',
-      chiBoName: att.members?.chi_bos?.name || 'Không rõ',
-      score: Number(att.score || 0),
-      correctCount: att.correct_count || 0,
-      totalQuestions: att.total_questions || 10,
-      durationSeconds: att.duration_seconds || 0,
-      submittedAt: att.submitted_at
+    snapshot.chiBos.forEach((cb: any) => chiBoMap.set(cb.id, {
+      id: cb.id, name: cb.name, secretaryName: cb.secretary_name || 'Chưa cập nhật',
+      totalRequired: 0, totalAttended: 0, totalExcused: 0, attendanceRate: 0, avgScore: 0
     }))
+    const attendeeIds = new Set(attendance.filter(a => ['present', 'warning', 'manual'].includes(a.status)).map(a => a.member_id))
+    const excusedIds = new Set(attendance.filter(a => a.status === 'excused').map(a => a.member_id))
+    const scores = new Map(attempts.map(a => [a.member_id, Number(a.score || 0)]))
+    const branchScores = new Map<string, number>()
+    participants.forEach(p => {
+      const branch = chiBoMap.get(p.chi_bo_id)
+      if (!branch) return
+      branch.totalRequired++
+      if (attendeeIds.has(p.member_id)) branch.totalAttended++
+      else if (excusedIds.has(p.member_id)) branch.totalExcused++
+      branchScores.set(p.chi_bo_id, (branchScores.get(p.chi_bo_id) || 0) + (scores.get(p.member_id) || 0))
+    })
+    const chiBoReportsList = Array.from(chiBoMap.values()).map(branch => ({
+      ...branch,
+      attendanceRate: branch.totalRequired > 0 ? Number((100 * branch.totalAttended / branch.totalRequired).toFixed(1)) : 0,
+      avgScore: branch.totalRequired > 0 ? Number(((branchScores.get(branch.id) || 0) / branch.totalRequired).toFixed(2)) : 0
+    })).sort((a, b) => b.attendanceRate - a.attendanceRate || b.avgScore - a.avgScore || a.name.localeCompare(b.name, 'vi'))
+    const topMembers: TopMember[] = [...attempts]
+      .sort((a, b) => Number(b.score || 0) - Number(a.score || 0) ||
+        Number(a.duration_seconds || 0) - Number(b.duration_seconds || 0) ||
+        String(a.submitted_at || '').localeCompare(String(b.submitted_at || '')) ||
+        a.member_id.localeCompare(b.member_id))
+      .slice(0, 10).map(att => ({
+        memberId: att.member_id, fullName: att.members?.full_name || 'Không rõ',
+        position: att.members?.position || 'Đảng viên', chiBoName: att.members?.chi_bos?.name || 'Không rõ',
+        score: Number(att.score || 0), correctCount: att.correct_count ?? 0,
+        totalQuestions: att.total_questions ?? 0, durationSeconds: att.duration_seconds ?? 0,
+        submittedAt: att.submitted_at
+      }))
 
     return {
       sessionId,
+      generatedAt: snapshot.generatedAt,
       title: session.title,
       meetingDate: session.meeting_date || 'Chưa rõ',
-      stats: {
-        totalParticipants,
-        attendedCount,
-        warningGpsCount,
-        absentCount,
-        excusedCount,
-        examSubmittedCount,
-        examNotSubmittedCount,
-        averageScore
-      },
+      stats: { totalParticipants, attendedCount, warningGpsCount, absentCount, excusedCount,
+        examSubmittedCount, examNotSubmittedCount, averageScore },
       chiBoReports: chiBoReportsList,
       topMembers
     }
@@ -272,6 +158,7 @@ export const reportService = {
     lines.push(`BÁO CÁO TỔNG HỢP PHIÊN SINH HOẠT CHÍNH TRỊ`)
     lines.push(`Phiên họp: "${report.title}"`)
     lines.push(`Ngày sinh hoạt: ${report.meetingDate}`)
+    lines.push(`Số liệu cập nhật lúc: ${new Date(report.generatedAt).toLocaleString('vi-VN')}`)
     lines.push('')
 
     // Key Statistics Section
@@ -340,6 +227,7 @@ export const reportService = {
       ["BÁO CÁO TỔNG HỢP PHIÊN SINH HOẠT CHÍNH TRỊ DƯỚI NGHI THỨC CHÀO CỜ"],
       ["Phiên họp:", report.title],
       ["Ngày họp:", report.meetingDate],
+      ["Số liệu cập nhật lúc:", new Date(report.generatedAt).toLocaleString('vi-VN')],
       [],
       ["THÔNG SỐ THỐNG KÊ CHUNG"],
       ["Chỉ số", "Số lượng", "Tỷ lệ"],

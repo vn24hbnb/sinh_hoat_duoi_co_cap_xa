@@ -14,7 +14,20 @@ const datasets={
 async function setup(data=datasets){
   let active='a'
   const queries=[]
-  const client={from(table){
+  const client={
+    async rpc(name,args){
+      assert.equal(name,'meeting_report_snapshot')
+      const org=args.p_organization_id,sessionId=args.p_meeting_session_id
+      queries.push({table:name,filters:[['organization_id',org],['meeting_session_id',sessionId]]})
+      const session=data.meeting_sessions.find(s=>s.id===sessionId&&s.organization_id===org)
+      if(!session)return{data:null,error:{message:'Không tìm thấy thông tin phiên họp.'}}
+      const scoped=table=>data[table].filter(r=>r.organization_id===org&&r.meeting_session_id===sessionId)
+      return{data:structuredClone({generatedAt:'2026-10-05T02:00:00Z',session,
+        participants:scoped('meeting_participants'),attendance:scoped('meeting_attendance'),
+        attempts:scoped('exam_attempts').filter(r=>r.status==='submitted'),
+        chiBos:data.chi_bos.filter(r=>r.organization_id===org&&r.is_active)}),error:null}
+    },
+    from(table){
     const filters=[];let single=false,limit=Infinity
     const q={select(){return q},eq(field,value){filters.push([field,value]);return q},order(){return q},limit(value){limit=value;return q},single(){single=true;return q},then(resolve,reject){
       queries.push({table,filters:[...filters]})
@@ -62,6 +75,56 @@ test('missing organization fails closed instead of compiling all communes',async
   const {reportService,choose,queries}=await setup();choose(null)
   await assert.rejects(reportService.compileMeetingReport('session-a'),/Chọn xã/)
   assert.equal(queries.length,0)
+})
+
+test('one snapshot supplies counters, scores, winners and exported totals; new submissions appear on refresh',async()=>{
+  const data=structuredClone(datasets),io=await setup(data)
+  const first=await io.reportService.compileMeetingReport('session-a','a')
+  assert.equal(io.queries.length,1)
+  assert.equal(first.stats.examSubmittedCount,1)
+  data.meeting_participants.push({meeting_session_id:'session-a',organization_id:'a',member_id:'new',chi_bo_id:'branch-a'})
+  data.exam_attempts.push({id:'new',meeting_session_id:'session-a',organization_id:'a',member_id:'new',status:'submitted',score:10,duration_seconds:30,members:{organization_id:'a',full_name:'Mới'}})
+  // A previously fetched report is a stable point-in-time result, not a live mutable object.
+  assert.equal(first.stats.examSubmittedCount,1)
+  const next=await io.reportService.compileMeetingReport('session-a','a')
+  assert.equal(next.stats.examSubmittedCount,2)
+  assert.equal(next.stats.averageScore,8.5)
+  assert.equal(next.chiBoReports[0].avgScore,8.5)
+  assert.equal(next.topMembers[0].fullName,'Mới')
+  assert.match(io.reportService.generateCsvContent(next),/Đã hoàn thành bài kiểm tra,2,100.0%/)
+  assert.match(io.reportService.generateCsvContent(next),/Số liệu cập nhật lúc:/)
+})
+test('submitted exams count even without any attendance; duplicate member attempts count once',async()=>{
+  const data=structuredClone(datasets)
+  data.meeting_attendance=[]
+  data.exam_attempts[0].submitted_at='2026-10-05T01:00:00Z'
+  data.exam_attempts.push({...data.exam_attempts[0],id:'latest',score:10,submitted_at:'2026-10-05T02:00:00Z'})
+  data.exam_attempts.push({...data.exam_attempts[0],id:'started',status:'started',score:0})
+  const {reportService}=await setup(data),r=await reportService.compileMeetingReport('session-a','a')
+  assert.equal(r.stats.attendedCount,0)
+  assert.equal(r.stats.examSubmittedCount,1)
+  assert.equal(r.stats.averageScore,10)
+  assert.equal(r.topMembers[0].score,10)
+})
+test('reports include more than the default REST row limit without truncating totals',async()=>{
+  const data=structuredClone(datasets)
+  data.meeting_participants=[];data.exam_attempts=[]
+  for(let i=0;i<1205;i++){
+    data.meeting_participants.push({meeting_session_id:'session-a',organization_id:'a',member_id:`m${i}`,chi_bo_id:'branch-a'})
+    data.exam_attempts.push({id:`e${i}`,meeting_session_id:'session-a',organization_id:'a',member_id:`m${i}`,status:'submitted',score:8})
+  }
+  const {reportService}=await setup(data),r=await reportService.compileMeetingReport('session-a','a')
+  assert.equal(r.stats.totalParticipants,1205);assert.equal(r.stats.examSubmittedCount,1205)
+  assert.equal(r.stats.averageScore,8);assert.equal(r.topMembers.length,10)
+})
+test('incomplete or cross-commune snapshots fail visibly instead of returning misleading zeroes',async()=>{
+  const io=await setup()
+  io.client.rpc=async()=>({data:{session:{id:'session-a',organization_id:'b'}},error:null})
+  await assert.rejects(io.reportService.compileMeetingReport('session-a','a'),/Không tìm thấy/)
+  io.client.rpc=async()=>({data:{session:{id:'session-a',organization_id:'a'},generatedAt:'bad'},error:null})
+  await assert.rejects(io.reportService.compileMeetingReport('session-a','a'),/không đầy đủ/)
+  io.client.rpc=async()=>({data:null,error:{message:'Network failure'}})
+  await assert.rejects(io.reportService.compileMeetingReport('session-a','a'),/Network failure/)
 })
 
 test('parallel GPS map loads capture separate commune/session IDs and hall caches',async()=>{
